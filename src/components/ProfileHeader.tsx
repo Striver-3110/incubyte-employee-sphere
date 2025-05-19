@@ -1,7 +1,7 @@
 
 import { useEmployeeDetails } from "@/api/employeeService";
 import { calculateTenure, formatDate } from "@/utils/dateUtils";
-import { LinkedIn, Github, Mail, Phone, MapPin, Edit, X, Check } from "lucide-react";
+import { Linkedin, Github, Mail, Phone, MapPin, Edit, X, Check } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,7 +19,7 @@ const ProfileHeader = () => {
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
       case "linkedin":
-        return <LinkedIn className="h-5 w-5" />;
+        return <Linkedin className="h-5 w-5" />;
       case "github":
         return <Github className="h-5 w-5" />;
       default:
