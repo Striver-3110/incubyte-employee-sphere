@@ -1,11 +1,65 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { useState } from "react";
+import ProfileHeader from "@/components/ProfileHeader";
+import AboutSection from "@/components/AboutSection";
+import CreativePursuits from "@/components/CreativePursuits";
+import IceBreakers from "@/components/IceBreakers";
+import MyPeople from "@/components/MyPeople";
+import SkillsMatrix from "@/components/SkillsMatrix";
+import CareerProgression from "@/components/CareerProgression";
+import FeedbackSection from "@/components/FeedbackSection";
+import CalibrationSection from "@/components/CalibrationSection";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
+  const [activeTab, setActiveTab] = useState("about");
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        <ProfileHeader />
+        
+        <div className="mt-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="w-full justify-start overflow-x-auto">
+              <TabsTrigger value="about">About</TabsTrigger>
+              <TabsTrigger value="people">My People</TabsTrigger>
+              <TabsTrigger value="career">Career</TabsTrigger>
+              <TabsTrigger value="feedback">Feedback</TabsTrigger>
+              <TabsTrigger value="calibration">Calibration</TabsTrigger>
+            </TabsList>
+            
+            {/* About Tab */}
+            <TabsContent value="about" className="space-y-6 mt-6">
+              <AboutSection />
+              <SkillsMatrix />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <CreativePursuits />
+                <IceBreakers />
+              </div>
+            </TabsContent>
+            
+            {/* My People Tab */}
+            <TabsContent value="people" className="mt-6">
+              <MyPeople />
+            </TabsContent>
+            
+            {/* Career Tab */}
+            <TabsContent value="career" className="mt-6">
+              <CareerProgression />
+            </TabsContent>
+            
+            {/* Feedback Tab */}
+            <TabsContent value="feedback" className="mt-6">
+              <FeedbackSection />
+            </TabsContent>
+            
+            {/* Calibration Tab */}
+            <TabsContent value="calibration" className="mt-6">
+              <CalibrationSection />
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );
