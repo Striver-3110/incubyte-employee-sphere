@@ -1,16 +1,35 @@
 
 import { useEmployeeDetails } from "@/api/employeeService";
 import { calculateTenure, formatDate } from "@/utils/dateUtils";
-import { Linkedin, Github, Mail, Phone, MapPin, Edit, X, Check } from "lucide-react";
+import { Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, Plus, Save } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "@/hooks/use-toast";
+
+const socialPlatforms = [
+  { id: "linkedin", name: "LinkedIn", icon: Linkedin },
+  { id: "github", name: "GitHub", icon: Github },
+  { id: "twitter", name: "Twitter", icon: Twitter },
+];
 
 const ProfileHeader = () => {
   const { employee, loading } = useEmployeeDetails();
   const [editingSocial, setEditingSocial] = useState<string | null>(null);
   const [newUrl, setNewUrl] = useState("");
+  
+  // New states for adding platforms
+  const [isAddingPlatform, setIsAddingPlatform] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState("");
+  const [platformUrl, setPlatformUrl] = useState("");
 
   if (loading || !employee) {
     return <ProfileHeaderSkeleton />;
@@ -22,6 +41,8 @@ const ProfileHeader = () => {
         return <Linkedin className="h-5 w-5" />;
       case "github":
         return <Github className="h-5 w-5" />;
+      case "twitter":
+        return <Twitter className="h-5 w-5" />;
       default:
         return null;
     }
@@ -32,16 +53,104 @@ const ProfileHeader = () => {
     setNewUrl(url);
   };
 
-  const handleSaveSocial = (platformId: string) => {
-    // In a real app, this would update the URL via an API call
-    console.log(`Updated ${platformId} to ${newUrl}`);
-    setEditingSocial(null);
-    setNewUrl("");
+  const handleSaveSocial = async (platformId: string) => {
+    try {
+      // In a real app, this would update the URL via an API call
+      console.log(`Updated ${platformId} to ${newUrl}`);
+      
+      // Mock API call for now
+      const updatedPlatforms = employee.custom_platforms.map(platform => 
+        platform.name === platformId ? { ...platform, url: newUrl } : platform
+      );
+      
+      // Call set_employee_details API here
+      await fetch('/api/method/one_view.api.user.set_employee_details', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          custom_platforms: updatedPlatforms
+        }),
+      });
+      
+      toast({
+        title: "Success",
+        description: "Platform link updated successfully",
+      });
+      
+      setEditingSocial(null);
+      setNewUrl("");
+    } catch (error) {
+      console.error("Error updating platform:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update platform link",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddPlatform = async () => {
+    if (!selectedPlatform || !platformUrl) {
+      toast({
+        title: "Error",
+        description: "Please select a platform and enter a URL",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      const platformInfo = socialPlatforms.find(p => p.id === selectedPlatform);
+      
+      if (!platformInfo) return;
+      
+      const newPlatform = {
+        name: `${selectedPlatform}-${Date.now()}`, // Generate unique name
+        platform_name: platformInfo.name,
+        url: platformUrl
+      };
+      
+      const updatedPlatforms = [...employee.custom_platforms, newPlatform];
+      
+      // Call set_employee_details API here
+      await fetch('/api/method/one_view.api.user.set_employee_details', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          custom_platforms: updatedPlatforms
+        }),
+      });
+      
+      toast({
+        title: "Success",
+        description: "Platform added successfully",
+      });
+      
+      setIsAddingPlatform(false);
+      setSelectedPlatform("");
+      setPlatformUrl("");
+      
+      // Refresh the page to get the updated data
+      window.location.reload();
+    } catch (error) {
+      console.error("Error adding platform:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add platform",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleCancelEdit = () => {
     setEditingSocial(null);
     setNewUrl("");
+  };
+
+  const handleCancelAddPlatform = () => {
+    setIsAddingPlatform(false);
+    setSelectedPlatform("");
+    setPlatformUrl("");
   };
 
   return (
@@ -108,7 +217,7 @@ const ProfileHeader = () => {
                         rel="noopener noreferrer" 
                         className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
                       >
-                        {getPlatformIcon(platform.platform_name)}
+                        {getPlatformIcon(platform.platform_name.toLowerCase())}
                         <span>{platform.platform_name}</span>
                       </a>
                       <Button 
@@ -123,6 +232,62 @@ const ProfileHeader = () => {
                   )}
                 </div>
               ))}
+              
+              {/* Add Platform Button & Form */}
+              {!isAddingPlatform ? (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setIsAddingPlatform(true)}
+                  className="flex items-center gap-1"
+                >
+                  <Plus className="h-3 w-3" /> Add Platform
+                </Button>
+              ) : (
+                <div className="flex flex-wrap items-center gap-2 p-2 border rounded-md bg-gray-50">
+                  <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
+                    <SelectTrigger className="w-[120px] h-8">
+                      <SelectValue placeholder="Platform" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {socialPlatforms.map((platform) => (
+                        <SelectItem key={platform.id} value={platform.id}>
+                          <div className="flex items-center gap-2">
+                            <platform.icon className="h-4 w-4" />
+                            <span>{platform.name}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  
+                  <Input 
+                    placeholder="Enter URL" 
+                    value={platformUrl}
+                    onChange={(e) => setPlatformUrl(e.target.value)}
+                    className="h-8 w-48"
+                  />
+                  
+                  <div className="flex gap-1">
+                    <Button 
+                      size="sm" 
+                      variant="default" 
+                      onClick={handleAddPlatform}
+                      className="h-8"
+                    >
+                      <Save className="h-3 w-3 mr-1" /> Save
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={handleCancelAddPlatform}
+                      className="h-8"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Contact Information */}

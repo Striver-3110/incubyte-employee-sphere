@@ -20,27 +20,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TechStack } from "@/api/employeeService";
+import { isTechnicalRole } from "@/utils/roleUtils";
 
 const proficiencyLevels = ["Expert", "Intermediate", "Beginner", "Learning"];
-
-// Check if employee is in a technical role
-const isTechnicalRole = (designation: string | undefined) => {
-  if (!designation) return false;
-  
-  const technicalRoles = [
-    'Software Craftsperson',
-    'Software Craftsperson - Tech Lead',
-    'Software Craftsperson - Tech Advisor',
-    'AI Craftsperson',
-    'Test Craftsperson',
-    'Test Craftsperson (Manual)',
-    'Test Craftsperson (Automation)',
-    'BQA',
-    'Intern'
-  ];
-  
-  return technicalRoles.includes(designation);
-};
 
 const SkillsMatrix = () => {
   const { employee, loading } = useEmployeeDetails();
@@ -60,7 +42,7 @@ const SkillsMatrix = () => {
     }
   }, [loading, employee, skills.length]);
   
-  const isTechnical = isTechnicalRole(employee?.designation);
+  const isTechnical = employee ? isTechnicalRole(employee.designation) : false;
   const componentTitle = isTechnical ? "Tech Stack" : "Competency Map";
   
   const groupedSkills = skills.reduce((acc: Record<string, TechStack[]>, skill) => {
@@ -160,18 +142,18 @@ const SkillsMatrix = () => {
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Add {selectedCategory} Skill</DialogTitle>
+            <DialogTitle>Add {selectedCategory} {isTechnical ? "Skill" : "Competency"}</DialogTitle>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div>
-              <label className="text-sm font-medium mb-1 block">Search Skills</label>
+              <label className="text-sm font-medium mb-1 block">Search {isTechnical ? "Skills" : "Competencies"}</label>
               <Input 
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
                   setIsNewSkill(true);
                 }}
-                placeholder="Type to search or enter a new skill"
+                placeholder={`Type to search or enter a new ${isTechnical ? "skill" : "competency"}`}
               />
             </div>
             
@@ -195,7 +177,7 @@ const SkillsMatrix = () => {
                   </div>
                 ) : (
                   <div className="p-2 text-sm text-gray-600">
-                    No matching skills. You can add "{searchTerm}" as a new skill.
+                    No matching {isTechnical ? "skills" : "competencies"}. You can add "{searchTerm}" as a new {isTechnical ? "skill" : "competency"}.
                   </div>
                 )}
               </div>
