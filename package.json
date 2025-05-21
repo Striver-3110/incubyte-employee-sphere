@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-   "scripts": {
+  "scripts": {
     "dev": "vite",
     "build": "vite build --base=/assets/incubyte_customizations/one_view/ && yarn copy-html-entry",
     "lint": "eslint .",
@@ -45,6 +45,7 @@
     "cmdk": "^1.0.0",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
+    "frappe-react-sdk": "^1.11.0",
     "input-otp": "^1.2.4",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",

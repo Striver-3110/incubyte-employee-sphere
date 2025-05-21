@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Edit, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 
+const BASE_URL = import.meta.env.VITE_SOCKET_PORT;
+
 // List of predefined questions
 const predefinedQuestions = [
   "If you were a superhero, what would your costume look like?",
@@ -30,13 +32,15 @@ interface IceBreakerQuestion {
 
 // Function to save employee ice breaker answers
 const saveIceBreakers = async (questions: IceBreakerQuestion[]) => {
+  console.log("Questions are: ",questions)
   try {
-    const response = await fetch('/api/method/one_view.api.user.set_employee_details', {
+    const response = await fetch(`${BASE_URL}user.set_employee_details`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         custom_employee_icebreaker_question: questions
       }),
+      credentials: 'include'
     });
 
     if (!response.ok) {

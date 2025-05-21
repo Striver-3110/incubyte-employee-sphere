@@ -1,6 +1,8 @@
-
 // API service for employee data
 import { useState, useEffect } from 'react';
+
+// Extracted base URL as a separate constant
+const BASE_URL = import.meta.env.VITE_SOCKET_PORT;
 
 export interface PlatformLink {
   name: string;
@@ -140,8 +142,12 @@ const fetchEmployeeDetails = async () => {
   }
 
   try {
-    const response = await fetch('/api/method/one_view.api.user.get_employee_details', {
-      headers: { 'Content-Type': 'application/json' },
+    const response = await fetch(`${BASE_URL}user.get_employee_details`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include'
     });
 
     if (!response.ok) {
@@ -149,11 +155,12 @@ const fetchEmployeeDetails = async () => {
     }
 
     const data = await response.json();
-    
+
+    console.log('Response:', data);
     if (!data.message) {
       throw new Error('Invalid employee data received');
     }
-    
+
     // Cache the response
     cachedEmployeeData = data.message;
     return data.message;
@@ -193,7 +200,7 @@ const fetchEmployeeFeedback = async () => {
   }
 
   try {
-    const response = await fetch('/api/method/one_view.api.user.get_employee_feedback', {
+    const response = await fetch(`${BASE_URL}user.get_employee_feedback`, {
       headers: { 'Content-Type': 'application/json' },
     });
 
@@ -202,11 +209,11 @@ const fetchEmployeeFeedback = async () => {
     }
 
     const data = await response.json();
-    
+
     if (!data.message) {
       throw new Error('Invalid feedback data received');
     }
-    
+
     cachedFeedbackData = data.message;
     return data.message;
   } catch (error) {
@@ -226,7 +233,7 @@ export const fetchTeamEmployees = async (teamName: string) => {
     // This is a placeholder. In a real application, you would have an API endpoint
     // that returns all employees in a specific team. For now, we'll mock this functionality
     // by fetching all employees and filtering them client-side.
-    const response = await fetch('/api/method/one_view.api.user.get_employees_by_team', {
+    const response = await fetch(`${BASE_URL}user.get_employees_by_team`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ team: teamName }),
@@ -237,11 +244,11 @@ export const fetchTeamEmployees = async (teamName: string) => {
     }
 
     const data = await response.json();
-    
+
     if (!data.message) {
       throw new Error('Invalid team employees data received');
     }
-    
+
     cachedTeamEmployees = data.message;
     return data.message;
   } catch (error) {
@@ -259,7 +266,7 @@ export const fetchTeamEmployees = async (teamName: string) => {
 // Save employee ice breaker answers
 export const saveIceBreakers = async (questions: IcebreakerQuestion[]) => {
   try {
-    const response = await fetch('/api/method/one_view.api.user.set_employee_details', {
+    const response = await fetch(`${BASE_URL}user.set_employee_details`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -272,12 +279,12 @@ export const saveIceBreakers = async (questions: IcebreakerQuestion[]) => {
     }
 
     const data = await response.json();
-    
+
     // Update the cached data
     if (cachedEmployeeData) {
       cachedEmployeeData.custom_employee_icebreaker_question = questions;
     }
-    
+
     return data;
   } catch (error) {
     console.error('Error saving ice breakers:', error);
@@ -288,7 +295,7 @@ export const saveIceBreakers = async (questions: IcebreakerQuestion[]) => {
 // Save employee feedback
 export const saveEmployeeFeedback = async (feedback: any) => {
   try {
-    const response = await fetch('/api/method/one_view.api.user.set_employee_feedback', {
+    const response = await fetch(`${BASE_URL}user.set_employee_feedback`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(feedback),
@@ -299,10 +306,10 @@ export const saveEmployeeFeedback = async (feedback: any) => {
     }
 
     const data = await response.json();
-    
+
     // Update the cached data
     cachedFeedbackData = null; // Clear the cache to force a refresh on next fetch
-    
+
     return data;
   } catch (error) {
     console.error('Error saving feedback:', error);
