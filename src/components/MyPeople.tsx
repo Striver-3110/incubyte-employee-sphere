@@ -1,6 +1,14 @@
 
-import { useEmployeeDetails } from "@/api/employeeService";
+import { useEmployeeDetails, useTeamEmployees } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface PeopleItemProps {
   label: string;
@@ -15,7 +23,10 @@ const PeopleItem = ({ label, value }: PeopleItemProps) => (
 );
 
 const MyPeople = () => {
-  const { employee, loading } = useEmployeeDetails();
+  const { employee, loading: employeeLoading } = useEmployeeDetails();
+  const { employees, loading: teamLoading } = useTeamEmployees(employee?.custom_team);
+  
+  const loading = employeeLoading || teamLoading;
   
   // Check if the employee is in a technical role based on designation
   const isTechnicalRole = employee && 
@@ -45,15 +56,45 @@ const MyPeople = () => {
     <div className="bg-white p-6 rounded-lg shadow-sm">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">My People</h2>
       
-      <div className="space-y-1">
-        <PeopleItem label="Team" value={employee.custom_team || ""} />
-        <PeopleItem label="Pod" value={employee.custom_pod || ""} />
-        <PeopleItem label="Lead" value={employee.custom_tech_lead || ""} />
-        <PeopleItem label="Buddy" value={employee.custom_buddy || ""} />
+      <div className="space-y-4">
+        {/* Employee's direct relationships */}
+        <div className="space-y-1">
+          <PeopleItem label="Team" value={employee.custom_team || ""} />
+          <PeopleItem label="Pod" value={employee.custom_pod || ""} />
+          <PeopleItem label="Lead" value={employee.custom_tech_lead || ""} />
+          <PeopleItem label="Buddy" value={employee.custom_buddy || ""} />
+          
+          {/* Only show Tech Advisor for technical roles */}
+          {isTechnicalRole && (
+            <PeopleItem label="Tech Advisor" value={employee.custom_tech_advisor || ""} />
+          )}
+        </div>
         
-        {/* Only show Tech Advisor for technical roles */}
-        {isTechnicalRole && (
-          <PeopleItem label="Tech Advisor" value={employee.custom_tech_advisor || ""} />
+        {/* Team members table */}
+        {employee.custom_team && employees.length > 0 && (
+          <div className="mt-6">
+            <h3 className="text-lg font-medium text-gray-800 mb-3">Team Members</h3>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-16">#</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Designation</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {employees.map((teamMember, index) => (
+                    <TableRow key={teamMember.name}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell className="font-medium">{teamMember.employee_name}</TableCell>
+                      <TableCell>{teamMember.designation}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
         )}
       </div>
     </div>

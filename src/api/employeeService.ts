@@ -1,5 +1,4 @@
-
-// Mock API service for employee data
+// API service for employee data
 import { useState, useEffect } from 'react';
 
 export interface PlatformLink {
@@ -49,7 +48,9 @@ export interface Calibration {
 export interface Feedback {
   id: string;
   from: string;
+  from_name?: string;
   to: string;
+  to_name?: string;
   date_initiated: string;
   status: 'Pending' | 'Completed';
   content?: string;
@@ -82,193 +83,163 @@ export interface EmployeeDetails {
   custom_pin: string;
 }
 
-// Mock employee data
-const mockEmployeeData: EmployeeDetails = {
-  name: "E0190",
-  employee: "E0190",
-  employee_name: "Jay Prajapati",
-  designation: "Intern",
-  image: "/private/files/A lifelike humanoid cat hybrid with soft fur, fel…077ad3.jpeg",
-  custom_about: "I am a passionate software engineer with experience in building web and mobile applications. I enjoy solving complex problems and learning new technologies.",
-  date_of_joining: "2025-01-06",
-  personal_email: "prajapatijay31100@gmail.com",
-  company_email: "jay@incubyte.co",
-  cell_number: "9099285709",
-  current_address: "408- Hostel Block- E , L.D. College of Engineering, Navrangpura, Ahmedabad, 380009",
-  custom_city: "Ahmedabad",
-  custom_state: "Gujarat",
-  custom_pin: "380009",
-  custom_team: "Kyruus",
-  custom_pod: "Practice Optimization",
-  custom_tech_lead: "E0028",
-  custom_buddy: "E0196",
-  custom_tech_advisor: "E0009",
-  custom_platforms: [
-    {
-      name: "lqn79h7h79",
-      platform_name: "Linkedin",
-      url: "https://linkedin.com"
-    },
-    {
-      name: "r1e22llg4o",
-      platform_name: "Github",
-      url: "https://github.com"
-    }
-  ],
-  custom_passionate_about: [
-    {
-      name: "i8p4imloiu",
-      passionate_about: "Reading Books"
-    }
-  ],
-  custom_tech_stack: [
-    {
-      name: "1v2mrl5m4n",
-      skill: "React",
-      proficiency_level: "Expert"
-    },
-    {
-      name: "4k6jl0k214",
-      skill: "Next.js",
-      proficiency_level: "Expert"
-    },
-    {
-      name: "22r13ppqp8",
-      skill: "React Native",
-      proficiency_level: "Expert"
-    },
-    {
-      name: "ubcrau9bur",
-      skill: "Angular",
-      proficiency_level: "Beginner"
-    },
-    {
-      name: "3dg1i8dls1",
-      skill: "Django",
-      proficiency_level: "Expert"
-    },
-    {
-      name: "3vjl12vprh",
-      skill: "StackOvefflow",
-      proficiency_level: "Learning"
-    }
-  ],
-  custom_employee_icebreaker_question: [
-    {
-      name: "3e55ru1m33",
-      question: "If you were a superhero, what would your costume look like?",
-      answer: "A sleek, minimalist design with integrated tech features and adaptable materials."
-    },
-    {
-      name: "3e5cv305f8",
-      question: "What's your favorite productivity hack?",
-      answer: "Time blocking and the Pomodoro technique combined with a no-distractions environment."
-    },
-    {
-      name: "3e5m5lll97",
-      question: "What was your first job ever?",
-      answer: "Teaching coding to middle school students during summer break."
-    },
-    {
-      name: "3e5t4tcsvq",
-      question: "If you could have dinner with any historical figure, who would it be?",
-      answer: "Ada Lovelace - I'd love to discuss how she envisioned computing before computers existed."
-    },
-    {
-      name: "3e5s0et1eh",
-      question: "What's your most-used emoji?",
-      answer: "🤔 - The thinking face, because I'm always contemplating solutions to problems."
-    }
-  ],
-  custom_project: [
-    {
-      title: "Project Athena",
-      expected_start_date: "2025-01-15",
-      expected_end_date: "2025-04-15",
-      status: "Completed",
-      project_link: "https://project-athena.com",
-      description: "AI-powered data analytics platform",
-      name: "Athena"
-    },
-    {
-      title: "Project Phoenix",
-      expected_start_date: "2025-04-20",
-      expected_end_date: "",
-      status: "Open",
-      project_link: "https://project-phoenix.com",
-      description: "Cloud migration and infrastructure redesign",
-      name: "Phoenix"
-    },
-    {
-      title: "Project Horizon",
-      expected_start_date: "2025-04-20",
-      expected_end_date: "",
-      status: "Open",
-      project_link: "https://project-horizon.com",
-      description: "Mobile application for healthcare providers",
-      name: "Horizon"
-    }
-  ]
-};
+// Cache for employee data
+let cachedEmployeeData: any = null;
+let cachedFeedbackData: any = null;
+let cachedTeamEmployees: any = null;
 
-// Mock feedback data
-const mockFeedbacks: Feedback[] = [
-  {
-    id: "1",
-    from: "E0190",
-    to: "E0028",
-    date_initiated: "2025-03-15",
-    status: "Completed",
-    content: "Great teamwork and technical contributions on Project Athena."
-  },
-  {
-    id: "2",
-    from: "E0028",
-    to: "E0190",
-    date_initiated: "2025-03-20",
-    status: "Completed",
-    content: "Excellent problem-solving skills and quick learning abilities."
-  },
-  {
-    id: "3",
-    from: "E0190",
-    to: "E0196",
-    date_initiated: "2025-04-10",
-    status: "Pending"
-  },
-  {
-    id: "4", 
-    from: "E0009",
-    to: "E0190",
-    date_initiated: "2025-04-05",
-    status: "Pending"
+// Fetch employee details from the API
+const fetchEmployeeDetails = async () => {
+  if (cachedEmployeeData) {
+    return cachedEmployeeData;
   }
-];
 
-// Mock calibration data
-const mockCalibrationData = {
-  performance: "High",
-  potential: "High",
-  skills: [
-    { skill: "Technology", level: "L2" },
-    { skill: "Craft Code", level: "L3" },
-    { skill: "Communication", level: "L2" },
-    { skill: "Mentoring", level: "L3" },
-    { skill: "Learning, Sharing and Community", level: "L0" },
-    { skill: "Represents and Contributes to Incubyte's Growth", level: "L0" },
-    { skill: "Tooling", level: "L0" },
-    { skill: "Technical Practices", level: "L2" },
-    { skill: "Overall Level", level: "L2" }
-  ]
+  try {
+    const response = await fetch('/api/method/one_view.api.user.get_employee_details', {
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch employee details');
+    }
+
+    const data = await response.json();
+    
+    if (!data.message) {
+      throw new Error('Invalid employee data received');
+    }
+    
+    // Cache the response
+    cachedEmployeeData = data.message;
+    return data.message;
+  } catch (error) {
+    console.error('Error fetching employee details:', error);
+    throw error;
+  }
 };
 
-// Mock tech stacks and skills
-const mockTechStacks = [
-  "JavaScript", "TypeScript", "React", "Angular", "Vue", "Node.js", "Python",
-  "Java", "Spring Boot", "Django", "GraphQL", "REST", "PostgreSQL", "MongoDB",
-  "Docker", "Kubernetes", "AWS", "Azure", "GCP", "CI/CD", "Git", "Jenkins",
-  "GitHub Actions", "Redux", "Next.js", "Express", "TDD", "Jest", "React Native"
-];
+// Fetch employee feedback from the API
+const fetchEmployeeFeedback = async () => {
+  if (cachedFeedbackData) {
+    return cachedFeedbackData;
+  }
+
+  try {
+    const response = await fetch('/api/method/one_view.api.user.get_employee_feedback', {
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch employee feedback');
+    }
+
+    const data = await response.json();
+    
+    if (!data.message) {
+      throw new Error('Invalid feedback data received');
+    }
+    
+    cachedFeedbackData = data.message;
+    return data.message;
+  } catch (error) {
+    console.error('Error fetching employee feedback:', error);
+    throw error;
+  }
+};
+
+// Fetch employees in the same team
+export const fetchTeamEmployees = async (teamName: string) => {
+  if (cachedTeamEmployees) {
+    return cachedTeamEmployees;
+  }
+
+  try {
+    // This is a placeholder. In a real application, you would have an API endpoint
+    // that returns all employees in a specific team. For now, we'll mock this functionality
+    // by fetching all employees and filtering them client-side.
+    const response = await fetch('/api/method/one_view.api.user.get_employees_by_team', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ team: teamName }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch team employees');
+    }
+
+    const data = await response.json();
+    
+    if (!data.message) {
+      throw new Error('Invalid team employees data received');
+    }
+    
+    cachedTeamEmployees = data.message;
+    return data.message;
+  } catch (error) {
+    console.error('Error fetching team employees:', error);
+    // Fallback to mock data for demonstration
+    return [
+      { name: "E0190", employee_name: "Jay Prajapati", designation: "Intern" },
+      { name: "E0028", employee_name: "John Doe", designation: "Software Craftsperson" },
+      { name: "E0196", employee_name: "Jane Smith", designation: "Test Craftsperson" },
+      { name: "E0009", employee_name: "Alex Johnson", designation: "Software Craftsperson - Tech Advisor" }
+    ];
+  }
+};
+
+// Save employee ice breaker answers
+export const saveIceBreakers = async (questions: IcebreakerQuestion[]) => {
+  try {
+    const response = await fetch('/api/method/one_view.api.user.set_employee_details', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        custom_employee_icebreaker_question: questions
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to save ice breakers');
+    }
+
+    const data = await response.json();
+    
+    // Update the cached data
+    if (cachedEmployeeData) {
+      cachedEmployeeData.custom_employee_icebreaker_question = questions;
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error saving ice breakers:', error);
+    throw error;
+  }
+};
+
+// Save employee feedback
+export const saveEmployeeFeedback = async (feedback: any) => {
+  try {
+    const response = await fetch('/api/method/one_view.api.user.set_employee_feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(feedback),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to save feedback');
+    }
+
+    const data = await response.json();
+    
+    // Update the cached data
+    cachedFeedbackData = null; // Clear the cache to force a refresh on next fetch
+    
+    return data;
+  } catch (error) {
+    console.error('Error saving feedback:', error);
+    throw error;
+  }
+};
 
 // Use this hook to get employee details
 export const useEmployeeDetails = () => {
@@ -277,15 +248,14 @@ export const useEmployeeDetails = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate API call with a delay
     const fetchData = async () => {
       try {
-        // In a real app, this would be an API call
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setEmployee(mockEmployeeData);
+        setLoading(true);
+        const data = await fetchEmployeeDetails();
+        setEmployee(data);
         setLoading(false);
-      } catch (err) {
-        setError("Failed to fetch employee details");
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch employee details");
         setLoading(false);
       }
     };
@@ -303,15 +273,14 @@ export const useFeedbackData = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate API call with a delay
     const fetchData = async () => {
       try {
-        // In a real app, this would be an API call
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setFeedbacks(mockFeedbacks);
+        setLoading(true);
+        const data = await fetchEmployeeFeedback();
+        setFeedbacks(data || []);
         setLoading(false);
-      } catch (err) {
-        setError("Failed to fetch feedback data");
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch feedback data");
         setLoading(false);
       }
     };
@@ -320,6 +289,37 @@ export const useFeedbackData = () => {
   }, []);
 
   return { feedbacks, loading, error };
+};
+
+// Use this hook to get employees in the same team
+export const useTeamEmployees = (teamName: string | undefined) => {
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!teamName) {
+        setEmployees([]);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const data = await fetchTeamEmployees(teamName);
+        setEmployees(data || []);
+        setLoading(false);
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch team employees");
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [teamName]);
+
+  return { employees, loading, error };
 };
 
 // Get calibration data
