@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
 
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 const socialPlatforms = [
   { id: "linkedin", name: "LinkedIn", icon: Linkedin },
   { id: "github", name: "GitHub", icon: Github },
@@ -23,6 +25,7 @@ const socialPlatforms = [
 
 const ProfileHeader = () => {
   const { employee, loading } = useEmployeeDetails();
+  console.log("Employee platforms are:", employee);
   const [editingSocial, setEditingSocial] = useState<string | null>(null);
   const [newUrl, setNewUrl] = useState("");
   
@@ -64,12 +67,13 @@ const ProfileHeader = () => {
       );
       
       // Call set_employee_details API here
-      await fetch('/api/method/one_view.api.user.set_employee_details', {
+      await fetch(`${BASE_URL}user.set_employee_details`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           custom_platforms: updatedPlatforms
         }),
+      credentials: 'include'
       });
       
       toast({
@@ -105,7 +109,6 @@ const ProfileHeader = () => {
       if (!platformInfo) return;
       
       const newPlatform = {
-        name: `${selectedPlatform}-${Date.now()}`, // Generate unique name
         platform_name: platformInfo.name,
         url: platformUrl
       };
@@ -113,12 +116,13 @@ const ProfileHeader = () => {
       const updatedPlatforms = [...employee.custom_platforms, newPlatform];
       
       // Call set_employee_details API here
-      await fetch('/api/method/one_view.api.user.set_employee_details', {
+      await fetch(`${BASE_URL}user.set_employee_details`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           custom_platforms: updatedPlatforms
         }),
+      credentials: 'include'
       });
       
       toast({
@@ -309,7 +313,7 @@ const ProfileHeader = () => {
               <div className="flex items-start gap-2 text-sm text-gray-600 sm:col-span-2">
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <span>
-                  {employee.current_address}, {employee.custom_city}, {employee.custom_state} - {employee.custom_pin}
+                  {employee.custom_city}, {employee.custom_state}
                 </span>
               </div>
             </div>

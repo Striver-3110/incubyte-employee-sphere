@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 
 // Extracted base URL as a separate constant
-const BASE_URL = import.meta.env.VITE_SOCKET_PORT;
+const BASE_URL = import.meta.env.VITE_BASE_URL
 
 export interface PlatformLink {
   name: string;
