@@ -1,6 +1,6 @@
 
 import { useEmployeeDetails } from "@/api/employeeService";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash } from "lucide-react";
@@ -20,10 +20,12 @@ const CreativePursuits = () => {
   const [newPursuit, setNewPursuit] = useState("");
   const [pursuits, setPursuits] = useState<PassionateAbout[]>([]);
   
-  // When employee data loads, initialize pursuits state
-  if (!loading && employee && pursuits.length === 0) {
-    setPursuits(employee.custom_passionate_about || []);
-  }
+  // Use useEffect to set pursuits state when employee data loads
+  useEffect(() => {
+    if (!loading && employee?.custom_passionate_about) {
+      setPursuits(employee.custom_passionate_about);
+    }
+  }, [loading, employee]);
 
   const handleAddPursuit = () => {
     if (newPursuit.trim()) {

@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -90,6 +90,18 @@ const IceBreakersForm = ({
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [answer, setAnswer] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Initialize questions with predefined ones if needed
+  useEffect(() => {
+    if (questions.length === 0 && currentQuestions.length === 0 && currentIndex === 0) {
+      const initialQuestions = predefinedQuestions.map((q, index) => ({
+        name: `q_${index}`,
+        question: q,
+        answer: ""
+      }));
+      setCurrentQuestions(initialQuestions);
+    }
+  }, [questions, predefinedQuestions, currentQuestions.length, currentIndex]);
 
   // Handle start/restart
   const handleStart = () => {
