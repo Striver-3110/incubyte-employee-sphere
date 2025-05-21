@@ -164,7 +164,7 @@ const IceBreakersForm = ({
   };
 
   // Handle save edit
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (editingIndex !== null) {
       const updatedQuestions = [...currentQuestions];
       updatedQuestions[editingIndex] = {
@@ -172,9 +172,23 @@ const IceBreakersForm = ({
         answer: answer
       };
       setCurrentQuestions(updatedQuestions);
+      
+      // Save the updates to the server
+      setIsSubmitting(true);
+      try {
+        // Filter out questions that have answers
+        const answeredQuestions = updatedQuestions.filter(q => q.answer.trim() !== "");
+        await saveIceBreakers(answeredQuestions);
+        toast.success("Answer updated successfully!");
+      } catch (error) {
+        toast.error("Failed to update answer");
+        console.error("Error saving edited answer:", error);
+      } finally {
+        setIsSubmitting(false);
+      }
+      
       setEditingIndex(null);
       setAnswer("");
-      toast.success("Answer updated");
     }
   };
 
@@ -304,9 +318,9 @@ const IceBreakersForm = ({
           </Button>
           <Button 
             onClick={handleSaveEdit}
-            disabled={answer.trim() === ""}
+            disabled={answer.trim() === "" || isSubmitting}
           >
-            Save
+            {isSubmitting ? "Saving..." : "Save"}
           </Button>
         </div>
       </div>
@@ -345,7 +359,7 @@ const IceBreakersForm = ({
               onClick={handleSubmit}
               disabled={isSubmitting}
             >
-              Submit
+              {isSubmitting ? "Submitting..." : "Submit"}
             </Button>
           )}
           <Button 
