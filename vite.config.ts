@@ -19,4 +19,16 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+		outDir: '../incubyte_customizations/public/one_view',
+		rollupOptions: {
+			output: {
+				entryFileNames: '[name].js',
+				chunkFileNames: '[name]-[hash].js',
+				assetFileNames: "[name].[ext]"
+			}
+		},
+		emptyOutDir: true,
+		target: 'es2015',
+	},
 }));
