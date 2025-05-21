@@ -1,3 +1,4 @@
+
 // API service for employee data
 import { useState, useEffect } from 'react';
 
@@ -82,6 +83,50 @@ export interface EmployeeDetails {
   custom_state: string;
   custom_pin: string;
 }
+
+// Mock data for calibration
+const mockCalibrationData: Calibration = {
+  performance: 'High',
+  potential: 'Medium',
+  skills: [
+    { skill: 'JavaScript', level: 'L4' },
+    { skill: 'React', level: 'L3' },
+    { skill: 'TypeScript', level: 'L3' },
+    { skill: 'Node.js', level: 'L2' },
+    { skill: 'Testing', level: 'L2' },
+    { skill: 'Database Design', level: 'L3' },
+  ]
+};
+
+// Mock data for tech stacks
+const mockTechStacks: string[] = [
+  'JavaScript',
+  'TypeScript',
+  'React',
+  'Angular',
+  'Vue',
+  'Node.js',
+  'Express',
+  'MongoDB',
+  'PostgreSQL',
+  'Redis',
+  'AWS',
+  'Docker',
+  'Kubernetes',
+  'GraphQL',
+  'REST API',
+  'HTML',
+  'CSS',
+  'Sass',
+  'Tailwind CSS',
+  'Jest',
+  'React Testing Library',
+  'Cypress',
+  'Jenkins',
+  'Git',
+  'GitHub Actions',
+  'CircleCI',
+];
 
 // Cache for employee data
 let cachedEmployeeData: any = null;
