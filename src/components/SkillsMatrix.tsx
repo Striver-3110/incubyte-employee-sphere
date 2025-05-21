@@ -1,3 +1,4 @@
+
 import { useEmployeeDetails, useAvailableTechStacks } from "@/api/employeeService";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -23,25 +24,6 @@ import { isTechnicalRole } from "@/utils/roleUtils";
 
 const proficiencyLevels = ["Expert", "Intermediate", "Beginner", "Learning"];
 
-// Check if employee is in a technical role
-const isTechnicalRole = (designation: string | undefined) => {
-  if (!designation) return false;
-  
-  const technicalRoles = [
-    'Software Craftsperson',
-    'Software Craftsperson - Tech Lead',
-    'Software Craftsperson - Tech Advisor',
-    'AI Craftsperson',
-    'Test Craftsperson',
-    'Test Craftsperson (Manual)',
-    'Test Craftsperson (Automation)',
-    'BQA',
-    'Intern'
-  ];
-  
-  return technicalRoles.includes(designation);
-};
-
 const SkillsMatrix = () => {
   const { employee, loading } = useEmployeeDetails();
   const { techStacks, loading: loadingTechStacks } = useAvailableTechStacks();
@@ -60,7 +42,7 @@ const SkillsMatrix = () => {
     }
   }, [loading, employee, skills.length]);
   
-  const isTechnical = isTechnicalRole(employee?.designation);
+  const isTechnical = employee ? isTechnicalRole(employee.designation) : false;
   const componentTitle = isTechnical ? "Tech Stack" : "Competency Map";
   
   const groupedSkills = skills.reduce((acc: Record<string, TechStack[]>, skill) => {
