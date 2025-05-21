@@ -1,6 +1,6 @@
 
 import { useEmployeeDetails, useAvailableTechStacks } from "@/api/employeeService";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash } from "lucide-react";
@@ -53,10 +53,12 @@ const SkillsMatrix = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isNewSkill, setIsNewSkill] = useState(false);
   
-  // Initialize skills when employee data loads
-  if (!loading && employee && skills.length === 0) {
-    setSkills(employee.custom_tech_stack || []);
-  }
+  // Use useEffect to initialize skills when employee data loads
+  useEffect(() => {
+    if (!loading && employee?.custom_tech_stack && skills.length === 0) {
+      setSkills(employee.custom_tech_stack);
+    }
+  }, [loading, employee, skills.length]);
   
   const isTechnical = isTechnicalRole(employee?.designation);
   const componentTitle = isTechnical ? "Tech Stack" : "Competency Map";
