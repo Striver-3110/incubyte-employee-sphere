@@ -1,4 +1,3 @@
-
 import { useEmployeeDetails, useAvailableTechStacks } from "@/api/employeeService";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TechStack } from "@/api/employeeService";
+import { isTechnicalRole } from "@/utils/roleUtils";
 
 const proficiencyLevels = ["Expert", "Intermediate", "Beginner", "Learning"];
 
@@ -160,18 +160,18 @@ const SkillsMatrix = () => {
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Add {selectedCategory} Skill</DialogTitle>
+            <DialogTitle>Add {selectedCategory} {isTechnical ? "Skill" : "Competency"}</DialogTitle>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div>
-              <label className="text-sm font-medium mb-1 block">Search Skills</label>
+              <label className="text-sm font-medium mb-1 block">Search {isTechnical ? "Skills" : "Competencies"}</label>
               <Input 
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
                   setIsNewSkill(true);
                 }}
-                placeholder="Type to search or enter a new skill"
+                placeholder={`Type to search or enter a new ${isTechnical ? "skill" : "competency"}`}
               />
             </div>
             
@@ -195,7 +195,7 @@ const SkillsMatrix = () => {
                   </div>
                 ) : (
                   <div className="p-2 text-sm text-gray-600">
-                    No matching skills. You can add "{searchTerm}" as a new skill.
+                    No matching {isTechnical ? "skills" : "competencies"}. You can add "{searchTerm}" as a new {isTechnical ? "skill" : "competency"}.
                   </div>
                 )}
               </div>

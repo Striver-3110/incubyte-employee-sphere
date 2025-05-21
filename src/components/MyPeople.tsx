@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { shouldShowTechAdvisor, isTechnicalRole } from "@/utils/roleUtils";
 
 interface PeopleItemProps {
   label: string;
@@ -28,12 +29,11 @@ const MyPeople = () => {
   
   const loading = employeeLoading || teamLoading;
   
-  // Check if the employee is in a technical role based on designation
-  const isTechnicalRole = employee && 
-    ['Software Craftsperson', 'Software Craftsperson - Tech Lead', 
-     'Software Craftsperson - Tech Advisor', 'AI Craftsperson', 
-     'Test Craftsperson', 'Test Craftsperson (Manual)', 
-     'Test Craftsperson (Automation)', 'BQA', 'Intern'].includes(employee.designation);
+  // Check if the employee is in a technical role based on role utils
+  const isTechnical = employee ? isTechnicalRole(employee.designation) : false;
+  
+  // Check if tech advisor should be shown
+  const showTechAdvisor = employee ? shouldShowTechAdvisor(employee.designation) : false;
   
   // Check if the employee is a co-founder
   const isCoFounder = employee && employee.designation === 'Co-Founder';
@@ -64,8 +64,8 @@ const MyPeople = () => {
           <PeopleItem label="Lead" value={employee.custom_tech_lead || ""} />
           <PeopleItem label="Buddy" value={employee.custom_buddy || ""} />
           
-          {/* Only show Tech Advisor for technical roles */}
-          {isTechnicalRole && (
+          {/* Only show Tech Advisor for technical roles and not PSM/Business */}
+          {showTechAdvisor && (
             <PeopleItem label="Tech Advisor" value={employee.custom_tech_advisor || ""} />
           )}
         </div>
