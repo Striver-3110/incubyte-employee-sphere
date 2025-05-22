@@ -1,7 +1,6 @@
-
 import { useEmployeeDetails } from "@/api/employeeService";
 import { calculateTenure, formatDate } from "@/utils/dateUtils";
-import { Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, Plus, Save } from "lucide-react";
+import { Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, Plus, Save, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,12 +24,13 @@ const socialPlatforms = [
 
 const ProfileHeader = () => {
   const { employee, loading } = useEmployeeDetails();
-  console.log("Employee platforms are:", employee);
   const [editingSocial, setEditingSocial] = useState<string | null>(null);
   const [newUrl, setNewUrl] = useState("");
-  
-  // New states for adding platforms
+  const [processingPlatform, setProcessingPlatform] = useState<string | null>(null); // Tracks the platform being edited or deleted
+
+  // States for adding platforms
   const [isAddingPlatform, setIsAddingPlatform] = useState(false);
+  const [isAddingPlatformLoading, setIsAddingPlatformLoading] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState("");
   const [platformUrl, setPlatformUrl] = useState("");
 
@@ -58,29 +58,25 @@ const ProfileHeader = () => {
 
   const handleSaveSocial = async (platformId: string) => {
     try {
-      // In a real app, this would update the URL via an API call
-      console.log(`Updated ${platformId} to ${newUrl}`);
-      
-      // Mock API call for now
-      const updatedPlatforms = employee.custom_platforms.map(platform => 
+      setProcessingPlatform(platformId); // Disable buttons for this platform
+      const updatedPlatforms = employee.custom_platforms.map((platform) =>
         platform.name === platformId ? { ...platform, url: newUrl } : platform
       );
-      
-      // Call set_employee_details API here
+
       await fetch(`${BASE_URL}user.set_employee_details`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          custom_platforms: updatedPlatforms
+          custom_platforms: updatedPlatforms,
         }),
-      credentials: 'include'
+        credentials: "include",
       });
-      
+
       toast({
         title: "Success",
         description: "Platform link updated successfully",
       });
-      
+
       setEditingSocial(null);
       setNewUrl("");
     } catch (error) {
@@ -90,7 +86,16 @@ const ProfileHeader = () => {
         description: "Failed to update platform link",
         variant: "destructive",
       });
+    } finally {
+      setProcessingPlatform(null); // Re-enable buttons
     }
+  };
+
+  const getAvailablePlatforms = () => {
+    const addedPlatforms = employee.custom_platforms.map((p) =>
+      p.platform_name.toLowerCase()
+    );
+    return socialPlatforms.filter((platform) => !addedPlatforms.includes(platform.name.toLowerCase()));
   };
 
   const handleAddPlatform = async () => {
@@ -102,39 +107,37 @@ const ProfileHeader = () => {
       });
       return;
     }
-    
+
     try {
-      const platformInfo = socialPlatforms.find(p => p.id === selectedPlatform);
-      
+      setIsAddingPlatformLoading(true);
+      const platformInfo = socialPlatforms.find((p) => p.id === selectedPlatform);
+
       if (!platformInfo) return;
-      
+
       const newPlatform = {
         platform_name: platformInfo.name,
-        url: platformUrl
+        url: platformUrl,
       };
-      
+
       const updatedPlatforms = [...employee.custom_platforms, newPlatform];
-      
-      // Call set_employee_details API here
+
       await fetch(`${BASE_URL}user.set_employee_details`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          custom_platforms: updatedPlatforms
+          custom_platforms: updatedPlatforms,
         }),
-      credentials: 'include'
+        credentials: "include",
       });
-      
+
       toast({
         title: "Success",
         description: "Platform added successfully",
       });
-      
+
       setIsAddingPlatform(false);
       setSelectedPlatform("");
       setPlatformUrl("");
-      
-      // Refresh the page to get the updated data
       window.location.reload();
     } catch (error) {
       console.error("Error adding platform:", error);
@@ -143,6 +146,42 @@ const ProfileHeader = () => {
         description: "Failed to add platform",
         variant: "destructive",
       });
+    } finally {
+      setIsAddingPlatformLoading(false);
+    }
+  };
+
+  const handleDeletePlatform = async (platformName: string) => {
+    try {
+      setProcessingPlatform(platformName); // Disable buttons for this platform
+      const updatedPlatforms = employee.custom_platforms.map((platform) =>
+        platform.platform_name === platformName ? { ...platform, url: "" } : platform
+      );
+
+      await fetch(`${BASE_URL}user.set_employee_details`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          custom_platforms: updatedPlatforms,
+        }),
+        credentials: "include",
+      });
+
+      toast({
+        title: "Success",
+        description: "Platform deleted successfully",
+      });
+
+      window.location.reload();
+    } catch (error) {
+      console.error("Error deleting platform:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete platform",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingPlatform(null); // Re-enable buttons
     }
   };
 
@@ -157,6 +196,8 @@ const ProfileHeader = () => {
     setPlatformUrl("");
   };
 
+  const availablePlatforms = getAvailablePlatforms();
+
   return (
     <div className="w-full bg-white rounded-lg shadow-md overflow-hidden">
       <div className="p-6 sm:p-8">
@@ -164,20 +205,20 @@ const ProfileHeader = () => {
           {/* Profile Image */}
           <div className="flex-shrink-0">
             <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-gray-100 shadow-inner">
-              <img 
-                src="/placeholder.svg" 
-                alt={employee.employee_name} 
+              <img
+                src="/placeholder.svg"
+                alt={employee.employee_name}
                 className="w-full h-full object-cover"
               />
             </div>
           </div>
-          
+
           {/* Profile Details */}
           <div className="flex flex-col flex-grow">
             <div className="mb-4">
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">{employee.employee_name}</h1>
               <p className="text-sm sm:text-base font-medium text-blue-600 mt-1">{employee.designation}</p>
-              
+
               <div className="flex items-center mt-2 text-gray-600 text-sm">
                 <span>Joined {formatDate(employee.date_of_joining)}</span>
                 <span className="mx-2">•</span>
@@ -191,106 +232,125 @@ const ProfileHeader = () => {
                 <div key={platform.name} className="flex items-center">
                   {editingSocial === platform.name ? (
                     <div className="flex items-center space-x-2">
-                      <Input 
-                        value={newUrl} 
-                        onChange={(e) => setNewUrl(e.target.value)} 
+                      <Input
+                        value={newUrl}
+                        onChange={(e) => setNewUrl(e.target.value)}
                         className="h-8 w-48"
+                        disabled={!!processingPlatform} // Disable input if processing
                       />
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleSaveSocial(platform.name)}
                         className="h-8 w-8"
+                        disabled={!!processingPlatform}
                       >
                         <Check className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={handleCancelEdit}
                         className="h-8 w-8"
+                        disabled={!!processingPlatform}
                       >
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
                   ) : (
                     <>
-                      <a 
-                        href={platform.url} 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
+                      <a
+                        href={platform.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
                       >
                         {getPlatformIcon(platform.platform_name.toLowerCase())}
                         <span>{platform.platform_name}</span>
                       </a>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleEditSocial(platform.name, platform.url)}
                         className="h-6 w-6 ml-1"
+                        disabled={processingPlatform === platform.name} // Disable button if processing
                       >
                         <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeletePlatform(platform.platform_name)}
+                        className="h-6 w-6 ml-1 text-red-500"
+                        disabled={processingPlatform === platform.name} // Disable button if processing
+                      >
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                     </>
                   )}
                 </div>
               ))}
-              
+
               {/* Add Platform Button & Form */}
-              {!isAddingPlatform ? (
-                <Button 
-                  variant="outline" 
+              {availablePlatforms.length > 0 && !isAddingPlatform && (
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => setIsAddingPlatform(true)}
                   className="flex items-center gap-1"
                 >
                   <Plus className="h-3 w-3" /> Add Platform
                 </Button>
+              )}
+
+              {isAddingPlatformLoading ? (
+                <Skeleton className="h-8 w-48" />
               ) : (
-                <div className="flex flex-wrap items-center gap-2 p-2 border rounded-md bg-gray-50">
-                  <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
-                    <SelectTrigger className="w-[120px] h-8">
-                      <SelectValue placeholder="Platform" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {socialPlatforms.map((platform) => (
-                        <SelectItem key={platform.id} value={platform.id}>
-                          <div className="flex items-center gap-2">
-                            <platform.icon className="h-4 w-4" />
-                            <span>{platform.name}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  <Input 
-                    placeholder="Enter URL" 
-                    value={platformUrl}
-                    onChange={(e) => setPlatformUrl(e.target.value)}
-                    className="h-8 w-48"
-                  />
-                  
-                  <div className="flex gap-1">
-                    <Button 
-                      size="sm" 
-                      variant="default" 
-                      onClick={handleAddPlatform}
-                      className="h-8"
-                    >
-                      <Save className="h-3 w-3 mr-1" /> Save
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={handleCancelAddPlatform}
-                      className="h-8"
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
+                isAddingPlatform && (
+                  <div className="flex flex-wrap items-center gap-2 p-2 border rounded-md bg-gray-50">
+                    <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
+                      <SelectTrigger className="w-[120px] h-8">
+                        <SelectValue placeholder="Platform" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availablePlatforms.map((platform) => (
+                          <SelectItem key={platform.id} value={platform.id}>
+                            <div className="flex items-center gap-2">
+                              <platform.icon className="h-4 w-4" />
+                              <span>{platform.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <Input
+                      placeholder="Enter URL"
+                      value={platformUrl}
+                      onChange={(e) => setPlatformUrl(e.target.value)}
+                      className="h-8 w-48"
+                    />
+
+                    <div className="flex gap-1">
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={handleAddPlatform}
+                        className="h-8"
+                      >
+                        <Save className="h-3 w-3 mr-1" /> Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleCancelAddPlatform}
+                        className="h-8"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                )
               )}
             </div>
 
@@ -302,14 +362,14 @@ const ProfileHeader = () => {
                   {employee.company_email}
                 </a>
               </div>
-              
+
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Phone className="h-4 w-4" />
                 <a href={`tel:${employee.cell_number}`} className="hover:underline">
                   {employee.cell_number}
                 </a>
               </div>
-              
+
               <div className="flex items-start gap-2 text-sm text-gray-600 sm:col-span-2">
                 <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                 <span>
