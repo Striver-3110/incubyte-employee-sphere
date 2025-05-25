@@ -12,7 +12,7 @@ const Modal = ({ open, onClose, children, title }: ModalProps) => {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg w-11/12 max-w-lg">
+      <div className="bg-white rounded-lg shadow-lg">
         {title && (
           <div className="flex justify-between items-center p-4 border-b">
             <h2 className="text-lg font-semibold">{title}</h2>

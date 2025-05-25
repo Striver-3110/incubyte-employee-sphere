@@ -11,6 +11,7 @@ const CalibrationSection = ({employeeCalibration}) => {
 
   // Use the passed employeeCalibration if available, otherwise use the current user's calibration
   const calibrationData = employeeCalibration || calibration;
+  console.log(calibrationData)
   const isLoading = !employeeCalibration && loading;
 
   if (isLoading || !calibrationData) {
@@ -36,9 +37,9 @@ const CalibrationSection = ({employeeCalibration}) => {
 
   // Matrix cell titles
   const matrixCellTitles = [
-    ["Trusted Professional", "High Impact Performer", "Future Leader"],
-    ["Effective", "Core Employee", "Growth Employee"],
-    ["Under Performer", "Dilemma", "Enigma"],
+    ["Enigma", "Growth Employee", "Future Leader"],
+    ["Dilemma", "Core Employee", "High Impact Performer"],
+    ["Under Performer", "Effective", "Trusted Professional"],
   ];
 
   // Background colors for the grid cells

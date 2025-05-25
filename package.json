@@ -8,7 +8,8 @@
     "build": "vite build --base=/assets/incubyte_customizations/one_view/ && yarn copy-html-entry",
     "lint": "eslint .",
     "preview": "vite preview",
-    "copy-html-entry": "cp ../incubyte_customizations/public/one_view/index.html ../incubyte_customizations/www/one_view.html"
+    "copy-html-entry": "cp ../incubyte_customizations/public/one_view/index.html ../incubyte_customizations/www/one_view.html",
+    "build:dev": "vite build --mode development"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
