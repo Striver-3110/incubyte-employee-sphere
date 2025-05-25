@@ -29,6 +29,8 @@ export interface IcebreakerQuestion {
 
 export interface Project {
   title: string;
+  pod: string;
+  role: string;
   expected_start_date: string;
   expected_end_date: string;
   status: string;
@@ -45,7 +47,8 @@ export interface CalibrationSkill {
 export interface Calibration {
   performance: string;
   potential: string;
-  skills: CalibrationSkill[];
+  calibration_skill_categories: CalibrationSkill[];
+  modified: string;
 }
 
 export interface Feedback {
@@ -90,7 +93,8 @@ export interface EmployeeDetails {
 const mockCalibrationData: Calibration = {
   performance: 'High',
   potential: 'Medium',
-  skills: [
+  modified: '2025-01-06T12:00:00Z',
+  calibration_skill_categories: [
     { skill: 'JavaScript', level: 'L4' },
     { skill: 'React', level: 'L3' },
     { skill: 'TypeScript', level: 'L3' },
@@ -224,7 +228,7 @@ const fetchEmployeeFeedback = async () => {
 };
 
 // Fetch employees in the same team
-export const fetchTeamEmployees = async (teamName: string) => {
+export const fetchTeamEmployees = async () => {
   if (cachedTeamEmployees) {
     return cachedTeamEmployees;
   }
@@ -233,10 +237,10 @@ export const fetchTeamEmployees = async (teamName: string) => {
     // This is a placeholder. In a real application, you would have an API endpoint
     // that returns all employees in a specific team. For now, we'll mock this functionality
     // by fetching all employees and filtering them client-side.
-    const response = await fetch(`${BASE_URL}user.get_employees_by_team`, {
+    const response = await fetch(`${BASE_URL}user.get_team_employees`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ team: teamName }),
+      credentials: "include",
     });
 
     if (!response.ok) {
@@ -250,7 +254,8 @@ export const fetchTeamEmployees = async (teamName: string) => {
     }
 
     cachedTeamEmployees = data.message;
-    return data.message;
+    console.log('Team Employees:', data.message);
+    return data.message.data;
   } catch (error) {
     console.error('Error fetching team employees:', error);
     // Fallback to mock data for demonstration
@@ -316,7 +321,6 @@ export const saveEmployeeFeedback = async (feedback: any) => {
     throw error;
   }
 };
-
 // Use this hook to get employee details
 export const useEmployeeDetails = () => {
   const [employee, setEmployee] = useState<EmployeeDetails | null>(null);
@@ -339,7 +343,7 @@ export const useEmployeeDetails = () => {
     fetchData();
   }, []);
 
-  return { employee, loading, error };
+  return { employee, loading, error, setEmployee };
 };
 
 // Get feedback data
@@ -368,22 +372,17 @@ export const useFeedbackData = () => {
 };
 
 // Use this hook to get employees in the same team
-export const useTeamEmployees = (teamName: string | undefined) => {
+export const useTeamEmployees = () => {
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!teamName) {
-        setEmployees([]);
-        setLoading(false);
-        return;
-      }
-
+  
       try {
         setLoading(true);
-        const data = await fetchTeamEmployees(teamName);
+        const data = await fetchTeamEmployees();
         setEmployees(data || []);
         setLoading(false);
       } catch (err: any) {
@@ -393,7 +392,7 @@ export const useTeamEmployees = (teamName: string | undefined) => {
     };
 
     fetchData();
-  }, [teamName]);
+  }, []);
 
   return { employees, loading, error };
 };
@@ -405,15 +404,19 @@ export const useCalibrationData = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Simulate API call with a delay
     const fetchData = async () => {
       try {
-        // In a real app, this would be an API call
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setCalibration(mockCalibrationData);
-        setLoading(false);
+        const response = await fetch(`${BASE_URL}user.get_calibration_for_employee`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+          });
+          const data = await response.json();
+          console.log("Calibration data: ",data)
+        setCalibration(data.message.data || mockCalibrationData);
       } catch (err: any) {
         setError("Failed to fetch calibration data");
+      } finally {
         setLoading(false);
       }
     };
@@ -422,6 +425,46 @@ export const useCalibrationData = () => {
   }, []);
 
   return { calibration, loading, error };
+};
+
+export const useCalibrationDataForAllEmployees = () => {
+  const [calibrationDataForAllEmployees, setCalibrationDataForAllEmployees] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCalibrationData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`${BASE_URL}user.get_calibrations_for_active_employees`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include'
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch calibration data for all employees");
+        }
+
+        const data = await response.json();
+        console.log("Calibration data for all employees: ", data.message.data);
+
+        if (!data || !data.message) {
+          throw new Error("Invalid calibration data received");
+        }
+
+        setCalibrationDataForAllEmployees(data.message.data); // Set calibration data for all employees
+      } catch (err: any) {
+        setError(err.message || "Failed to fetch calibration data for all employees");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCalibrationData();
+  }, []);
+
+  return { calibrationDataForAllEmployees, loading, error };
 };
 
 // Get available tech stacks

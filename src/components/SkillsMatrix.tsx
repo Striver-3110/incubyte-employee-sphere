@@ -1,6 +1,5 @@
-
-import { useEmployeeDetails, useAvailableTechStacks } from "@/api/employeeService";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useEmployeeDetails } from "@/api/employeeService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash } from "lucide-react";
@@ -19,78 +18,141 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TechStack } from "@/api/employeeService";
-import { isTechnicalRole } from "@/utils/roleUtils";
+import { toast } from "sonner";
 
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 const proficiencyLevels = ["Expert", "Intermediate", "Beginner", "Learning"];
 
 const SkillsMatrix = () => {
-  const { employee, loading } = useEmployeeDetails();
-  const { techStacks, loading: loadingTechStacks } = useAvailableTechStacks();
+  const { employee, loading, setEmployee } = useEmployeeDetails();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [newSkill, setNewSkill] = useState("");
   const [selectedProficiency, setSelectedProficiency] = useState("");
-  const [skills, setSkills] = useState<TechStack[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isNewSkill, setIsNewSkill] = useState(false);
-  
-  // Use useEffect to initialize skills when employee data loads
+  const [availableSkills, setAvailableSkills] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Fetch available skills from the API
   useEffect(() => {
-    if (!loading && employee?.custom_tech_stack && skills.length === 0) {
-      setSkills(employee.custom_tech_stack);
+    const fetchAvailableSkills = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}tech_stack.get_tech_stack_list`, {
+          method: "GET",
+          credentials: "include",
+        });
+        const data = await response.json();
+        setAvailableSkills(data.message.map((item: { skill_name: string }) => item.skill_name));
+      } catch (error) {
+        console.error("Error fetching available skills:", error);
+        toast.error("Failed to fetch available skills.");
+      }
+    };
+
+    fetchAvailableSkills();
+  }, []);
+
+  // Group skills by proficiency level
+  const groupedSkills = employee?.custom_tech_stack?.reduce(
+    (acc: Record<string, typeof employee.custom_tech_stack>, skill) => {
+      const category = skill.proficiency_level;
+      if (!acc[category]) {
+        acc[category] = [];
+      }
+      acc[category].push(skill);
+      return acc;
+    },
+    {}
+  ) || {};
+
+  // Add a new skill
+  const handleAddSkill = async () => {
+    if (!searchTerm || !selectedProficiency) {
+      toast.error("Please fill out all fields.");
+      return;
     }
-  }, [loading, employee, skills.length]);
-  
-  const isTechnical = employee ? isTechnicalRole(employee.designation) : false;
-  const componentTitle = isTechnical ? "Tech Stack" : "Competency Map";
-  
-  const groupedSkills = skills.reduce((acc: Record<string, TechStack[]>, skill) => {
-    const category = skill.proficiency_level;
-    if (!acc[category]) {
-      acc[category] = [];
-    }
-    acc[category].push(skill);
-    return acc;
-  }, {});
-  
-  // Get filtered tech stacks based on search term
-  const filteredTechStacks = techStacks.filter(stack => 
-    stack.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  const handleAddSkill = () => {
-    if ((newSkill || isNewSkill) && selectedProficiency) {
-      const skillToAdd = isNewSkill ? searchTerm : newSkill;
-      
-      if (skillToAdd.trim()) {
-        const newItem: TechStack = {
-          name: `new-${Date.now()}`,
-          skill: skillToAdd.trim(),
-          proficiency_level: selectedProficiency as any
-        };
-        
-        setSkills([...skills, newItem]);
-        setNewSkill("");
+
+    const newSkill = {
+      name: `new-${Date.now()}`,
+      skill: searchTerm.trim(),
+      proficiency_level: selectedProficiency,
+      parent: employee?.name || "",
+      parentfield: "custom_tech_stack",
+      parenttype: "Employee",
+      doctype: "Tech Stack",
+    };
+
+    const updatedSkills = [...(employee?.custom_tech_stack || []), newSkill];
+
+    try {
+      setIsSaving(true);
+      // Call API to save the new skill
+      const response = await fetch(`${BASE_URL}user.set_employee_details`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          custom_tech_stack: updatedSkills,
+        }),
+        credentials: "include",
+      });
+      const data = await response.json();
+
+      if (data.message?.status === "success") {
+        toast.success(data.message.message || "Skill added successfully.");
+        setEmployee((prev) => ({
+          ...prev,
+          custom_tech_stack: data.message.data.custom_tech_stack,
+        }));
+        setIsAddDialogOpen(false);
         setSearchTerm("");
         setSelectedProficiency("");
-        setIsNewSkill(false);
-        setIsAddDialogOpen(false);
-        
-        // In a real app, this would make an API call to save the new skill
+      } else {
+        throw new Error(data.message?.message || "Failed to add skill.");
       }
+    } catch (error) {
+      console.error("Error adding skill:", error);
+      toast.error("Failed to add skill.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleDeleteSkill = (name: string) => {
-    setSkills(skills.filter(s => s.name !== name));
-    // In a real app, this would make an API call to delete the skill
-  };
+  // Delete a skill
+  const handleDeleteSkill = async (name: string) => {
+    const updatedSkills = (employee?.custom_tech_stack || []).map((skill) =>
+      skill.name === name ? { ...skill, skill: "", proficiency_level: "" } : skill
+    );
 
-  const handleOpenAddDialog = (category: string) => {
-    setSelectedCategory(category);
-    setSelectedProficiency(category);
-    setIsAddDialogOpen(true);
+    try {
+      setIsSaving(true);
+      // Call API to delete the skill
+      const response = await fetch(`${BASE_URL}user.set_employee_details`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          custom_tech_stack: updatedSkills,
+        }),
+        credentials: "include",
+      });
+      const data = await response.json();
+
+      if (data.message?.status === "success") {
+        toast.success(data.message.message || "Skill deleted successfully.");
+        setEmployee((prev) => ({
+          ...prev,
+          custom_tech_stack: data.message.data.custom_tech_stack,
+        }));
+      } else {
+        throw new Error(data.message?.message || "Failed to delete skill.");
+      }
+    } catch (error) {
+      console.error("Error deleting skill:", error);
+      toast.error("Failed to delete skill.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (loading) {
@@ -98,33 +160,37 @@ const SkillsMatrix = () => {
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">{componentTitle}</h2>
-      
-      <div className="space-y-6">
+    <div className="bg-white p-6 rounded-lg shadow-md">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-semibold text-gray-800">Skills Matrix</h2>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setIsAddDialogOpen(true)}
+          className="h-8"
+        >
+          <Plus className="h-4 w-4 mr-1" /> Add Skill
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-6">
         {proficiencyLevels.map((level) => (
-          <div key={level} className="space-y-2">
-            <div className="flex justify-between items-center">
-              <h3 className="font-medium text-gray-700">{level}</h3>
-              <Button 
-                onClick={() => handleOpenAddDialog(level)}
-                className="h-8"
-                size="sm"
-              >
-                <Plus className="h-4 w-4 mr-1" /> Add
-              </Button>
-            </div>
-            
+          <div key={level}>
+            <h3 className="text-lg font-medium text-gray-700 mb-3">{level}</h3>
             {groupedSkills[level]?.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              <div className="flex flex-wrap gap-2">
                 {groupedSkills[level].map((skill) => (
-                  <div key={skill.name} className="flex items-center justify-between bg-gray-50 p-3 rounded-md">
-                    <span>{skill.skill}</span>
+                  <div
+                    key={skill.name}
+                    className="flex items-center bg-gray-50 p-2 rounded-md border shadow-sm space-x-2"
+                  >
+                    <span className="text-gray-800 text-sm">{skill.skill}</span>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDeleteSkill(skill.name)}
-                      className="h-8 w-8 text-gray-500 hover:text-red-500"
+                      className="h-6 w-6 text-gray-500 hover:text-red-500"
+                      disabled={isSaving}
                     >
                       <Trash className="h-4 w-4" />
                     </Button>
@@ -140,69 +206,62 @@ const SkillsMatrix = () => {
 
       {/* Add Skill Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Add {selectedCategory} {isTechnical ? "Skill" : "Competency"}</DialogTitle>
+            <DialogTitle>Add Skill</DialogTitle>
           </DialogHeader>
-          <div className="py-4 space-y-4">
+          <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium mb-1 block">Search {isTechnical ? "Skills" : "Competencies"}</label>
-              <Input 
+              <label className="text-sm font-medium mb-1 block">Skill Name</label>
+              <Input
                 value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setIsNewSkill(true);
-                }}
-                placeholder={`Type to search or enter a new ${isTechnical ? "skill" : "competency"}`}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Enter a new skill or search"
               />
-            </div>
-            
-            {searchTerm && (
-              <div className="max-h-32 overflow-y-auto border rounded-md">
-                {filteredTechStacks.length > 0 ? (
-                  <div className="divide-y">
-                    {filteredTechStacks.map((stack, index) => (
-                      <div 
-                        key={index} 
+              {searchTerm && (
+                <div className="max-h-32 overflow-y-auto border rounded-md mt-2">
+                  {availableSkills
+                    .filter((skill) =>
+                      skill.toLowerCase().includes(searchTerm.toLowerCase())
+                    )
+                    .map((skill, index) => (
+                      <div
+                        key={index}
                         className="p-2 cursor-pointer hover:bg-gray-100"
-                        onClick={() => {
-                          setNewSkill(stack);
-                          setSearchTerm(stack);
-                          setIsNewSkill(false);
-                        }}
+                        onClick={() => setSearchTerm(skill)}
                       >
-                        {stack}
+                        {skill}
                       </div>
                     ))}
-                  </div>
-                ) : (
-                  <div className="p-2 text-sm text-gray-600">
-                    No matching {isTechnical ? "skills" : "competencies"}. You can add "{searchTerm}" as a new {isTechnical ? "skill" : "competency"}.
-                  </div>
-                )}
-              </div>
-            )}
-            
+                </div>
+              )}
+            </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Proficiency Level</label>
-              <Select 
-                value={selectedProficiency} 
+              <Select
+                value={selectedProficiency}
                 onValueChange={setSelectedProficiency}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select level" />
+                  <SelectValue placeholder="Select proficiency" />
                 </SelectTrigger>
                 <SelectContent>
-                  {proficiencyLevels.map(level => (
-                    <SelectItem key={level} value={level}>{level}</SelectItem>
+                  {proficiencyLevels.map((level) => (
+                    <SelectItem key={level} value={level}>
+                      {level}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-            <Button onClick={handleAddSkill}>Add</Button>
+            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddSkill} disabled={isSaving}>
+              {isSaving ? "Saving..." : "Add Skill"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -211,23 +270,24 @@ const SkillsMatrix = () => {
 };
 
 const SkillsMatrixSkeleton = () => (
-  <div className="bg-white p-6 rounded-lg shadow-sm">
+  <div className="bg-white p-6 rounded-lg shadow-md">
     <Skeleton className="h-7 w-40 mb-4" />
-    
     <div className="space-y-6">
-      {Array(4).fill(0).map((_, i) => (
-        <div key={i} className="space-y-2">
-          <div className="flex justify-between items-center">
-            <Skeleton className="h-5 w-28" />
-            <Skeleton className="h-8 w-16" />
+      {Array(4)
+        .fill(0)
+        .map((_, i) => (
+          <div key={i} className="space-y-2">
+            <div className="flex justify-between items-center">
+              <Skeleton className="h-5 w-28" />
+              <Skeleton className="h-8 w-16" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-            <Skeleton className="h-12 w-full" />
-          </div>
-        </div>
-      ))}
+        ))}
     </div>
   </div>
 );

@@ -1,4 +1,3 @@
-
 import { useEmployeeDetails, useTeamEmployees } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -10,6 +9,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { shouldShowTechAdvisor, isTechnicalRole } from "@/utils/roleUtils";
+import { useEffect } from "react";
+
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 interface PeopleItemProps {
   label: string;
@@ -25,53 +27,49 @@ const PeopleItem = ({ label, value }: PeopleItemProps) => (
 
 const MyPeople = () => {
   const { employee, loading: employeeLoading } = useEmployeeDetails();
-  const { employees, loading: teamLoading } = useTeamEmployees(employee?.custom_team);
-  
+  const { employees, loading: teamLoading } = useTeamEmployees();
+
   const loading = employeeLoading || teamLoading;
-  
+
   // Check if the employee is in a technical role based on role utils
   const isTechnical = employee ? isTechnicalRole(employee.designation) : false;
-  
+
   // Check if tech advisor should be shown
   const showTechAdvisor = employee ? shouldShowTechAdvisor(employee.designation) : false;
-  
+
   // Check if the employee is a co-founder
-  const isCoFounder = employee && employee.designation === 'Co-Founder';
+  const isCoFounder = employee && employee.designation === "Co-Founder";
 
   if (loading || !employee) {
     return <MyPeopleSkeleton />;
-  }
-  
-  // If co-founder, don't show any fields
-  if (isCoFounder) {
-    return (
-      <div className="bg-white p-6 rounded-lg shadow-sm">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">My People</h2>
-        <p className="text-gray-600 italic">This section is not applicable for co-founders.</p>
-      </div>
-    );
   }
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">My People</h2>
-      
+
       <div className="space-y-4">
         {/* Employee's direct relationships */}
         <div className="space-y-1">
           <PeopleItem label="Team" value={employee.custom_team || ""} />
           <PeopleItem label="Pod" value={employee.custom_pod || ""} />
-          <PeopleItem label="Lead" value={employee.custom_tech_lead || ""} />
-          <PeopleItem label="Buddy" value={employee.custom_buddy || ""} />
-          
-          {/* Only show Tech Advisor for technical roles and not PSM/Business */}
-          {showTechAdvisor && (
-            <PeopleItem label="Tech Advisor" value={employee.custom_tech_advisor || ""} />
+
+          {/* Show additional fields only if not a co-founder */}
+          {!isCoFounder && (
+            <>
+              <PeopleItem label="Lead" value={employee.custom_tech_lead || ""} />
+              <PeopleItem label="Buddy" value={employee.custom_buddy || ""} />
+
+              {/* Only show Tech Advisor for technical roles and not PSM/Business */}
+              {showTechAdvisor && (
+                <PeopleItem label="Tech Advisor" value={employee.custom_tech_advisor || ""} />
+              )}
+            </>
           )}
         </div>
-        
+
         {/* Team members table */}
-        {employee.custom_team && employees.length > 0 && (
+        {!isCoFounder && employee.custom_team && employees.length > 0 && (
           <div className="mt-6">
             <h3 className="text-lg font-medium text-gray-800 mb-3">Team Members</h3>
             <div className="rounded-md border">

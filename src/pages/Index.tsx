@@ -10,6 +10,7 @@ import CareerProgression from "@/components/CareerProgression";
 import FeedbackSection from "@/components/FeedbackSection";
 import CalibrationSection from "@/components/CalibrationSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import CalibrationDashboard from "@/components/CalibrationDashboard";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("about");
@@ -27,6 +28,7 @@ const Index = () => {
               <TabsTrigger value="career">Career</TabsTrigger>
               <TabsTrigger value="feedback">Feedback</TabsTrigger>
               <TabsTrigger value="calibration">Calibration</TabsTrigger>
+              <TabsTrigger value="calibration-dashboard">Calibration Dashboard</TabsTrigger>
             </TabsList>
             
             {/* About Tab */}
@@ -56,7 +58,12 @@ const Index = () => {
             
             {/* Calibration Tab */}
             <TabsContent value="calibration" className="mt-6">
-              <CalibrationSection />
+              <CalibrationSection employeeCalibration={''} />
+            </TabsContent>
+
+            {/* Calibration Dashboard Tab*/}
+            <TabsContent value="calibration-dashboard" className="mt-6">
+              <CalibrationDashboard />
             </TabsContent>
           </Tabs>
         </div>
