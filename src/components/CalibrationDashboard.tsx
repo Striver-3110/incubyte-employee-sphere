@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { roleCategories } from "@/utils/roleUtils";
 import CalibrationSection from "./CalibrationSection";
@@ -8,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Modal from "./ui/modal";
 import { useEmployeeDetails, useCalibrationDataForAllEmployees } from "@/api/employeeService";
-import { Users, UserCheck, BarChart3, ArrowLeft } from "lucide-react";
+import { Users, UserCheck, BarChart3, ArrowLeft, Clock, AlertTriangle } from "lucide-react";
+import { formatDate } from "@/utils/dateUtils";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -21,6 +21,8 @@ const CalibrationDashboard = () => {
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+  const [showCalibratedModal, setShowCalibratedModal] = useState(false);
+  const [showNotCalibratedModal, setShowNotCalibratedModal] = useState(false);
 
   if (employeeLoading || calibrationLoading) {
     return (
@@ -64,6 +66,20 @@ const CalibrationDashboard = () => {
   const notCalibrated = calibrationDataForAllEmployees.filter(
     (data) => data.status === "error" || !data.data?.performance
   );
+
+  // Check if calibration is older than 6 months
+  const isOldCalibration = (modifiedDate: string) => {
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    return new Date(modifiedDate) < sixMonthsAgo;
+  };
+
+  // Sort calibrated employees by modified date (oldest first)
+  const sortedCalibratedEmployees = [...calibrated].sort((a, b) => {
+    const dateA = new Date(a.data.modified);
+    const dateB = new Date(b.data.modified);
+    return dateA.getTime() - dateB.getTime();
+  });
 
   // Map categories
   const categoryMapping = [
@@ -171,7 +187,10 @@ const CalibrationDashboard = () => {
 
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="border-green-200 bg-green-50">
+            <Card 
+              className="border-green-200 bg-green-50 cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setShowCalibratedModal(true)}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-green-700">Calibrated Employees</CardTitle>
                 <UserCheck className="h-4 w-4 text-green-600" />
@@ -179,12 +198,15 @@ const CalibrationDashboard = () => {
               <CardContent>
                 <div className="text-2xl font-bold text-green-800">{calibrated.length}</div>
                 <p className="text-xs text-green-600 mt-1">
-                  Employees with complete calibration data
+                  Click to view details
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-red-200 bg-red-50">
+            <Card 
+              className="border-red-200 bg-red-50 cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setShowNotCalibratedModal(true)}
+            >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-red-700">Pending Calibration</CardTitle>
                 <Users className="h-4 w-4 text-red-600" />
@@ -192,7 +214,7 @@ const CalibrationDashboard = () => {
               <CardContent>
                 <div className="text-2xl font-bold text-red-800">{notCalibrated.length}</div>
                 <p className="text-xs text-red-600 mt-1">
-                  Employees requiring calibration
+                  Click to view details
                 </p>
               </CardContent>
             </Card>
@@ -276,6 +298,80 @@ const CalibrationDashboard = () => {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Modal for Calibrated Employees */}
+      {showCalibratedModal && (
+        <Modal
+          open={showCalibratedModal}
+          onClose={() => setShowCalibratedModal(false)}
+          title="Calibrated Employees"
+        >
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {sortedCalibratedEmployees.map((record) => {
+              const needsRecalibration = isOldCalibration(record.data.modified);
+              return (
+                <div
+                  key={record.employee_name}
+                  className={`flex items-center justify-between p-3 border rounded-lg ${
+                    needsRecalibration ? 'border-orange-200 bg-orange-50' : 'hover:bg-gray-50'
+                  } transition-colors`}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-medium text-gray-800">{record.employee_name}</h3>
+                      {needsRecalibration && (
+                        <AlertTriangle className="h-4 w-4 text-orange-500" title="Needs recalibration" />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 text-sm text-gray-600">
+                      <Clock className="h-3 w-3" />
+                      <span>Last updated on: {formatDate(record.data.modified)}</span>
+                    </div>
+                    {needsRecalibration && (
+                      <p className="text-xs text-orange-600 mt-1">
+                        This employee should be recalibrated
+                      </p>
+                    )}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedEmployee(record);
+                      setShowCalibratedModal(false);
+                    }}
+                  >
+                    View
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        </Modal>
+      )}
+
+      {/* Modal for Non-Calibrated Employees */}
+      {showNotCalibratedModal && (
+        <Modal
+          open={showNotCalibratedModal}
+          onClose={() => setShowNotCalibratedModal(false)}
+          title="Employees Pending Calibration"
+        >
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {notCalibrated.map((record) => (
+              <div
+                key={record.employee_name}
+                className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <div>
+                  <h3 className="font-medium text-gray-800">{record.employee_name}</h3>
+                  <p className="text-sm text-gray-600">Calibration pending</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Modal>
       )}
 
       {/* Modal for Employee Details */}
