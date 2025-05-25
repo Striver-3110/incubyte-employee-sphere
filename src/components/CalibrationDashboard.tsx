@@ -1,11 +1,14 @@
+
 import React, { useState } from "react";
 import { roleCategories } from "@/utils/roleUtils";
-import CalibrationSection from "./CalibrationSection"; // Reusing CalibrationSection component
+import CalibrationSection from "./CalibrationSection";
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from "chart.js";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Modal from "./ui/modal";
 import { useEmployeeDetails, useCalibrationDataForAllEmployees } from "@/api/employeeService";
+import { Users, UserCheck, BarChart3, ArrowLeft } from "lucide-react";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -20,14 +23,24 @@ const CalibrationDashboard = () => {
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
 
   if (employeeLoading || calibrationLoading) {
-    return <p className="text-center text-gray-500 italic">Loading...</p>;
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        <div className="flex items-center justify-center h-32">
+          <p className="text-gray-500 italic">Loading calibration data...</p>
+        </div>
+      </div>
+    );
   }
 
   if (employeeError || calibrationError) {
     return (
-      <p className="text-center text-red-500 italic">
-        {employeeError || calibrationError}
-      </p>
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        <div className="flex items-center justify-center h-32">
+          <p className="text-red-500 italic">
+            Error loading data: {employeeError || calibrationError}
+          </p>
+        </div>
+      </div>
     );
   }
 
@@ -35,7 +48,13 @@ const CalibrationDashboard = () => {
   const hasAccess = true || roleCategories.Business.includes(userRole);
 
   if (!hasAccess) {
-    return <p className="text-center text-gray-500 italic">You do not have access to this dashboard.</p>;
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        <div className="flex items-center justify-center h-32">
+          <p className="text-gray-500 italic">You do not have access to this dashboard.</p>
+        </div>
+      </div>
+    );
   }
 
   // Filter data
@@ -74,15 +93,12 @@ const CalibrationDashboard = () => {
         label: "Employees per Category",
         data: categoryMapping.flat().map((category) => categoryCounts[category] || 0),
         backgroundColor: [
-          "#FFCDD2",
-          "#F8BBD0",
-          "#BBDEFB",
-          "#C8E6C9",
-          "#FFF9C4",
-          "#FFCCBC",
-          "#D1C4E9",
-          "#B2EBF2",
-          "#FFECB3",
+          "#fef2f2", "#fdf2f8", "#eff6ff", "#f0fdf4", "#fffbeb",
+          "#fff7ed", "#f3f4f6", "#ecfdf5", "#fefce8",
+        ],
+        borderColor: [
+          "#dc2626", "#be185d", "#2563eb", "#059669", "#d97706",
+          "#ea580c", "#6b7280", "#10b981", "#ca8a04",
         ],
         borderWidth: 1,
       },
@@ -91,13 +107,31 @@ const CalibrationDashboard = () => {
 
   const chartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         position: "top" as const,
+        labels: {
+          font: {
+            size: 12,
+          },
+        },
       },
       title: {
         display: true,
         text: "Performance & Potential Categories",
+        font: {
+          size: 16,
+          weight: 'bold' as const,
+        },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1,
+        },
       },
     },
     onClick: (_, elements) => {
@@ -123,58 +157,134 @@ const CalibrationDashboard = () => {
   });
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Calibration Dashboard</h1>
+    <div className="space-y-6">
+      {!selectedCategory ? (
+        <>
+          {/* Header */}
+          <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className="flex items-center gap-3 mb-2">
+              <BarChart3 className="h-6 w-6 text-blue-600" />
+              <h1 className="text-2xl font-semibold text-gray-800">Calibration Dashboard</h1>
+            </div>
+            <p className="text-gray-600">Overview of employee calibration status and performance distribution</p>
+          </div>
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-blue-100 p-4 rounded-lg shadow-md">
-          <h2 className="text-lg font-semibold">Calibrated Employees</h2>
-          <p className="text-2xl font-bold">{calibrated.length}</p>
-        </div>
-        <div className="bg-red-100 p-4 rounded-lg shadow-md">
-          <h2 className="text-lg font-semibold">Not Calibrated Employees</h2>
-          <p className="text-2xl font-bold">{notCalibrated.length}</p>
-        </div>
-      </div>
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="border-green-200 bg-green-50">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-green-700">Calibrated Employees</CardTitle>
+                <UserCheck className="h-4 w-4 text-green-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-800">{calibrated.length}</div>
+                <p className="text-xs text-green-600 mt-1">
+                  Employees with complete calibration data
+                </p>
+              </CardContent>
+            </Card>
 
-      {/* Graph */}
-      <div className="mb-8">
-        <Bar data={chartData} options={chartOptions} />
-      </div>
+            <Card className="border-red-200 bg-red-50">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium text-red-700">Pending Calibration</CardTitle>
+                <Users className="h-4 w-4 text-red-600" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-red-800">{notCalibrated.length}</div>
+                <p className="text-xs text-red-600 mt-1">
+                  Employees requiring calibration
+                </p>
+              </CardContent>
+            </Card>
+          </div>
 
-      {/* Selected Category */}
-      {selectedCategory && (
-        <div>
-          <Button variant="outline" onClick={() => setSelectedCategory(null)} className="mb-4">
-            Go Back
-          </Button>
-          <h2 className="text-xl font-semibold mb-4">
-            Employees in Category: <span className="text-blue-600">{selectedCategory}</span>
-          </h2>
-          {employeesInCategory.length > 0 ? (
-            <ul className="list-disc pl-8">
-              {employeesInCategory.map((record) => (
-                <li key={record.employee_name} className="mb-2">
-                  <Button
-                    variant="link"
-                    onClick={() => setSelectedEmployee(record)}
-                    className="text-blue-600 hover:underline"
-                  >
-                    {record.employee_name}
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500 italic">No employees found in this category.</p>
-          )}
+          {/* Chart Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg font-semibold text-gray-800">
+                Performance Distribution
+              </CardTitle>
+              <p className="text-sm text-gray-600">
+                Click on any category to view employees in that group
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="h-96">
+                <Bar data={chartData} options={chartOptions} />
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      ) : (
+        /* Category Detail View */
+        <div className="space-y-6">
+          <div className="bg-white p-6 rounded-lg shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedCategory(null)}
+                  className="mb-4"
+                >
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  Back to Dashboard
+                </Button>
+                <h2 className="text-xl font-semibold text-gray-800">
+                  Category: <span className="text-blue-600">{selectedCategory}</span>
+                </h2>
+                <p className="text-gray-600 mt-1">
+                  {employeesInCategory.length} employee{employeesInCategory.length !== 1 ? 's' : ''} in this category
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Employees in {selectedCategory}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {employeesInCategory.length > 0 ? (
+                <div className="grid gap-3">
+                  {employeesInCategory.map((record) => (
+                    <div
+                      key={record.employee_name}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <div>
+                        <h3 className="font-medium text-gray-800">{record.employee_name}</h3>
+                        <p className="text-sm text-gray-600">
+                          Performance: {record.data.performance} | Potential: {record.data.potential}
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedEmployee(record)}
+                      >
+                        View Details
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500 italic">No employees found in this category</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       )}
 
-      {/* Modal for Calibration Section */}
+      {/* Modal for Employee Details */}
       {selectedEmployee && (
-        <Modal open={!!selectedEmployee} onClose={() => setSelectedEmployee(null)}>
+        <Modal 
+          open={!!selectedEmployee} 
+          onClose={() => setSelectedEmployee(null)}
+          title={`Calibration Details - ${selectedEmployee.employee_name}`}
+        >
           <CalibrationSection employeeCalibration={selectedEmployee.data} />
         </Modal>
       )}
