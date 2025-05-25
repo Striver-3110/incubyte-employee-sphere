@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { roleCategories } from "@/utils/roleUtils";
 import CalibrationSection from "./CalibrationSection";
@@ -321,7 +322,7 @@ const CalibrationDashboard = () => {
                     <div className="flex items-center gap-2">
                       <h3 className="font-medium text-gray-800">{record.employee_name}</h3>
                       {needsRecalibration && (
-                        <AlertTriangle className="h-4 w-4 text-orange-500" title="Needs recalibration" />
+                        <AlertTriangle className="h-4 w-4 text-orange-500" />
                       )}
                     </div>
                     <div className="flex items-center gap-1 text-sm text-gray-600">
