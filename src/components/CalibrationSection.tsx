@@ -1,3 +1,4 @@
+
 import { useCalibrationData, useCalibrationDataForAllEmployees } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
@@ -8,14 +9,18 @@ const CalibrationSection = ({employeeCalibration}) => {
   const { calibrationDataForAllEmployees } = useCalibrationDataForAllEmployees();
   console.log(calibrationDataForAllEmployees)
 
-  if (loading || !calibration) {
+  // Use the passed employeeCalibration if available, otherwise use the current user's calibration
+  const calibrationData = employeeCalibration || calibration;
+  const isLoading = !employeeCalibration && loading;
+
+  if (isLoading || !calibrationData) {
     return <CalibrationSectionSkeleton />;
   }
 
   // Determine the highlighted cell in the performance-potential matrix
   const getMatrixPosition = () => {
-    const performance = calibration.performance || "Medium";
-    const potential = calibration.potential || "Medium";
+    const performance = calibrationData.performance || "Medium";
+    const potential = calibrationData.potential || "Medium";
 
     const colMap: Record<string, number> = { Low: 0, Medium: 1, High: 2 };
     const rowMap: Record<string, number> = { Low: 2, Medium: 1, High: 0 }; // Reversed for top-to-bottom grid
@@ -82,7 +87,7 @@ const CalibrationSection = ({employeeCalibration}) => {
   };
 
   // Format the "Last updated on" date using the `modified` field
-  const lastUpdatedOn = new Date(calibration.modified).toLocaleDateString("en-US", {
+  const lastUpdatedOn = new Date(calibrationData.modified).toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric",
@@ -172,7 +177,7 @@ const CalibrationSection = ({employeeCalibration}) => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {calibration.calibration_skill_categories.map((skill, index) => (
+              {calibrationData.calibration_skill_categories.map((skill, index) => (
                 <TableRow key={index} className="hover:bg-gray-50">
                   <TableCell className="font-medium">{index + 1}</TableCell>
                   <TableCell>{skill.skill}</TableCell>
