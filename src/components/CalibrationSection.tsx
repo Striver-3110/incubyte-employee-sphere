@@ -1,13 +1,30 @@
+
 import { useCalibrationData, useCalibrationDataForAllEmployees, useEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Upload, FileText } from "lucide-react";
 import { getRoleCategory } from "@/utils/roleUtils";
+import { useState } from "react";
 
-const CalibrationSection = ({employeeCalibration}) => {
+interface CalibrationSectionProps {
+  employeeCalibration?: any;
+  showPerformanceMatrix?: boolean;
+  showSelfEvaluationUpload?: boolean;
+}
+
+const CalibrationSection = ({ 
+  employeeCalibration, 
+  showPerformanceMatrix = true,
+  showSelfEvaluationUpload = false 
+}: CalibrationSectionProps) => {
   const { calibration, loading } = useCalibrationData();
   const { calibrationDataForAllEmployees } = useCalibrationDataForAllEmployees();
   const { employee } = useEmployeeDetails();
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   
   console.log(calibrationDataForAllEmployees);
 
@@ -111,6 +128,23 @@ const CalibrationSection = ({employeeCalibration}) => {
     year: "numeric",
   });
 
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleFileUpload = () => {
+    if (selectedFile) {
+      // TODO: Implement actual file upload logic
+      console.log("Uploading file:", selectedFile.name);
+      // For now, just show success message
+      alert("Self-evaluation sheet uploaded successfully!");
+      setSelectedFile(null);
+    }
+  };
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
       <div className="flex flex-col sm:flex-row justify-between items-start mb-4">
@@ -118,69 +152,106 @@ const CalibrationSection = ({employeeCalibration}) => {
         <p className="text-sm text-gray-500">Last updated on: {lastUpdatedOn}</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Performance & Potential Matrix */}
-        <div>
-          <h3 className="font-medium text-gray-700 mb-4">Performance & Potential Matrix</h3>
-
-          <div className="relative pl-16 pb-12">
-            {/* The 3x3 grid */}
-            <div className="grid grid-cols-3 gap-0.5 border border-gray-200">
-              {Array(9)
-                .fill(0)
-                .map((_, idx) => {
-                  const row = Math.floor(idx / 3);
-                  const col = idx % 3;
-                  const isHighlighted = row === position.row && col === position.col;
-
-                  return (
-                    <div
-                      key={idx}
-                      className={`w-full h-24 p-2 flex items-center justify-center text-center transition-colors
-                      ${isHighlighted ? "bg-indigo-500 text-white" : cellColors[row][col]}
-                      border border-gray-200`}
-                    >
-                      <span className="text-sm font-medium">
-                        {matrixCellTitles[row][col]}
-                      </span>
-                    </div>
-                  );
-                })}
+      {/* Self Evaluation Upload Section */}
+      {showSelfEvaluationUpload && (
+        <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+          <h3 className="font-medium text-gray-700 mb-3">Self-Evaluation Sheet</h3>
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor="self-evaluation" className="text-sm font-medium text-gray-600">
+                Upload your self-evaluation document
+              </Label>
+              <Input
+                id="self-evaluation"
+                type="file"
+                accept=".pdf,.doc,.docx,.txt"
+                onChange={handleFileChange}
+                className="mt-1"
+              />
             </div>
-
-            {/* Y-axis label */}
-            <div className="absolute -left-10 top-1/2 -translate-y-6 -rotate-90 text-sm font-medium text-gray-600 whitespace-nowrap">
-              Potential
-            </div>
-
-            {/* X-axis label */}
-            <div className="absolute -bottom-2 left-1/2 -translate-x-5 text-sm font-medium text-gray-600">
-              Performance
-            </div>
-
-            {/* Row labels */}
-            {matrixRowLabels.map((label, idx) => (
-              <div
-                key={`row-${idx}`}
-                className="absolute -left-0 text-sm font-medium text-gray-600"
-                style={{ top: `${idx * 33.33 + 10}%` }}
-              >
-                {label}
+            {selectedFile && (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <FileText className="h-4 w-4" />
+                <span>{selectedFile.name}</span>
+                <Button 
+                  onClick={handleFileUpload}
+                  size="sm"
+                  className="ml-2"
+                >
+                  <Upload className="h-4 w-4 mr-1" />
+                  Upload
+                </Button>
               </div>
-            ))}
-
-            {/* Column labels */}
-            {matrixColLabels.map((label, idx) => (
-              <div
-                key={`col-${idx}`}
-                className="absolute bottom-4 text-sm font-medium text-gray-600"
-                style={{ left: `${idx * 33.33 + 16.5}%` }}
-              >
-                {label}
-              </div>
-            ))}
+            )}
           </div>
         </div>
+      )}
+
+      <div className={`grid ${showPerformanceMatrix ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'} gap-8`}>
+        {/* Performance & Potential Matrix - Only show if showPerformanceMatrix is true */}
+        {showPerformanceMatrix && (
+          <div>
+            <h3 className="font-medium text-gray-700 mb-4">Performance & Potential Matrix</h3>
+
+            <div className="relative pl-16 pb-12">
+              {/* The 3x3 grid */}
+              <div className="grid grid-cols-3 gap-0.5 border border-gray-200">
+                {Array(9)
+                  .fill(0)
+                  .map((_, idx) => {
+                    const row = Math.floor(idx / 3);
+                    const col = idx % 3;
+                    const isHighlighted = row === position.row && col === position.col;
+
+                    return (
+                      <div
+                        key={idx}
+                        className={`w-full h-24 p-2 flex items-center justify-center text-center transition-colors
+                        ${isHighlighted ? "bg-indigo-500 text-white" : cellColors[row][col]}
+                        border border-gray-200`}
+                      >
+                        <span className="text-sm font-medium">
+                          {matrixCellTitles[row][col]}
+                        </span>
+                      </div>
+                    );
+                  })}
+              </div>
+
+              {/* Y-axis label */}
+              <div className="absolute -left-10 top-1/2 -translate-y-6 -rotate-90 text-sm font-medium text-gray-600 whitespace-nowrap">
+                Potential
+              </div>
+
+              {/* X-axis label */}
+              <div className="absolute -bottom-2 left-1/2 -translate-x-5 text-sm font-medium text-gray-600">
+                Performance
+              </div>
+
+              {/* Row labels */}
+              {matrixRowLabels.map((label, idx) => (
+                <div
+                  key={`row-${idx}`}
+                  className="absolute -left-0 text-sm font-medium text-gray-600"
+                  style={{ top: `${idx * 33.33 + 10}%` }}
+                >
+                  {label}
+                </div>
+              ))}
+
+              {/* Column labels */}
+              {matrixColLabels.map((label, idx) => (
+                <div
+                  key={`col-${idx}`}
+                  className="absolute bottom-4 text-sm font-medium text-gray-600"
+                  style={{ left: `${idx * 33.33 + 16.5}%` }}
+                >
+                  {label}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Skill Calibration Levels */}
         <div>

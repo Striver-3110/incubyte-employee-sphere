@@ -382,7 +382,11 @@ const CalibrationDashboard = () => {
           onClose={() => setSelectedEmployee(null)}
           title={`Calibration Details - ${selectedEmployee.employee_name}`}
         >
-          <CalibrationSection employeeCalibration={selectedEmployee.data} />
+          <CalibrationSection 
+            employeeCalibration={selectedEmployee.data}
+            showPerformanceMatrix={true}
+            showSelfEvaluationUpload={false}
+          />
         </Modal>
       )}
     </div>
