@@ -48,7 +48,7 @@ const CalibrationDashboard = () => {
     }
 
     const userRole = employee?.designation || "";
-    const hasAccess = true || roleCategories.Business.includes(userRole);
+    const hasAccess = roleCategories.Business.includes(userRole);
 
     if (!hasAccess) {
         return (

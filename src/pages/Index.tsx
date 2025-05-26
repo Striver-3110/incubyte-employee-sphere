@@ -11,6 +11,7 @@ import FeedbackSection from "@/components/FeedbackSection";
 import CalibrationSection from "@/components/CalibrationSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CalibrationDashboard from "@/components/CalibrationDashboard";
+import Contributions from "./Contributions";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("about");
@@ -64,6 +65,10 @@ const Index = () => {
             {/* Calibration Dashboard Tab*/}
             <TabsContent value="calibration-dashboard" className="mt-6">
               <CalibrationDashboard />
+            </TabsContent>
+            {/* Contribution Tab */}
+            <TabsContent value="contributions" className="mt-6">
+              <Contributions />
             </TabsContent>
           </Tabs>
         </div>
