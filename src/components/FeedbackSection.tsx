@@ -5,7 +5,6 @@ import { hasRecentFeedback, formatDate } from "@/utils/dateUtils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { X } from "lucide-react";
-import { Feedback } from "@/api/employeeService";
 import {
   Tabs,
   TabsContent,
@@ -13,16 +12,19 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 
-// Helper function to convert employee IDs to names
-const getEmployeeName = (id: string, employeeMap: Record<string, string>) => {
-  return employeeMap[id] || id;
-};
+interface FeedbackItem {
+  name: string;
+  for_employee: string;
+  employee_name: string;
+  reviewer_name: string;
+  reviewer: string;
+  rag_status: string;
+}
 
 const FeedbackSection = () => {
   const { feedbacks, loading } = useFeedbackData();
   const { employee, loading: employeeLoading } = useEmployeeDetails();
   const [employeeId, setEmployeeId] = useState<string>("");
-  const [employeeNames, setEmployeeNames] = useState<Record<string, string>>({});
   const [showAllInitiated, setShowAllInitiated] = useState(false);
   const [showAllGiven, setShowAllGiven] = useState(false);
   const [showAllReceived, setShowAllReceived] = useState(false);
@@ -36,56 +38,24 @@ const FeedbackSection = () => {
   useEffect(() => {
     if (employee) {
       setEmployeeId(employee.employee);
-      
-      // Create a mapping of employee IDs to names
-      // In a real app, you would fetch this data from your API
-      // For now, we'll use a placeholder mapping starting with the current user
-      setEmployeeNames(prev => ({
-        ...prev,
-        [employee.employee]: employee.employee_name
-      }));
     }
   }, [employee]);
-  
-  // Mock employee names for demonstration
-  useEffect(() => {
-    if (feedbacks.length > 0) {
-      const uniqueEmployeeIds = new Set<string>();
-      feedbacks.forEach(feedback => {
-        uniqueEmployeeIds.add(feedback.from);
-        uniqueEmployeeIds.add(feedback.to);
-      });
-      
-      // In a real app, you would fetch these names using the IDs
-      // For now, we'll create mock names for demonstration
-      const nameMap: Record<string, string> = {};
-      uniqueEmployeeIds.forEach(id => {
-        if (id === employeeId && employee) {
-          nameMap[id] = employee.employee_name;
-        } else {
-          // Mock names for other employees - in real app, fetch from API
-          nameMap[id] = `Employee ${id.replace('E', '')}`;
-        }
-      });
-      
-      setEmployeeNames(nameMap);
-    }
-  }, [feedbacks, employeeId, employee]);
 
   if (loading || employeeLoading || !employeeId) {
     return <FeedbackSectionSkeleton />;
   }
 
-  // Filter feedbacks
-  const initiatedFeedbacks = feedbacks.filter(f => f.from === employeeId && f.status === 'Pending');
-  const givenFeedbacks = feedbacks.filter(f => f.from === employeeId && f.status === 'Completed');
-  const receivedFeedbacks = feedbacks.filter(f => f.to === employeeId && f.status === 'Completed');
-  const pendingFeedbacks = feedbacks.filter(f => 
-    f.to === employeeId && f.status === 'Pending'
-  );
+  // Extract feedback arrays from the new structure
+  const initiatedFeedbacks = feedbacks?.initiated_by_me || [];
+  const givenFeedbacks = feedbacks?.given_by_me || [];
+  const receivedFeedbacks = feedbacks?.given_to_me || [];
+  const pendingFeedbacks = feedbacks?.pending_to_give || [];
   
-  // Check for recent feedback
-  const recentFeedback = hasRecentFeedback(feedbacks, employeeId);
+  // Check for recent feedback based on new structure
+  const recentFeedback = {
+    given: givenFeedbacks.length > 0,
+    received: receivedFeedbacks.length > 0
+  };
   
   // Calculate the number to show initially
   const initialDisplayCount = 3;
@@ -143,10 +113,9 @@ const FeedbackSection = () => {
                 <h3 className="font-medium text-gray-700 mb-2">Feedback Initiated</h3>
                 <div className="space-y-2">
                   {displayedInitiated.map((feedback) => (
-                    <FeedbackItem 
-                      key={feedback.id} 
+                    <FeedbackItemComponent 
+                      key={feedback.name} 
                       feedback={feedback} 
-                      employeeNames={employeeNames}
                       currentEmployeeId={employeeId}
                     />
                   ))}
@@ -170,10 +139,9 @@ const FeedbackSection = () => {
                 <h3 className="font-medium text-gray-700 mb-2">Feedback Given</h3>
                 <div className="space-y-2">
                   {displayedGiven.map((feedback) => (
-                    <FeedbackItem 
-                      key={feedback.id} 
+                    <FeedbackItemComponent 
+                      key={feedback.name} 
                       feedback={feedback} 
-                      employeeNames={employeeNames}
                       currentEmployeeId={employeeId}
                     />
                   ))}
@@ -197,10 +165,9 @@ const FeedbackSection = () => {
                 <h3 className="font-medium text-gray-700 mb-2">Feedback Received</h3>
                 <div className="space-y-2">
                   {displayedReceived.map((feedback) => (
-                    <FeedbackItem 
-                      key={feedback.id} 
+                    <FeedbackItemComponent 
+                      key={feedback.name} 
                       feedback={feedback} 
-                      employeeNames={employeeNames}
                       currentEmployeeId={employeeId}
                     />
                   ))}
@@ -224,10 +191,9 @@ const FeedbackSection = () => {
                 <h3 className="font-medium text-gray-700 mb-2">Pending Feedback</h3>
                 <div className="space-y-2">
                   {displayedPending.map((feedback) => (
-                    <FeedbackItem 
-                      key={feedback.id} 
+                    <FeedbackItemComponent 
+                      key={feedback.name} 
                       feedback={feedback} 
-                      employeeNames={employeeNames}
                       currentEmployeeId={employeeId}
                     />
                   ))}
@@ -257,10 +223,9 @@ const FeedbackSection = () => {
             {initiatedFeedbacks.length > 0 ? (
               <div className="space-y-2">
                 {displayedInitiated.map((feedback) => (
-                  <FeedbackItem 
-                    key={feedback.id} 
+                  <FeedbackItemComponent 
+                    key={feedback.name} 
                     feedback={feedback} 
-                    employeeNames={employeeNames}
                     currentEmployeeId={employeeId}
                   />
                 ))}
@@ -286,10 +251,9 @@ const FeedbackSection = () => {
             {givenFeedbacks.length > 0 ? (
               <div className="space-y-2">
                 {displayedGiven.map((feedback) => (
-                  <FeedbackItem 
-                    key={feedback.id} 
+                  <FeedbackItemComponent 
+                    key={feedback.name} 
                     feedback={feedback} 
-                    employeeNames={employeeNames}
                     currentEmployeeId={employeeId}
                   />
                 ))}
@@ -315,10 +279,9 @@ const FeedbackSection = () => {
             {receivedFeedbacks.length > 0 ? (
               <div className="space-y-2">
                 {displayedReceived.map((feedback) => (
-                  <FeedbackItem 
-                    key={feedback.id} 
+                  <FeedbackItemComponent 
+                    key={feedback.name} 
                     feedback={feedback} 
-                    employeeNames={employeeNames}
                     currentEmployeeId={employeeId}
                   />
                 ))}
@@ -344,10 +307,9 @@ const FeedbackSection = () => {
             {pendingFeedbacks.length > 0 ? (
               <div className="space-y-2">
                 {displayedPending.map((feedback) => (
-                  <FeedbackItem 
-                    key={feedback.id} 
+                  <FeedbackItemComponent 
+                    key={feedback.name} 
                     feedback={feedback} 
-                    employeeNames={employeeNames}
                     currentEmployeeId={employeeId}
                   />
                 ))}
@@ -373,42 +335,44 @@ const FeedbackSection = () => {
 };
 
 interface FeedbackItemProps {
-  feedback: Feedback;
-  employeeNames: Record<string, string>;
+  feedback: FeedbackItem;
   currentEmployeeId: string;
 }
 
-const FeedbackItem = ({ feedback, employeeNames, currentEmployeeId }: FeedbackItemProps) => {
-  const fromName = getEmployeeName(feedback.from, employeeNames);
-  const toName = getEmployeeName(feedback.to, employeeNames);
-  
-  // Determine if this is a self-review
-  const isSelfReview = feedback.from === feedback.to;
-  
+const FeedbackItemComponent = ({ feedback, currentEmployeeId }: FeedbackItemProps) => {
   // Show labels like "You → Emma" instead of employee IDs
-  const displayFrom = feedback.from === currentEmployeeId ? "You" : fromName;
-  const displayTo = feedback.to === currentEmployeeId ? "You" : toName;
+  const displayFrom = feedback.reviewer === currentEmployeeId ? "You" : feedback.reviewer_name;
+  const displayTo = feedback.for_employee === currentEmployeeId ? "You" : feedback.employee_name;
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'green':
+        return 'bg-green-100 text-green-800';
+      case 'amber':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'red':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
 
   return (
     <div className="bg-gray-50 p-3 rounded-md">
       <div className="flex justify-between items-center mb-1">
         <div className="font-medium">
-          {displayFrom} {isSelfReview ? "(Self)" : `→ ${displayTo}`}
+          {displayFrom} → {displayTo}
         </div>
         <div className="text-sm text-gray-500">
-          {formatDate(feedback.date_initiated)}
+          {feedback.name}
         </div>
       </div>
       <div className="flex justify-between items-center">
         <div className="text-sm text-gray-600 line-clamp-1">
-          {feedback.content || "(No content available)"}
+          Feedback for {feedback.employee_name}
         </div>
-        <span className={`text-xs px-2 py-0.5 rounded-full ${
-          feedback.status === 'Completed' 
-            ? 'bg-green-100 text-green-800' 
-            : 'bg-yellow-100 text-yellow-800'
-        }`}>
-          {feedback.status}
+        <span className={`text-xs px-2 py-0.5 rounded-full ${getStatusColor(feedback.rag_status)}`}>
+          {feedback.rag_status}
         </span>
       </div>
     </div>

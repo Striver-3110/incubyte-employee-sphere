@@ -52,14 +52,19 @@ export interface Calibration {
 }
 
 export interface Feedback {
-  id: string;
-  from: string;
-  from_name?: string;
-  to: string;
-  to_name?: string;
-  date_initiated: string;
-  status: 'Pending' | 'Completed';
-  content?: string;
+  name: string;
+  for_employee: string;
+  employee_name: string;
+  reviewer_name: string;
+  reviewer: string;
+  rag_status: string;
+}
+
+export interface FeedbackData {
+  initiated_by_me: Feedback[];
+  given_to_me: Feedback[];
+  given_by_me: Feedback[];
+  pending_to_give: Feedback[];
 }
 
 export interface EmployeeDetails {
@@ -205,7 +210,9 @@ const fetchEmployeeFeedback = async () => {
 
   try {
     const response = await fetch(`${BASE_URL}user.get_employee_feedback`, {
+      method: 'GET',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -213,17 +220,23 @@ const fetchEmployeeFeedback = async () => {
     }
 
     const data = await response.json();
+    console.log("Feedback data are: ", data);
 
     if (!data.message) {
       throw new Error('Invalid feedback data received');
     }
 
-    cachedFeedbackData = data.message;
-    return data.message;
+    cachedFeedbackData = data.data || data.message;
+    return data.data || data.message;
   } catch (error) {
     console.error('Error fetching employee feedback:', error);
     // For development, return mock data if API fails
-    return [];
+    return {
+      initiated_by_me: [],
+      given_to_me: [],
+      given_by_me: [],
+      pending_to_give: []
+    };
   }
 };
 
@@ -348,7 +361,7 @@ export const useEmployeeDetails = () => {
 
 // Get feedback data
 export const useFeedbackData = () => {
-  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [feedbacks, setFeedbacks] = useState<FeedbackData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -357,7 +370,7 @@ export const useFeedbackData = () => {
       try {
         setLoading(true);
         const data = await fetchEmployeeFeedback();
-        setFeedbacks(data || []);
+        setFeedbacks(data);
         setLoading(false);
       } catch (err: any) {
         setError(err.message || "Failed to fetch feedback data");

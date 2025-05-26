@@ -1,13 +1,19 @@
-
-import { useCalibrationData, useCalibrationDataForAllEmployees } from "@/api/employeeService";
+import { useCalibrationData, useCalibrationDataForAllEmployees, useEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { getRoleCategory } from "@/utils/roleUtils";
 
 const CalibrationSection = ({employeeCalibration}) => {
   const { calibration, loading } = useCalibrationData();
   const { calibrationDataForAllEmployees } = useCalibrationDataForAllEmployees();
-  console.log(calibrationDataForAllEmployees)
+  const { employee } = useEmployeeDetails();
+  
+  console.log(calibrationDataForAllEmployees);
+
+  // Check if current user is business role
+  const userRoleCategory = getRoleCategory(employee?.designation);
+  const isBusinessRole = userRoleCategory === "Business";
 
   // Use the passed employeeCalibration if available, otherwise use the current user's calibration
   const calibrationData = employeeCalibration || calibration;
@@ -15,6 +21,18 @@ const CalibrationSection = ({employeeCalibration}) => {
 
   if (isLoading || !calibrationData) {
     return <CalibrationSectionSkeleton />;
+  }
+
+  // If not a business role and no specific employee calibration is passed, don't show
+  if (!isBusinessRole && !employeeCalibration) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        <div className="text-center py-8">
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Calibration</h2>
+          <p className="text-gray-500">Calibration data is only available to business team members.</p>
+        </div>
+      </div>
+    );
   }
 
   // Determine the highlighted cell in the performance-potential matrix
