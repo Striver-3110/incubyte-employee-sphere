@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { roleCategories } from "@/utils/roleUtils";
 import CalibrationSection from "./CalibrationSection";
@@ -386,6 +385,7 @@ const CalibrationDashboard = () => {
             employeeCalibration={selectedEmployee.data}
             showPerformanceMatrix={true}
             showSelfEvaluationUpload={false}
+            isAdminView={true}
           />
         </Modal>
       )}
