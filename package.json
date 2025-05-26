@@ -4,11 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build --base=/assets/incubyte_customizations/one_view/ && yarn copy-html-entry",
+    "build:prod": "vite build --base=/assets/incubyte_customizations/one_view/ && yarn copy-html-entry",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "copy-html-entry": "cp ../incubyte_customizations/public/one_view/index.html ../incubyte_customizations/www/one_view.html"
+    "copy-html-entry": "cp ../incubyte_customizations/public/one_view/index.html ../incubyte_customizations/www/one_view.html",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "build:dev": "vite build --mode development",
+    "preview": "vite preview"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
