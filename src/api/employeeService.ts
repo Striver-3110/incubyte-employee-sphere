@@ -1,3 +1,4 @@
+
 // API service for employee data
 import { useState, useEffect } from 'react';
 
@@ -52,15 +53,50 @@ export interface Calibration {
 }
 
 export interface Feedback {
-  id: string;
-  from: string;
-  from_name?: string;
-  to: string;
-  to_name?: string;
-  date_initiated: string;
-  status: 'Pending' | 'Completed';
-  content?: string;
+  name: string;
+  for_employee: string;
+  employee_name: string;
+  reviewer_name: string;
+  reviewer: string;
+  rag_status: string;
 }
+
+export interface FeedbackData {
+  initiated_by_me: Feedback[];
+  given_to_me: Feedback[];
+  given_by_me: Feedback[];
+  pending_to_give: Feedback[];
+}
+
+export interface LightningTalk {
+  id: string;
+  title: string;
+  description: string;
+  date_presented: string;
+  audience: string;
+  recording_link?: string;
+}
+
+export interface SCITalk {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  organizing_team: string;
+  feedback_received?: string;
+}
+
+export interface Volunteering {
+  id: string;
+  activity_name: string;
+  description: string;
+  date: string;
+  hours_spent: number;
+  impact: string;
+  organization: string;
+}
+
+export type ContributionType = 'lightning_talk' | 'sci_talk' | 'volunteering';
 
 export interface EmployeeDetails {
   name: string;
@@ -133,6 +169,41 @@ const mockTechStacks: string[] = [
   'GitHub Actions',
   'CircleCI',
 ];
+
+// Mock data for contributions
+const mockContributions = {
+  lightning_talk: [
+    {
+      id: '1',
+      title: 'React Best Practices',
+      description: 'Discussing modern React patterns and best practices',
+      date_presented: '2024-12-15',
+      audience: 'Development Team',
+      recording_link: 'https://example.com/recording1'
+    }
+  ],
+  sci_talk: [
+    {
+      id: '1',
+      title: 'AI in Software Development',
+      description: 'Exploring AI tools for developers',
+      date: '2024-11-20',
+      organizing_team: 'Innovation Team',
+      feedback_received: 'Very informative session'
+    }
+  ],
+  volunteering: [
+    {
+      id: '1',
+      activity_name: 'Code for Good',
+      description: 'Teaching programming to underprivileged children',
+      date: '2024-10-05',
+      hours_spent: 8,
+      impact: 'Helped 20 children learn basic programming',
+      organization: 'Local NGO'
+    }
+  ]
+};
 
 // Cache for employee data
 let cachedEmployeeData: any = null;
@@ -215,18 +286,23 @@ const fetchEmployeeFeedback = async () => {
     }
 
     const data = await response.json();
-    console.log("Feedback data are: ",data)
+    console.log("Feedback data are: ", data);
 
     if (!data.message) {
       throw new Error('Invalid feedback data received');
     }
 
-    cachedFeedbackData = data.message;
-    return data.message;
+    cachedFeedbackData = data.data || data.message.data;
+    return data.data || data.message.data;
   } catch (error) {
     console.error('Error fetching employee feedback:', error);
     // For development, return mock data if API fails
-    return [];
+    return {
+      initiated_by_me: [],
+      given_to_me: [],
+      given_by_me: [],
+      pending_to_give: []
+    };
   }
 };
 
@@ -268,6 +344,90 @@ export const fetchTeamEmployees = async () => {
       { name: "E0196", employee_name: "Jane Smith", designation: "Test Craftsperson" },
       { name: "E0009", employee_name: "Alex Johnson", designation: "Software Craftsperson - Tech Advisor" }
     ];
+  }
+};
+
+// Contribution API functions
+export const fetchContributions = async (type: ContributionType) => {
+  try {
+    const response = await fetch(`${BASE_URL}user.get_contributions?type=${type}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ${type} contributions`);
+    }
+
+    const data = await response.json();
+    return data.message.data || [];
+  } catch (error) {
+    console.error(`Error fetching ${type} contributions:`, error);
+    return mockContributions[type] || [];
+  }
+};
+
+export const createContribution = async (type: ContributionType, contribution: any) => {
+  try {
+    const response = await fetch(`${BASE_URL}user.create_contribution`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ type, ...contribution }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create ${type} contribution`);
+    }
+
+    const data = await response.json();
+    return data.message;
+  } catch (error) {
+    console.error(`Error creating ${type} contribution:`, error);
+    throw error;
+  }
+};
+
+export const updateContribution = async (type: ContributionType, id: string, contribution: any) => {
+  try {
+    const response = await fetch(`${BASE_URL}user.update_contribution`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ type, id, ...contribution }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update ${type} contribution`);
+    }
+
+    const data = await response.json();
+    return data.message;
+  } catch (error) {
+    console.error(`Error updating ${type} contribution:`, error);
+    throw error;
+  }
+};
+
+export const deleteContribution = async (type: ContributionType, id: string) => {
+  try {
+    const response = await fetch(`${BASE_URL}user.delete_contribution`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ type, id }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete ${type} contribution`);
+    }
+
+    const data = await response.json();
+    return data.message;
+  } catch (error) {
+    console.error(`Error deleting ${type} contribution:`, error);
+    throw error;
   }
 };
 
@@ -324,6 +484,7 @@ export const saveEmployeeFeedback = async (feedback: any) => {
     throw error;
   }
 };
+
 // Use this hook to get employee details
 export const useEmployeeDetails = () => {
   const [employee, setEmployee] = useState<EmployeeDetails | null>(null);
@@ -351,7 +512,7 @@ export const useEmployeeDetails = () => {
 
 // Get feedback data
 export const useFeedbackData = () => {
-  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [feedbacks, setFeedbacks] = useState<FeedbackData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -360,7 +521,7 @@ export const useFeedbackData = () => {
       try {
         setLoading(true);
         const data = await fetchEmployeeFeedback();
-        setFeedbacks(data || []);
+        setFeedbacks(data);
         setLoading(false);
       } catch (err: any) {
         setError(err.message || "Failed to fetch feedback data");
@@ -398,6 +559,31 @@ export const useTeamEmployees = () => {
   }, []);
 
   return { employees, loading, error };
+};
+
+// Use this hook to get contributions
+export const useContributions = (type: ContributionType) => {
+  const [contributions, setContributions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadContributions = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchContributions(type);
+      setContributions(data);
+      setLoading(false);
+    } catch (err: any) {
+      setError(err.message || `Failed to fetch ${type} contributions`);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadContributions();
+  }, [type]);
+
+  return { contributions, loading, error, refetch: loadContributions };
 };
 
 // Get calibration data
