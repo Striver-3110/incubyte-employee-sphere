@@ -1,3 +1,4 @@
+
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
@@ -8,6 +9,17 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    force: true, // Force optimize deps
+  },
+  optimizeDeps: {
+    force: true, // Force re-optimization
+    include: [
+      "react",
+      "react-dom",
+      "@radix-ui/react-label",
+      "@radix-ui/react-tabs",
+      "lucide-react"
+    ]
   },
   plugins: [
     react(),

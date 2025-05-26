@@ -11,9 +11,26 @@ import FeedbackSection from "@/components/FeedbackSection";
 import CalibrationSection from "@/components/CalibrationSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CalibrationDashboard from "@/components/CalibrationDashboard";
+import { useEmployeeDetails } from "@/api/employeeService";
+import { roleCategories } from "@/utils/roleUtils";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("about");
+  const { employee, loading } = useEmployeeDetails();
+
+  // Check if user has business role access for calibration dashboard
+  const userRole = employee?.designation || "";
+  const hasBusinessAccess = roleCategories.Business.includes(userRole);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p className="text-gray-500">Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -28,7 +45,10 @@ const Index = () => {
               <TabsTrigger value="career">Career</TabsTrigger>
               <TabsTrigger value="feedback">Feedback</TabsTrigger>
               <TabsTrigger value="calibration">Calibration</TabsTrigger>
-              <TabsTrigger value="calibration-dashboard">Calibration Dashboard</TabsTrigger>
+              <TabsTrigger value="contributions">Contributions</TabsTrigger>
+              {hasBusinessAccess && (
+                <TabsTrigger value="calibration-dashboard">Calibration Dashboard</TabsTrigger>
+              )}
             </TabsList>
             
             {/* About Tab */}
@@ -61,10 +81,29 @@ const Index = () => {
               <CalibrationSection employeeCalibration={''} />
             </TabsContent>
 
-            {/* Calibration Dashboard Tab*/}
-            <TabsContent value="calibration-dashboard" className="mt-6">
-              <CalibrationDashboard />
+            {/* Contributions Tab */}
+            <TabsContent value="contributions" className="mt-6">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="text-center">
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4">Contributions</h2>
+                  <p className="text-gray-600 mb-6">
+                    Manage your lightning talks, SCI talks, and volunteering activities
+                  </p>
+                  <Link to="/contributions">
+                    <Button>
+                      Go to Contributions Page
+                    </Button>
+                  </Link>
+                </div>
+              </div>
             </TabsContent>
+
+            {/* Calibration Dashboard Tab - Only for Business roles */}
+            {hasBusinessAccess && (
+              <TabsContent value="calibration-dashboard" className="mt-6">
+                <CalibrationDashboard />
+              </TabsContent>
+            )}
           </Tabs>
         </div>
       </div>
