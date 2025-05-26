@@ -374,18 +374,22 @@ const CalibrationDashboard = () => {
                 </Modal>
             )}
 
-            {/* Modal for Employee Details */}
-            {selectedEmployee && (
-                <Modal
-                    open={!!selectedEmployee}
-                    onClose={() => setSelectedEmployee(null)}
-                    title={`Calibration Details - ${selectedEmployee.employee_name}`}
-                >
-                    <CalibrationSection employeeCalibration={selectedEmployee.data} />
-                </Modal>
-            )}
-        </div>
-    );
+      {/* Modal for Employee Details */}
+      {selectedEmployee && (
+        <Modal 
+          open={!!selectedEmployee} 
+          onClose={() => setSelectedEmployee(null)}
+          title={`Calibration Details - ${selectedEmployee.employee_name}`}
+        >
+          <CalibrationSection 
+            employeeCalibration={selectedEmployee.data}
+            showPerformanceMatrix={true}
+            showSelfEvaluationUpload={false}
+          />
+        </Modal>
+      )}
+    </div>
+  );
 };
 
 export default CalibrationDashboard;

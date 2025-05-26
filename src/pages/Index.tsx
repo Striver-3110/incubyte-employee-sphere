@@ -79,7 +79,11 @@ const Index = () => {
             
             {/* Calibration Tab */}
             <TabsContent value="calibration" className="mt-6">
-              <CalibrationSection employeeCalibration={''} />
+              <CalibrationSection 
+                employeeCalibration={''}
+                showPerformanceMatrix={false}
+                showSelfEvaluationUpload={true}
+              />
             </TabsContent>
 
             {/* Contributions Tab */}
