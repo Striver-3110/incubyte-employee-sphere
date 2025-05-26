@@ -15,26 +15,32 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <FrappeProvider
-    socketPort={import.meta.env.VITE_SOCKET_PORT}
-    siteName={import.meta.env.VITE_SITE_NAME}
-  >
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <Router>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/contributions" element={<Contributions />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Router>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </FrappeProvider>
-);
+const App = () => {
+  // Provide default values for environment variables to prevent null context issues
+  const socketPort = import.meta.env.VITE_SOCKET_PORT || '9000';
+  const siteName = import.meta.env.VITE_SITE_NAME || 'localhost:8000';
+
+  return (
+    <FrappeProvider
+      socketPort={socketPort}
+      siteName={siteName}
+    >
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Router>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/contributions" element={<Contributions />} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Router>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </FrappeProvider>
+  );
+};
 
 export default App;
