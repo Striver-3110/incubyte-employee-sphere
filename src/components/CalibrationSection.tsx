@@ -4,11 +4,11 @@ import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { getRoleCategory } from "@/utils/roleUtils";
 
-const CalibrationSection = ({employeeCalibration}) => {
+const CalibrationSection = ({ employeeCalibration }) => {
   const { calibration, loading } = useCalibrationData();
   const { calibrationDataForAllEmployees } = useCalibrationDataForAllEmployees();
   const { employee } = useEmployeeDetails();
-  
+
   console.log(calibrationDataForAllEmployees);
 
   // Check if current user is business role
@@ -25,12 +25,12 @@ const CalibrationSection = ({employeeCalibration}) => {
   }
 
   // If not a business role and no specific employee calibration is passed, don't show
-  if (!isBusinessRole && !employeeCalibration) {
+  if (!employeeCalibration) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <div className="text-center py-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Calibration</h2>
-          <p className="text-gray-500">Calibration data is only available to business team members.</p>
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Calibration Pending</h2>
+          <p className="text-gray-500">Your calibration is pending. Stay tuned for updates.</p>
         </div>
       </div>
     );
