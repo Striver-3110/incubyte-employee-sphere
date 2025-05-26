@@ -10,22 +10,27 @@ import { Upload, FileText } from "lucide-react";
 import { getRoleCategory } from "@/utils/roleUtils";
 import { useState } from "react";
 
+
+const BASE_URL = import.meta.env.VITE_BASE_URL
+
+
 interface CalibrationSectionProps {
   employeeCalibration?: any;
   showPerformanceMatrix?: boolean;
   showSelfEvaluationUpload?: boolean;
 }
 
-const CalibrationSection = ({ 
-  employeeCalibration, 
+const CalibrationSection = ({
+  employeeCalibration,
   showPerformanceMatrix = true,
-  showSelfEvaluationUpload = false 
+  showSelfEvaluationUpload = false
 }: CalibrationSectionProps) => {
   const { calibration, loading } = useCalibrationData();
+  console.log("employee calibration data: ", calibration)
   const { calibrationDataForAllEmployees } = useCalibrationDataForAllEmployees();
   const { employee } = useEmployeeDetails();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  
+
   console.log(calibrationDataForAllEmployees);
 
   // Check if current user is business role
@@ -42,7 +47,7 @@ const CalibrationSection = ({
   }
 
   // If not a business role and no specific employee calibration is passed, don't show
-  if (!employeeCalibration) {
+  if (!calibrationData) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <div className="text-center py-8">
@@ -136,13 +141,55 @@ const CalibrationSection = ({
     }
   };
 
-  const handleFileUpload = () => {
-    if (selectedFile) {
-      // TODO: Implement actual file upload logic
-      console.log("Uploading file:", selectedFile.name);
-      // For now, just show success message
-      alert("Self-evaluation sheet uploaded successfully!");
-      setSelectedFile(null);
+  const handleFileUpload = async () => {
+    if (!selectedFile) {
+      alert("No file selected for upload.");
+      return;
+    }
+
+    try {
+      // Read the file as base64
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64FileData = reader.result?.toString().split(",")[1]; // Extract base64 content
+
+        if (!base64FileData) {
+          alert("Failed to process the selected file.");
+          return;
+        }
+
+        // Make the API call to upload the file
+        const response = await fetch(`${BASE_URL}user.upload_self_evaluation_sheet`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include", // Include cookies for authentication
+          body: JSON.stringify({
+            filedata: base64FileData,
+            filename: selectedFile.name,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Error uploading file:", errorData);
+          alert("Failed to upload the self-evaluation sheet.");
+          return;
+        }
+
+        const responseData = await response.json();
+        console.log("File uploaded successfully:", responseData);
+
+        // Show success message and reset selected file
+        alert("Self-evaluation sheet uploaded successfully!");
+        setSelectedFile(null);
+      };
+
+      reader.readAsDataURL(selectedFile); // Read the file as a Base64 Data URL
+    } catch (error) {
+      console.error("Error during file upload:", error);
+      alert("An error occurred while uploading the file. Please try again.");
     }
   };
 
@@ -158,23 +205,48 @@ const CalibrationSection = ({
         <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
           <h3 className="font-medium text-gray-700 mb-3">Self-Evaluation Sheet</h3>
           <div className="space-y-3">
-            <div>
-              <Label htmlFor="self-evaluation" className="text-sm font-medium text-gray-600">
-                Upload your self-evaluation document
-              </Label>
-              <Input
-                id="self-evaluation"
-                type="file"
-                accept=".pdf,.doc,.docx,.txt"
-                onChange={handleFileChange}
-                className="mt-1"
-              />
-            </div>
+            {/* If a file is already uploaded */}
+            {calibrationData.custom_self_evaluation_sheet ? (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <FileText className="h-4 w-4" />
+                <a
+                  href={`${import.meta.env.VITE_FILE_BASE_URL}${calibrationData.custom_self_evaluation_sheet}`} // Generate the full URL
+                  target="_blank" // Open file in a new tab
+                  rel="noopener noreferrer" // Security best practices
+                  className="text-blue-500 underline"
+                >
+                  {calibrationData.custom_self_evaluation_sheet.split("/").pop()} {/* Extract file name from URL */}
+                </a>
+                <Button
+                  onClick={() => alert("Existing file is already uploaded. You can upload a new one to replace it.")}
+                  size="sm"
+                  variant="secondary"
+                  className="ml-2"
+                >
+                  File Uploaded
+                </Button>
+              </div>
+            ) : (
+              <div>
+                <Label htmlFor="self-evaluation" className="text-sm font-medium text-gray-600">
+                  Upload your self-evaluation document
+                </Label>
+                <Input
+                  id="self-evaluation"
+                  type="file"
+                  accept=".pdf,.doc,.docx,.txt"
+                  onChange={handleFileChange}
+                  className="mt-1"
+                />
+              </div>
+            )}
+
+            {/* New File Upload Section */}
             {selectedFile && (
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <FileText className="h-4 w-4" />
                 <span>{selectedFile.name}</span>
-                <Button 
+                <Button
                   onClick={handleFileUpload}
                   size="sm"
                   className="ml-2"
