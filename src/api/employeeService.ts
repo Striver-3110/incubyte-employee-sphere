@@ -205,7 +205,9 @@ const fetchEmployeeFeedback = async () => {
 
   try {
     const response = await fetch(`${BASE_URL}user.get_employee_feedback`, {
+      method: 'GET',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
     });
 
     if (!response.ok) {
@@ -213,6 +215,7 @@ const fetchEmployeeFeedback = async () => {
     }
 
     const data = await response.json();
+    console.log("Feedback data are: ",data)
 
     if (!data.message) {
       throw new Error('Invalid feedback data received');
