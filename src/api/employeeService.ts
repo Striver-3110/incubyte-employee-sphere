@@ -223,7 +223,6 @@ const fetchEmployeeDetails = async () => {
     })
       .then(response => response.json())
       .then(data => {
-        // console.log("Logged-in user:", data.message);
       })
       .catch(error => {
         console.error("Error fetching logged-in user:", error);
@@ -618,8 +617,6 @@ export const useCalibrationData = () => {
         }
 
         const data = await response.json();
-        // console.log("Calibration data: -------------------------------", data);
-
         // Check if the data is valid before setting it
         if (data.message.status === "error" || !data?.message?.data) {
           console.error("Invalid calibration data received:", data);

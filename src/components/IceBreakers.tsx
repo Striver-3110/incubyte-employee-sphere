@@ -50,7 +50,7 @@ interface IceBreakerQuestion {
 
 // Function to save employee ice breaker answers
 const saveIceBreakers = async (questions: IceBreakerQuestion[]) => {
-  // console.log("Questions are: ", questions)
+
   try {
     const response = await fetch(`${BASE_URL}user.set_employee_details`, {
       method: 'POST',

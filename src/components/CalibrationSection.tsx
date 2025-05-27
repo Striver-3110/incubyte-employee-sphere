@@ -189,7 +189,6 @@ const CalibrationSection = ({
         }
 
         const responseData = await response.json();
-        // console.log("File uploaded successfully:", responseData);
 
         // Show success message and reset selected file
         alert("Self-evaluation sheet uploaded successfully!");
