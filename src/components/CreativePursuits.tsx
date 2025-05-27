@@ -66,7 +66,6 @@ const CreativePursuits = () => {
   const handleAddPursuit = async () => {
     if (newPursuit.trim()) {
       const newItem = {
-        name: `new-${Date.now()}`,
         passionate_about: newPursuit.trim(),
       };
       const updatedPursuits = [...pursuits, newItem];

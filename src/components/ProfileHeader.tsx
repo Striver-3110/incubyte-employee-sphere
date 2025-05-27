@@ -23,7 +23,7 @@ const socialPlatforms = [
 ];
 
 const ProfileHeader = () => {
-  const { employee, loading } = useEmployeeDetails();
+  const { employee, setEmployee, loading } = useEmployeeDetails();
   const [editingSocial, setEditingSocial] = useState<string | null>(null);
   const [newUrl, setNewUrl] = useState("");
   const [processingPlatform, setProcessingPlatform] = useState<string | null>(null); // Tracks the platform being edited or deleted
@@ -71,6 +71,14 @@ const ProfileHeader = () => {
         }),
         credentials: "include",
       });
+
+      // Update the UI without reloading
+      const platformIndex = employee.custom_platforms.findIndex(
+        (platform) => platform.name === platformId
+      );
+      if (platformIndex !== -1) {
+        employee.custom_platforms[platformIndex].url = newUrl;
+      }
 
       toast({
         title: "Success",
@@ -130,6 +138,9 @@ const ProfileHeader = () => {
         credentials: "include",
       });
 
+      // Update the UI without reloading
+      employee.custom_platforms.push(newPlatform);
+
       toast({
         title: "Success",
         description: "Platform added successfully",
@@ -138,7 +149,6 @@ const ProfileHeader = () => {
       setIsAddingPlatform(false);
       setSelectedPlatform("");
       setPlatformUrl("");
-      window.location.reload();
     } catch (error) {
       console.error("Error adding platform:", error);
       toast({
@@ -153,11 +163,14 @@ const ProfileHeader = () => {
 
   const handleDeletePlatform = async (platformName: string) => {
     try {
-      setProcessingPlatform(platformName); // Disable buttons for this platform
-      const updatedPlatforms = employee.custom_platforms.map((platform) =>
-        platform.platform_name === platformName ? { ...platform, url: "" } : platform
+      setProcessingPlatform(platformName); // Show loading state for the platform being deleted
+
+      // Filter out the platform being deleted
+      const updatedPlatforms = employee.custom_platforms.filter(
+        (platform) => platform.platform_name !== platformName
       );
 
+      // Send the updated list to the backend
       await fetch(`${BASE_URL}user.set_employee_details`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -167,12 +180,16 @@ const ProfileHeader = () => {
         credentials: "include",
       });
 
+      // Use the setEmployee hook to update the employee state
+      setEmployee((prevEmployee) => ({
+        ...prevEmployee,
+        custom_platforms: updatedPlatforms,
+      }));
+
       toast({
         title: "Success",
         description: "Platform deleted successfully",
       });
-
-      window.location.reload();
     } catch (error) {
       console.error("Error deleting platform:", error);
       toast({
@@ -184,7 +201,6 @@ const ProfileHeader = () => {
       setProcessingPlatform(null); // Re-enable buttons
     }
   };
-
   const handleCancelEdit = () => {
     setEditingSocial(null);
     setNewUrl("");
@@ -282,7 +298,7 @@ const ProfileHeader = () => {
                         size="icon"
                         onClick={() => handleDeletePlatform(platform.platform_name)}
                         className="h-6 w-6 ml-1 text-red-500"
-                        disabled={processingPlatform === platform.name} // Disable button if processing
+                        disabled={processingPlatform === platform.platform_name} // Disable button if processing
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>

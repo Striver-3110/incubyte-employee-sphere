@@ -20,19 +20,16 @@ interface CalibrationSectionProps {
   isAdminView?: boolean;
 }
 
-const CalibrationSection = ({ 
-  employeeCalibration, 
+const CalibrationSection = ({
+  employeeCalibration,
   showPerformanceMatrix = true,
   showSelfEvaluationUpload = false,
   isAdminView = false
 }: CalibrationSectionProps) => {
-  const { calibration, loading } = useCalibrationData();
-  console.log("employee calibration data: ",calibration)
+  const { calibration, loading, error } = useCalibrationData();
   const { calibrationDataForAllEmployees } = useCalibrationDataForAllEmployees();
   const { employee } = useEmployeeDetails();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  
-  console.log(calibrationDataForAllEmployees);
 
   // Check if current user is business role
   const userRoleCategory = getRoleCategory(employee?.designation);
@@ -40,15 +37,27 @@ const CalibrationSection = ({
 
   // Use the passed employeeCalibration if available, otherwise use the current user's calibration
   const calibrationData = employeeCalibration || calibration;
-  console.log(calibrationData)
   const isLoading = !employeeCalibration && loading;
 
-  if (isLoading || !calibrationData) {
+  // Handle loading state
+  if (isLoading) {
     return <CalibrationSectionSkeleton />;
   }
 
+  // Handle error state
+  if (error) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        <div className="text-center py-8">
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Calibration Pending</h2>
+          <p className="text-gray-500">Your calibration is pending. Stay tuned for updates.</p>
+        </div>
+      </div>
+    );
+  }
+
   // If not a business role and no specific employee calibration is passed, don't show
-  if (!calibrationData) {
+  if (calibrationData === null) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <div className="text-center py-8">
@@ -142,57 +151,57 @@ const CalibrationSection = ({
     }
   };
 
-const handleFileUpload = async () => {
-  if (!selectedFile) {
-    alert("No file selected for upload.");
-    return;
-  }
+  const handleFileUpload = async () => {
+    if (!selectedFile) {
+      alert("No file selected for upload.");
+      return;
+    }
 
-  try {
-    // Read the file as base64
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64FileData = reader.result?.toString().split(",")[1]; // Extract base64 content
+    try {
+      // Read the file as base64
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64FileData = reader.result?.toString().split(",")[1]; // Extract base64 content
 
-      if (!base64FileData) {
-        alert("Failed to process the selected file.");
-        return;
-      }
+        if (!base64FileData) {
+          alert("Failed to process the selected file.");
+          return;
+        }
 
-      // Make the API call to upload the file
-      const response = await fetch(`${BASE_URL}user.upload_self_evaluation_sheet`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include", // Include cookies for authentication
-        body: JSON.stringify({
-          filedata: base64FileData,
-          filename: selectedFile.name,
-        }),
-      });
+        // Make the API call to upload the file
+        const response = await fetch(`${BASE_URL}user.upload_self_evaluation_sheet`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include", // Include cookies for authentication
+          body: JSON.stringify({
+            filedata: base64FileData,
+            filename: selectedFile.name,
+          }),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error uploading file:", errorData);
-        alert("Failed to upload the self-evaluation sheet.");
-        return;
-      }
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Error uploading file:", errorData);
+          alert("Failed to upload the self-evaluation sheet.");
+          return;
+        }
 
-      const responseData = await response.json();
-      console.log("File uploaded successfully:", responseData);
+        const responseData = await response.json();
+        console.log("File uploaded successfully:", responseData);
 
-      // Show success message and reset selected file
-      alert("Self-evaluation sheet uploaded successfully!");
-      setSelectedFile(null);
-    };
+        // Show success message and reset selected file
+        alert("Self-evaluation sheet uploaded successfully!");
+        setSelectedFile(null);
+      };
 
-    reader.readAsDataURL(selectedFile); // Read the file as a Base64 Data URL
-  } catch (error) {
-    console.error("Error during file upload:", error);
-    alert("An error occurred while uploading the file. Please try again.");
-  }
-};
+      reader.readAsDataURL(selectedFile); // Read the file as a Base64 Data URL
+    } catch (error) {
+      console.error("Error during file upload:", error);
+      alert("An error occurred while uploading the file. Please try again.");
+    }
+  };
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -222,7 +231,7 @@ const handleFileUpload = async () => {
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <FileText className="h-4 w-4" />
                 <span>{selectedFile.name}</span>
-                <Button 
+                <Button
                   onClick={handleFileUpload}
                   size="sm"
                   className="ml-2"
