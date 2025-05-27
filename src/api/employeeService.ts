@@ -12,7 +12,7 @@ export interface PlatformLink {
 }
 
 export interface PassionateAbout {
-  name: string;
+  name?: string;
   passionate_about: string;
 }
 
@@ -23,7 +23,7 @@ export interface TechStack {
 }
 
 export interface IcebreakerQuestion {
-  name: string;
+  name?: string;
   question: string;
   answer: string;
 }
@@ -217,6 +217,17 @@ const fetchEmployeeDetails = async () => {
   }
 
   try {
+    fetch('/api/method/frappe.auth.get_logged_user', {
+      method: 'GET',
+      credentials: 'include'
+    })
+      .then(response => response.json())
+      .then(data => {
+        // console.log("Logged-in user:", data.message);
+      })
+      .catch(error => {
+        console.error("Error fetching logged-in user:", error);
+      });
     const response = await fetch(`${BASE_URL}user.get_employee_details`, {
       method: 'GET',
       headers: {
@@ -231,7 +242,7 @@ const fetchEmployeeDetails = async () => {
 
     const data = await response.json();
 
-    console.log('Response:', data);
+    // console.log('Response:', data);
     if (!data.message) {
       throw new Error('Invalid employee data received');
     }
@@ -245,7 +256,7 @@ const fetchEmployeeDetails = async () => {
     return {
       name: "E0190",
       employee: "E0190",
-      employee_name: "Jay Prajapati",
+      employee_name: "Jay Prajapati--",
       designation: "Intern",
       image: "/placeholder.svg",
       custom_about: "Frontend developer with expertise in React and TypeScript.",
@@ -286,7 +297,7 @@ const fetchEmployeeFeedback = async () => {
     }
 
     const data = await response.json();
-    console.log("Feedback data are: ", data);
+    // console.log("Feedback data are: ", data);
 
     if (!data.message) {
       throw new Error('Invalid feedback data received');
@@ -308,9 +319,10 @@ const fetchEmployeeFeedback = async () => {
 
 // Fetch employees in the same team
 export const fetchTeamEmployees = async () => {
-  if (cachedTeamEmployees) {
-    return cachedTeamEmployees;
-  }
+  // if (cachedTeamEmployees) {
+  //   console.log('Returning cached team employees:', cachedTeamEmployees);
+  //   return cachedTeamEmployees;
+  // }
 
   try {
     // This is a placeholder. In a real application, you would have an API endpoint
@@ -333,7 +345,7 @@ export const fetchTeamEmployees = async () => {
     }
 
     cachedTeamEmployees = data.message;
-    console.log('Team Employees:', data.message);
+    // console.log('Team Employees:', data.message);
     return data.message.data;
   } catch (error) {
     console.error('Error fetching team employees:', error);
@@ -543,7 +555,7 @@ export const useTeamEmployees = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-  
+
       try {
         setLoading(true);
         const data = await fetchTeamEmployees();
@@ -599,13 +611,27 @@ export const useCalibrationData = () => {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include'
-          });
-          const data = await response.json();
-          console.log("Calibration data: ",data)
-        setCalibration(data.message.data || mockCalibrationData);
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch calibration data");
+        }
+
+        const data = await response.json();
+        // console.log("Calibration data: -------------------------------", data);
+
+        // Check if the data is valid before setting it
+        if (data.message.status === "error" || !data?.message?.data) {
+          console.error("Invalid calibration data received:", data);
+          throw new Error(data?.message || "Failed to fetch calibration data. Please try again later.");
+        }
+
+        setCalibration(data.message.data);
       } catch (err: any) {
-        setError("Failed to fetch calibration data");
+        console.error("Error fetching calibration data:", err);
+        setError(err.message || "Failed to fetch calibration data");
       } finally {
+        // Ensure that loading is set to false regardless of success or failure
         setLoading(false);
       }
     };
@@ -615,7 +641,6 @@ export const useCalibrationData = () => {
 
   return { calibration, loading, error };
 };
-
 export const useCalibrationDataForAllEmployees = () => {
   const [calibrationDataForAllEmployees, setCalibrationDataForAllEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -636,7 +661,7 @@ export const useCalibrationDataForAllEmployees = () => {
         }
 
         const data = await response.json();
-        console.log("Calibration data for all employees: ", data.message.data);
+        // console.log("Calibration data for all employees: ", data.message.data);
 
         if (!data || !data.message) {
           throw new Error("Invalid calibration data received");

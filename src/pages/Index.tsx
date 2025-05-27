@@ -46,7 +46,7 @@ const Index = () => {
               <TabsTrigger value="career">Career</TabsTrigger>
               <TabsTrigger value="feedback">Feedback</TabsTrigger>
               <TabsTrigger value="calibration">Calibration</TabsTrigger>
-              <TabsTrigger value="contributions">Contributions</TabsTrigger>
+              {/* <TabsTrigger value="contributions">Contributions</TabsTrigger> */}
               {hasBusinessAccess && (
                 <TabsTrigger value="calibration-dashboard">Calibration Dashboard</TabsTrigger>
               )}
@@ -87,7 +87,7 @@ const Index = () => {
             </TabsContent>
 
             {/* Contributions Tab */}
-            <TabsContent value="contributions" className="mt-6">
+            {/* <TabsContent value="contributions" className="mt-6">
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="text-center">
                   <h2 className="text-xl font-semibold text-gray-800 mb-4">Contributions</h2>
@@ -101,11 +101,11 @@ const Index = () => {
                   </Link>
                 </div>
               </div>
-            </TabsContent>
+            </TabsContent> */}
             {/* Contribution Tab */}
-            <TabsContent value="contributions" className="mt-6">
+            {/* <TabsContent value="contributions" className="mt-6">
               <Contributions />
-            </TabsContent>
+            </TabsContent> */}
 
             {/* Calibration Dashboard Tab - Only for Business roles */}
             {hasBusinessAccess && (

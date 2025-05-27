@@ -17,7 +17,7 @@ const CalibrationDashboard = () => {
     const { calibrationDataForAllEmployees, loading: calibrationLoading, error: calibrationError } =
         useCalibrationDataForAllEmployees();
 
-    console.log("Calibration Data for All Employees:", calibrationDataForAllEmployees);
+    // console.log("Calibration Data for All Employees:", calibrationDataForAllEmployees);
 
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [selectedEmployee, setSelectedEmployee] = useState<any>(null);

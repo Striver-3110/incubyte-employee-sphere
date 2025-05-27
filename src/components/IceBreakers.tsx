@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Edit, RefreshCcw, Save, X } from "lucide-react";
 import { toast } from "sonner";
 
-const BASE_URL = import.meta.env.VITE_BASE_URL 
+const BASE_URL = import.meta.env.VITE_BASE_URL
 
 // Expanded list of predefined questions (30 total)
 const predefinedQuestions = [
@@ -43,14 +43,14 @@ const predefinedQuestions = [
 ];
 
 interface IceBreakerQuestion {
-  name: string;
+  name?: string;
   question: string;
   answer: string;
 }
 
 // Function to save employee ice breaker answers
 const saveIceBreakers = async (questions: IceBreakerQuestion[]) => {
-  console.log("Questions are: ",questions)
+  // console.log("Questions are: ", questions)
   try {
     const response = await fetch(`${BASE_URL}user.set_employee_details`, {
       method: 'POST',
@@ -93,14 +93,14 @@ const IceBreakers = () => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Ice Breakers</h2>
-      
+
       {employee.custom_employee_icebreaker_question ? (
         employee.custom_employee_icebreaker_question.length === 0 ? (
           <IceBreakersForm questions={[]} predefinedQuestions={predefinedQuestions} />
         ) : (
-          <IceBreakersForm 
-            questions={employee.custom_employee_icebreaker_question} 
-            predefinedQuestions={predefinedQuestions} 
+          <IceBreakersForm
+            questions={employee.custom_employee_icebreaker_question}
+            predefinedQuestions={predefinedQuestions}
           />
         )
       ) : (
@@ -110,10 +110,10 @@ const IceBreakers = () => {
   );
 };
 
-const IceBreakersForm = ({ 
-  questions, 
-  predefinedQuestions 
-}: { 
+const IceBreakersForm = ({
+  questions,
+  predefinedQuestions
+}: {
   questions: IceBreakerQuestion[];
   predefinedQuestions: string[];
 }) => {
@@ -178,7 +178,7 @@ const IceBreakersForm = ({
         answer: editedAnswer
       };
       setCurrentQuestions(updatedQuestions);
-      
+
       // Save the updates to the server
       setIsSubmitting(true);
       try {
@@ -192,7 +192,7 @@ const IceBreakersForm = ({
       } finally {
         setIsSubmitting(false);
       }
-      
+
       setInlineEditing(null);
       setEditedAnswer("");
     }
@@ -219,7 +219,7 @@ const IceBreakersForm = ({
         answer: answer
       };
       setCurrentQuestions(updatedQuestions);
-      
+
       // Save the updates to the server
       setIsSubmitting(true);
       try {
@@ -233,25 +233,53 @@ const IceBreakersForm = ({
       } finally {
         setIsSubmitting(false);
       }
-      
+
       setEditingIndex(null);
       setAnswer("");
     }
   };
 
   // Handle next question (with circular navigation)
+  // Handle next question (with circular navigation)
   const handleNext = () => {
-    if (currentIndex >= 0) {
+    if (currentIndex >= 0 && currentIndex < currentQuestions.length) {
       const updatedQuestions = [...currentQuestions];
       updatedQuestions[currentIndex] = {
         ...updatedQuestions[currentIndex],
-        answer: answer
+        answer: answer.trim(), // Ensure the answer is trimmed and saved
       };
       setCurrentQuestions(updatedQuestions);
-      
-      // Implement circular navigation
+
+      // Move to the next question
       setCurrentIndex(prev => (prev + 1) % currentQuestions.length);
-      setAnswer("");
+      setAnswer(""); // Clear the answer for the next question
+    }
+  };
+
+  // Handle submit
+  const handleSubmit = async () => {
+    // Save the current answer if there is one
+    if (currentIndex >= 0 && currentIndex < currentQuestions.length) {
+      const updatedQuestions = [...currentQuestions];
+      updatedQuestions[currentIndex] = {
+        ...updatedQuestions[currentIndex],
+        answer: answer.trim(), // Ensure the current answer is saved
+      };
+      setCurrentQuestions(updatedQuestions);
+
+      // Filter out questions that have answers
+      const answeredQuestions = updatedQuestions.filter(q => q.answer.trim() !== "");
+
+      setIsSubmitting(true);
+      try {
+        await saveIceBreakers(answeredQuestions);
+        toast.success("Ice breakers submitted successfully!");
+        setCurrentIndex(-1); // Back to view mode
+      } catch (error) {
+        toast.error("Failed to submit ice breakers");
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -261,32 +289,6 @@ const IceBreakersForm = ({
     setAnswer("");
   };
 
-  // Handle submit
-  const handleSubmit = async () => {
-    // Save the current answer if there is one
-    if (currentIndex >= 0 && currentIndex < currentQuestions.length) {
-      const finalQuestions = [...currentQuestions];
-      finalQuestions[currentIndex] = {
-        ...finalQuestions[currentIndex],
-        answer
-      };
-      setCurrentQuestions(finalQuestions);
-    }
-
-    setIsSubmitting(true);
-    try {
-      // Filter out questions that have answers
-      const answeredQuestions = currentQuestions.filter(q => q.answer.trim() !== "");
-      await saveIceBreakers(answeredQuestions);
-      toast.success("Ice breakers submitted successfully!");
-      setCurrentIndex(-1); // Back to view mode
-    } catch (error) {
-      toast.error("Failed to submit ice breakers");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   // Check if minimum questions are answered
   const answeredCount = currentQuestions.filter(q => q.answer.trim() !== "").length;
   const canSubmit = answeredCount >= 5;
@@ -294,7 +296,7 @@ const IceBreakersForm = ({
   // Render view mode (list of answered questions)
   if (currentIndex === -1) {
     const answeredQuestions = currentQuestions.filter(q => q.answer.trim() !== "");
-    
+
     return (
       <div>
         {answeredQuestions.length > 0 ? (
@@ -303,18 +305,18 @@ const IceBreakersForm = ({
               <div key={item.name || index} className="bg-gray-50 p-4 rounded-md relative">
                 <div className="flex justify-between mb-2">
                   <p className="font-medium text-gray-700">{item.question}</p>
-                  
+
                   {inlineEditing === index ? (
                     <div className="flex space-x-2">
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="sm"
                         onClick={() => handleCancelInlineEdit()}
                       >
                         <X size={16} />
                       </Button>
-                      <Button 
-                        variant="ghost" 
+                      <Button
+                        variant="ghost"
                         size="sm"
                         onClick={() => handleSaveInlineEdit(index)}
                         disabled={isSubmitting}
@@ -323,9 +325,9 @@ const IceBreakersForm = ({
                       </Button>
                     </div>
                   ) : (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       className="absolute top-2 right-2"
                       onClick={() => handleInlineEdit(index)}
                     >
@@ -333,10 +335,10 @@ const IceBreakersForm = ({
                     </Button>
                   )}
                 </div>
-                
+
                 {inlineEditing === index ? (
-                  <Textarea 
-                    value={editedAnswer} 
+                  <Textarea
+                    value={editedAnswer}
                     onChange={(e) => setEditedAnswer(e.target.value)}
                     className="w-full min-h-[100px]"
                     disabled={isSubmitting}
@@ -371,15 +373,15 @@ const IceBreakersForm = ({
     return (
       <div className="space-y-4">
         <h3 className="font-medium text-gray-700">{currentQuestions[editingIndex].question}</h3>
-        <Textarea 
-          value={answer} 
+        <Textarea
+          value={answer}
           onChange={(e) => setAnswer(e.target.value)}
           placeholder="Your answer..."
           className="w-full min-h-[100px]"
         />
         <div className="flex justify-between mt-4">
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => {
               setEditingIndex(null);
               setAnswer("");
@@ -387,7 +389,7 @@ const IceBreakersForm = ({
           >
             Cancel
           </Button>
-          <Button 
+          <Button
             onClick={handleSaveEdit}
             disabled={answer.trim() === "" || isSubmitting}
           >
@@ -408,32 +410,32 @@ const IceBreakersForm = ({
       <div className="flex justify-between items-center mb-2">
         <p className="text-sm text-gray-500">Question {currentIndex + 1} of {currentQuestions.length}</p>
       </div>
-      
+
       <h3 className="font-medium text-gray-700">{currentQuestion?.question}</h3>
-      <Textarea 
-        value={answer} 
+      <Textarea
+        value={answer}
         onChange={(e) => setAnswer(e.target.value)}
         placeholder="Your answer..."
         className="w-full min-h-[100px]"
       />
-      
+
       <div className="flex justify-between mt-4">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={handleSkip}
         >
           Skip
         </Button>
         <div className="flex gap-2">
           {(canSubmit || answeredCount + (hasAnswer ? 1 : 0) >= 5) && (
-            <Button 
+            <Button
               onClick={handleSubmit}
               disabled={isSubmitting}
             >
               {isSubmitting ? "Submitting..." : "Submit"}
             </Button>
           )}
-          <Button 
+          <Button
             onClick={handleNext}
             disabled={isSubmitting || !hasAnswer}
           >
@@ -441,7 +443,7 @@ const IceBreakersForm = ({
           </Button>
         </div>
       </div>
-      
+
       {remainingQuestionsToAnswerMinimum > 0 && (
         <p className="text-sm text-amber-600">
           Please answer at least {remainingQuestionsToAnswerMinimum} more question{remainingQuestionsToAnswerMinimum !== 1 ? 's' : ''} before submitting ({answeredCount}/5 answered)

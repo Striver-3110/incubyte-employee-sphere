@@ -71,13 +71,8 @@ const SkillsMatrix = () => {
     }
 
     const newSkill = {
-      name: `new-${Date.now()}`,
       skill: searchTerm.trim(),
       proficiency_level: selectedProficiency,
-      parent: employee?.name || "",
-      parentfield: "custom_tech_stack",
-      parenttype: "Employee",
-      doctype: "Tech Stack",
     };
 
     const updatedSkills = [...(employee?.custom_tech_stack || []), newSkill];
@@ -96,6 +91,7 @@ const SkillsMatrix = () => {
         credentials: "include",
       });
       const data = await response.json();
+      // console.log("Updated tech stack data:", data)
 
       if (data.message?.status === "success") {
         toast.success(data.message.message || "Skill added successfully.");
