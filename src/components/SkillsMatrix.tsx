@@ -91,7 +91,6 @@ const SkillsMatrix = () => {
         credentials: "include",
       });
       const data = await response.json();
-      // console.log("Updated tech stack data:", data)
 
       if (data.message?.status === "success") {
         toast.success(data.message.message || "Skill added successfully.");

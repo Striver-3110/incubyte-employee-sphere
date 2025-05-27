@@ -64,15 +64,32 @@ const CreativePursuits = () => {
   };
 
   const handleAddPursuit = async () => {
-    if (newPursuit.trim()) {
-      const newItem = {
-        passionate_about: newPursuit.trim(),
-      };
-      const updatedPursuits = [...pursuits, newItem];
-      setNewPursuit("");
-      setIsAddDialogOpen(false);
-      await updatePursuitsInAPI(updatedPursuits);
+    const trimmedPursuit = newPursuit.trim();
+
+    if (!trimmedPursuit) {
+      toast.error("Pursuit cannot be empty.");
+      return;
     }
+
+    // Check for duplicates in a case-insensitive manner
+    const isDuplicate = pursuits.some(
+      (pursuit) =>
+        pursuit.passionate_about.trim().toLowerCase() === trimmedPursuit.toLowerCase()
+    );
+
+    if (isDuplicate) {
+      toast.error(`"${newPursuit}" already exists as a creative pursuit.`);
+      return;
+    }
+
+    const newItem = {
+      passionate_about: trimmedPursuit,
+    };
+
+    const updatedPursuits = [...pursuits, newItem];
+    setNewPursuit("");
+    setIsAddDialogOpen(false);
+    await updatePursuitsInAPI(updatedPursuits);
   };
 
   const handleDeletePursuit = async (name: string) => {

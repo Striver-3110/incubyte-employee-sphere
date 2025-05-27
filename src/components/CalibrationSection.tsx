@@ -27,6 +27,7 @@ const CalibrationSection = ({
   isAdminView = false
 }: CalibrationSectionProps) => {
   const { calibration, loading, error } = useCalibrationData();
+  // console.log("Calibration data:", calibration, employeeCalibration);
   const { calibrationDataForAllEmployees } = useCalibrationDataForAllEmployees();
   const { employee } = useEmployeeDetails();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -42,18 +43,6 @@ const CalibrationSection = ({
   // Handle loading state
   if (isLoading) {
     return <CalibrationSectionSkeleton />;
-  }
-
-  // Handle error state
-  if (error) {
-    return (
-      <div className="bg-white p-6 rounded-lg shadow-sm">
-        <div className="text-center py-8">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Calibration Pending</h2>
-          <p className="text-gray-500">Your calibration is pending. Stay tuned for updates.</p>
-        </div>
-      </div>
-    );
   }
 
   // If not a business role and no specific employee calibration is passed, don't show
@@ -189,7 +178,6 @@ const CalibrationSection = ({
         }
 
         const responseData = await response.json();
-        // console.log("File uploaded successfully:", responseData);
 
         // Show success message and reset selected file
         alert("Self-evaluation sheet uploaded successfully!");

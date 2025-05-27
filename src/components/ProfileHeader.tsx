@@ -116,6 +116,17 @@ const ProfileHeader = () => {
       return;
     }
 
+    // URL validation using regex
+    const urlRegex = /^(https?:\/\/)?([\w\-]+\.)+[\w\-]+(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$/;
+    if (!urlRegex.test(platformUrl)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid URL",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsAddingPlatformLoading(true);
       const platformInfo = socialPlatforms.find((p) => p.id === selectedPlatform);
@@ -160,7 +171,6 @@ const ProfileHeader = () => {
       setIsAddingPlatformLoading(false);
     }
   };
-
   const handleDeletePlatform = async (platformName: string) => {
     try {
       setProcessingPlatform(platformName); // Show loading state for the platform being deleted
