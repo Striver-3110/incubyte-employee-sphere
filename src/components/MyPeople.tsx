@@ -57,12 +57,12 @@ const MyPeople = () => {
           {/* Show additional fields only if not a co-founder */}
           {!isCoFounder && (
             <>
-              <PeopleItem label="Lead" value={employee.custom_tech_lead || ""} />
-              <PeopleItem label="Buddy" value={employee.custom_buddy || ""} />
+              <PeopleItem label="Lead" value={employee.custom_tech_lead_name || ""} />
+              <PeopleItem label="Buddy" value={employee.custom_buddy_name || ""} />
 
               {/* Only show Tech Advisor for technical roles and not PSM/Business */}
               {showTechAdvisor && (
-                <PeopleItem label="Tech Advisor" value={employee.custom_tech_advisor || ""} />
+                <PeopleItem label="Tech Advisor" value={employee.custom_tech_advisor_name || ""} />
               )}
             </>
           )}

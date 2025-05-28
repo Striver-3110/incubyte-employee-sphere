@@ -116,6 +116,9 @@ export interface EmployeeDetails {
   custom_tech_lead?: string;
   custom_buddy?: string;
   custom_tech_advisor?: string;
+  custom_tech_lead_name?: string;
+  custom_buddy_name?: string;
+  custom_tech_advisor_name?: string;
   personal_email: string;
   company_email: string;
   cell_number: string;
@@ -217,16 +220,7 @@ const fetchEmployeeDetails = async () => {
   }
 
   try {
-    fetch('/api/method/frappe.auth.get_logged_user', {
-      method: 'GET',
-      credentials: 'include'
-    })
-      .then(response => response.json())
-      .then(data => {
-      })
-      .catch(error => {
-        console.error("Error fetching logged-in user:", error);
-      });
+
     const response = await fetch(`${BASE_URL}user.get_employee_details`, {
       method: 'GET',
       headers: {

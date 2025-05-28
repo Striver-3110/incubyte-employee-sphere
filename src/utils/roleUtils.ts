@@ -66,5 +66,5 @@ export const shouldShowTechAdvisor = (designation: string | undefined): boolean 
   if (!designation) return false;
   
   const category = getRoleCategory(designation);
-  return category !== "PSM" && category !== "Business";
+  return category !== "PSM" && category !== "Business" && designation !== "Software Craftsperson - Tech Advisor";
 };
