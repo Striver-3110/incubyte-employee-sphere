@@ -172,14 +172,16 @@ const IceBreakersForm = ({
 
   // Handle back button
   const handleBack = () => {
-    if (questionHistory.length > 0) {
+    if (questionHistory.length > 0 && currentIndex >= 0) {
       // Save current answer before going back
       const updatedQuestions = [...currentQuestions];
-      updatedQuestions[currentIndex] = {
-        ...updatedQuestions[currentIndex],
-        answer: answer.trim(),
-      };
-      setCurrentQuestions(updatedQuestions);
+      if (currentIndex < updatedQuestions.length) {
+        updatedQuestions[currentIndex] = {
+          ...updatedQuestions[currentIndex],
+          answer: answer.trim(),
+        };
+        setCurrentQuestions(updatedQuestions);
+      }
 
       // Get the previous question from history
       const previousQuestion = questionHistory[questionHistory.length - 1];
@@ -322,17 +324,19 @@ const IceBreakersForm = ({
 
   // Handle skip question (with circular navigation and history tracking)
   const handleSkip = () => {
-    // Save current state to history
-    setQuestionHistory(prev => [...prev, {
-      index: currentIndex,
-      answer: answer
-    }]);
+    if (currentIndex >= 0 && currentIndex < currentQuestions.length) {
+      // Save current state to history
+      setQuestionHistory(prev => [...prev, {
+        index: currentIndex,
+        answer: answer
+      }]);
 
-    const nextIndex = (currentIndex + 1) % currentQuestions.length;
-    setCurrentIndex(nextIndex);
-    
-    // Load the answer for the next question if it exists
-    setAnswer(currentQuestions[nextIndex]?.answer || "");
+      const nextIndex = (currentIndex + 1) % currentQuestions.length;
+      setCurrentIndex(nextIndex);
+      
+      // Load the answer for the next question if it exists
+      setAnswer(currentQuestions[nextIndex]?.answer || "");
+    }
   };
 
   // Check if minimum questions are answered
