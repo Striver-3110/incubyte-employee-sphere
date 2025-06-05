@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,38 +10,40 @@ import { toast } from "sonner";
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const AboutSection = () => {
-  const { employee, loading, error, setEmployee } = useEmployeeDetails(); // Added `setEmployee` to update the employee state
+  const { employee, loading, error, setEmployee } = useEmployeeDetails();
   const [isEditing, setIsEditing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false); // State to track saving progress
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
+    // Validate input - don't allow empty or whitespace-only content
+    const trimmedAbout = employee?.custom_about?.trim();
+    if (!trimmedAbout) {
+      toast.error("About section cannot be empty.");
+      return;
+    }
+
     setIsSaving(true);
     try {
-      // Call the API to update the "About" section
       const response = await fetch(`${BASE_URL}user.set_employee_details`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          custom_about: employee?.custom_about, // Use the existing `employee` object
+          custom_about: trimmedAbout,
         }),
-        credentials: "include", // Include cookies for authentication
+        credentials: "include",
       });
 
       const aboutData = await response.json();
 
-      // Check if the response indicates success
       if (aboutData.message?.status === "success") {
         toast.success(aboutData.message.message || "About section updated successfully");
-
-        // Update the employee state with the new "About" value
         setEmployee((prevEmployee) => ({
           ...prevEmployee,
           custom_about: aboutData.message.data.custom_about,
         }));
-
-        setIsEditing(false); // Exit editing mode
+        setIsEditing(false);
       } else {
         throw new Error(aboutData.message?.message || "Failed to update About section");
       }
@@ -89,13 +92,13 @@ const AboutSection = () => {
             }
             placeholder="Write something about yourself..."
             className="min-h-[100px] w-full"
-            disabled={isSaving} // Disable textarea while saving
+            disabled={isSaving}
           />
           <div className="flex justify-end gap-2 mt-3">
             <Button
               variant="outline"
               onClick={() => setIsEditing(false)}
-              disabled={isSaving} // Disable cancel button while saving
+              disabled={isSaving}
             >
               <X className="h-4 w-4 mr-1" /> Cancel
             </Button>

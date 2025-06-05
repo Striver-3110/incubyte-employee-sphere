@@ -26,9 +26,8 @@ const ProfileHeader = () => {
   const { employee, setEmployee, loading } = useEmployeeDetails();
   const [editingSocial, setEditingSocial] = useState<string | null>(null);
   const [newUrl, setNewUrl] = useState("");
-  const [processingPlatform, setProcessingPlatform] = useState<string | null>(null); // Tracks the platform being edited or deleted
+  const [processingPlatform, setProcessingPlatform] = useState<string | null>(null);
 
-  // States for adding platforms
   const [isAddingPlatform, setIsAddingPlatform] = useState(false);
   const [isAddingPlatformLoading, setIsAddingPlatformLoading] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState("");
@@ -57,10 +56,31 @@ const ProfileHeader = () => {
   };
 
   const handleSaveSocial = async (platformId: string) => {
+    const trimmedUrl = newUrl.trim();
+    if (!trimmedUrl) {
+      toast({
+        title: "Error",
+        description: "URL cannot be empty",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // URL validation
+    const urlRegex = /^(https?:\/\/)?([\w\-]+\.)+[\w\-]+(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$/;
+    if (!urlRegex.test(trimmedUrl)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid URL",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
-      setProcessingPlatform(platformId); // Disable buttons for this platform
+      setProcessingPlatform(platformId);
       const updatedPlatforms = employee.custom_platforms.map((platform) =>
-        platform.name === platformId ? { ...platform, url: newUrl } : platform
+        platform.name === platformId ? { ...platform, url: trimmedUrl } : platform
       );
 
       await fetch(`${BASE_URL}user.set_employee_details`, {
@@ -72,12 +92,11 @@ const ProfileHeader = () => {
         credentials: "include",
       });
 
-      // Update the UI without reloading
       const platformIndex = employee.custom_platforms.findIndex(
         (platform) => platform.name === platformId
       );
       if (platformIndex !== -1) {
-        employee.custom_platforms[platformIndex].url = newUrl;
+        employee.custom_platforms[platformIndex].url = trimmedUrl;
       }
 
       toast({
@@ -95,7 +114,7 @@ const ProfileHeader = () => {
         variant: "destructive",
       });
     } finally {
-      setProcessingPlatform(null); // Re-enable buttons
+      setProcessingPlatform(null);
     }
   };
 
@@ -107,7 +126,9 @@ const ProfileHeader = () => {
   };
 
   const handleAddPlatform = async () => {
-    if (!selectedPlatform || !platformUrl) {
+    const trimmedUrl = platformUrl.trim();
+    
+    if (!selectedPlatform || !trimmedUrl) {
       toast({
         title: "Error",
         description: "Please select a platform and enter a URL",
@@ -116,9 +137,8 @@ const ProfileHeader = () => {
       return;
     }
 
-    // URL validation using regex
     const urlRegex = /^(https?:\/\/)?([\w\-]+\.)+[\w\-]+(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$/;
-    if (!urlRegex.test(platformUrl)) {
+    if (!urlRegex.test(trimmedUrl)) {
       toast({
         title: "Error",
         description: "Please enter a valid URL",
@@ -134,9 +154,9 @@ const ProfileHeader = () => {
       if (!platformInfo) return;
 
       const newPlatform = {
-        name: selectedPlatform, // Use 'name' instead of 'platform_name'
+        name: selectedPlatform,
         platform_name: platformInfo.name,
-        url: platformUrl,
+        url: trimmedUrl,
       };
 
       const updatedPlatforms = [...employee.custom_platforms, newPlatform];
@@ -150,7 +170,6 @@ const ProfileHeader = () => {
         credentials: "include",
       });
 
-      // Update the UI without reloading
       employee.custom_platforms.push(newPlatform);
 
       toast({
@@ -172,6 +191,7 @@ const ProfileHeader = () => {
       setIsAddingPlatformLoading(false);
     }
   };
+
   const handleDeletePlatform = async (platformName: string) => {
     try {
       setProcessingPlatform(platformName); // Show loading state for the platform being deleted
@@ -212,6 +232,7 @@ const ProfileHeader = () => {
       setProcessingPlatform(null); // Re-enable buttons
     }
   };
+
   const handleCancelEdit = () => {
     setEditingSocial(null);
     setNewUrl("");
@@ -263,7 +284,7 @@ const ProfileHeader = () => {
                         value={newUrl}
                         onChange={(e) => setNewUrl(e.target.value)}
                         className="h-8 w-48"
-                        disabled={!!processingPlatform} // Disable input if processing
+                        disabled={!!processingPlatform}
                       />
                       <Button
                         variant="ghost"
@@ -300,7 +321,7 @@ const ProfileHeader = () => {
                         size="icon"
                         onClick={() => handleEditSocial(platform.name, platform.url)}
                         className="h-6 w-6 ml-1"
-                        disabled={processingPlatform === platform.name} // Disable button if processing
+                        disabled={processingPlatform === platform.name}
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
@@ -309,7 +330,7 @@ const ProfileHeader = () => {
                         size="icon"
                         onClick={() => handleDeletePlatform(platform.platform_name)}
                         className="h-6 w-6 ml-1 text-red-500"
-                        disabled={processingPlatform === platform.platform_name} // Disable button if processing
+                        disabled={processingPlatform === platform.name}
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>

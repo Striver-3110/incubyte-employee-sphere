@@ -23,7 +23,6 @@ const CreativePursuits = () => {
   const [pursuits, setPursuits] = useState<PassionateAbout[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Use useEffect to set pursuits state when employee data loads
   useEffect(() => {
     if (!loading && employee?.custom_passionate_about) {
       setPursuits(employee.custom_passionate_about);
@@ -67,18 +66,17 @@ const CreativePursuits = () => {
     const trimmedPursuit = newPursuit.trim();
 
     if (!trimmedPursuit) {
-      toast.error("Pursuit cannot be empty.");
+      toast.error("Creative pursuit cannot be empty.");
       return;
     }
 
-    // Check for duplicates in a case-insensitive manner
     const isDuplicate = pursuits.some(
       (pursuit) =>
         pursuit.passionate_about.trim().toLowerCase() === trimmedPursuit.toLowerCase()
     );
 
     if (isDuplicate) {
-      toast.error(`"${newPursuit}" already exists as a creative pursuit.`);
+      toast.error(`"${trimmedPursuit}" already exists as a creative pursuit.`);
       return;
     }
 
@@ -139,7 +137,6 @@ const CreativePursuits = () => {
         </div>
       )}
 
-      {/* Add Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[425px]" showOverlay={false}>
           <DialogHeader>
