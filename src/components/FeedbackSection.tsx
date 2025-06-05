@@ -1,5 +1,6 @@
+
 import React, { useState } from "react";
-import { useEmployeeDetails } from "@/api/employeeService";
+import { useFeedbackData } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -8,7 +9,7 @@ import { FeedbackInitiation } from "./FeedbackInitiation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const FeedbackSection = () => {
-  const { employee, loading } = useEmployeeDetails();
+  const { feedbacks, loading } = useFeedbackData();
   const [isInitiateDialogOpen, setIsInitiateDialogOpen] = useState(false);
 
   if (loading) {
@@ -25,7 +26,7 @@ const FeedbackSection = () => {
               <Plus className="h-4 w-4 mr-1" /> Initiate Feedback
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl" showOverlay={false}>
             <FeedbackInitiation onClose={() => setIsInitiateDialogOpen(false)} />
           </DialogContent>
         </Dialog>
@@ -38,30 +39,27 @@ const FeedbackSection = () => {
         </TabsList>
         
         <TabsContent value="received" className="mt-4">
-          {employee?.feedback_requests && employee.feedback_requests.length > 0 ? (
+          {feedbacks?.given_to_me && feedbacks.given_to_me.length > 0 ? (
             <div className="space-y-4">
-              {employee.feedback_requests.map((feedback, index) => (
+              {feedbacks.given_to_me.map((feedback, index) => (
                 <div key={index} className="bg-gray-50 p-4 rounded-md border">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-medium text-gray-800">
-                      {feedback.feedback_template || "Feedback Request"}
+                      {feedback.name || "Feedback Request"}
                     </h3>
                     <span className={`px-2 py-1 text-xs rounded-full ${
-                      feedback.status === 'Pending' 
+                      feedback.rag_status === 'Pending' 
                         ? 'bg-yellow-100 text-yellow-800'
-                        : feedback.status === 'Completed'
+                        : feedback.rag_status === 'Completed'
                         ? 'bg-green-100 text-green-800'
                         : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {feedback.status}
+                      {feedback.rag_status}
                     </span>
                   </div>
                   <div className="text-sm text-gray-600 space-y-1">
-                    <p><strong>From:</strong> {feedback.requester_name}</p>
-                    <p><strong>Type:</strong> {feedback.feedback_type}</p>
-                    {feedback.creation_date && (
-                      <p><strong>Requested:</strong> {new Date(feedback.creation_date).toLocaleDateString()}</p>
-                    )}
+                    <p><strong>From:</strong> {feedback.reviewer_name}</p>
+                    <p><strong>For:</strong> {feedback.employee_name}</p>
                   </div>
                 </div>
               ))}
@@ -72,10 +70,34 @@ const FeedbackSection = () => {
         </TabsContent>
 
         <TabsContent value="my-feedback" className="mt-4">
-          <div className="text-center py-8">
-            <p className="text-gray-500 italic">My feedback functionality will be implemented here.</p>
-            <p className="text-sm text-gray-400 mt-2">This will show feedback that you have given or initiated.</p>
-          </div>
+          {feedbacks?.given_by_me && feedbacks.given_by_me.length > 0 ? (
+            <div className="space-y-4">
+              {feedbacks.given_by_me.map((feedback, index) => (
+                <div key={index} className="bg-gray-50 p-4 rounded-md border">
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-medium text-gray-800">
+                      {feedback.name || "Feedback Given"}
+                    </h3>
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      feedback.rag_status === 'Pending' 
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : feedback.rag_status === 'Completed'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {feedback.rag_status}
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <p><strong>To:</strong> {feedback.employee_name}</p>
+                    <p><strong>Reviewer:</strong> {feedback.reviewer_name}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500 italic">No feedback given yet.</p>
+          )}
         </TabsContent>
       </Tabs>
     </div>
