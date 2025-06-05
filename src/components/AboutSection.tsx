@@ -55,6 +55,9 @@ const AboutSection = () => {
     }
   };
 
+  // Check if save should be disabled
+  const isSaveDisabled = !employee?.custom_about?.trim() || isSaving;
+
   if (loading || !employee) {
     return <AboutSkeleton />;
   }
@@ -102,7 +105,7 @@ const AboutSection = () => {
             >
               <X className="h-4 w-4 mr-1" /> Cancel
             </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
+            <Button onClick={handleSave} disabled={isSaveDisabled}>
               {isSaving ? "Saving..." : <><Check className="h-4 w-4 mr-1" /> Save</>}
             </Button>
           </div>
