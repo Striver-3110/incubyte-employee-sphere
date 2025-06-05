@@ -109,7 +109,7 @@ const CreativePursuits = () => {
           onClick={() => setIsAddDialogOpen(true)}
           className="h-8"
           size="sm"
-          disabled={isSaving} // Disable button while saving
+          disabled={isSaving}
         >
           <Plus className="h-4 w-4 mr-1" /> Add
         </Button>
@@ -130,7 +130,7 @@ const CreativePursuits = () => {
                 size="icon"
                 onClick={() => handleDeletePursuit(pursuit.name)}
                 className="h-8 w-8 text-gray-500 hover:text-red-500"
-                disabled={isSaving} // Disable button while saving
+                disabled={isSaving}
               >
                 <Trash className="h-4 w-4" />
               </Button>
@@ -141,7 +141,7 @@ const CreativePursuits = () => {
 
       {/* Add Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px]" showOverlay={false}>
           <DialogHeader>
             <DialogTitle>Add Creative Pursuit</DialogTitle>
           </DialogHeader>
@@ -150,14 +150,14 @@ const CreativePursuits = () => {
               value={newPursuit}
               onChange={(e) => setNewPursuit(e.target.value)}
               placeholder="E.g., Photography, Writing, Playing Guitar..."
-              disabled={isSaving} // Disable input while saving
+              disabled={isSaving}
             />
           </div>
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setIsAddDialogOpen(false)}
-              disabled={isSaving} // Disable button while saving
+              disabled={isSaving}
             >
               Cancel
             </Button>

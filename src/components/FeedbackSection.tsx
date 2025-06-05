@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -26,7 +25,7 @@ const FeedbackSection = () => {
               <Plus className="h-4 w-4 mr-1" /> Initiate Feedback
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl" showOverlay={false}>
+          <DialogContent className="max-w-2xl">
             <FeedbackInitiation onClose={() => setIsInitiateDialogOpen(false)} />
           </DialogContent>
         </Dialog>
@@ -39,9 +38,9 @@ const FeedbackSection = () => {
         </TabsList>
         
         <TabsContent value="received" className="mt-4">
-          {employee?.feedback_request && employee.feedback_request.length > 0 ? (
+          {employee?.feedback_requests && employee.feedback_requests.length > 0 ? (
             <div className="space-y-4">
-              {employee.feedback_request.map((feedback, index) => (
+              {employee.feedback_requests.map((feedback, index) => (
                 <div key={index} className="bg-gray-50 p-4 rounded-md border">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-medium text-gray-800">
