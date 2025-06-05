@@ -65,13 +65,15 @@ const SkillsMatrix = () => {
 
   // Add a new skill
   const handleAddSkill = async () => {
-    if (!searchTerm || !selectedProficiency) {
+    const trimmedSkill = searchTerm.trim();
+    
+    if (!trimmedSkill || !selectedProficiency) {
       toast.error("Please fill out all fields.");
       return;
     }
 
     const newSkill = {
-      skill: searchTerm.trim(),
+      skill: trimmedSkill,
       proficiency_level: selectedProficiency,
     };
 
@@ -98,9 +100,8 @@ const SkillsMatrix = () => {
           ...prev,
           custom_tech_stack: data.message.data.custom_tech_stack,
         }));
-        setIsAddDialogOpen(false);
-        setSearchTerm("");
-        setSelectedProficiency("");
+        // Auto-close modal and reset form
+        closeDialog();
       } else {
         throw new Error(data.message?.message || "Failed to add skill.");
       }
@@ -148,6 +149,16 @@ const SkillsMatrix = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleSkillSelect = (skill: string) => {
+    setSearchTerm(skill);
+  };
+
+  const closeDialog = () => {
+    setIsAddDialogOpen(false);
+    setSearchTerm("");
+    setSelectedProficiency("");
   };
 
   if (loading) {
@@ -199,9 +210,9 @@ const SkillsMatrix = () => {
         ))}
       </div>
 
-      {/* Add Skill Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-md">
+      {/* Add Skill Dialog - No backdrop */}
+      <Dialog open={isAddDialogOpen} onOpenChange={closeDialog}>
+        <DialogContent className="max-w-md" showOverlay={false}>
           <DialogHeader>
             <DialogTitle>Add Skill</DialogTitle>
           </DialogHeader>
@@ -214,7 +225,7 @@ const SkillsMatrix = () => {
                 placeholder="Enter a new skill or search"
               />
               {searchTerm && (
-                <div className="max-h-32 overflow-y-auto border rounded-md mt-2">
+                <div className="max-h-32 overflow-y-auto border rounded-md mt-2 bg-white z-50">
                   {availableSkills
                     .filter((skill) =>
                       skill.toLowerCase().includes(searchTerm.toLowerCase())
@@ -223,7 +234,7 @@ const SkillsMatrix = () => {
                       <div
                         key={index}
                         className="p-2 cursor-pointer hover:bg-gray-100"
-                        onClick={() => setSearchTerm(skill)}
+                        onClick={() => handleSkillSelect(skill)}
                       >
                         {skill}
                       </div>
@@ -251,7 +262,7 @@ const SkillsMatrix = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+            <Button variant="outline" onClick={closeDialog}>
               Cancel
             </Button>
             <Button onClick={handleAddSkill} disabled={isSaving}>
