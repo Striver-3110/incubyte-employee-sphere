@@ -134,6 +134,7 @@ const ProfileHeader = () => {
       if (!platformInfo) return;
 
       const newPlatform = {
+        name: selectedPlatform, // Use 'name' instead of 'platform_name'
         platform_name: platformInfo.name,
         url: platformUrl,
       };
