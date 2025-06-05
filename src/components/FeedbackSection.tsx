@@ -16,6 +16,9 @@ const FeedbackSection = () => {
     return <FeedbackSkeleton />;
   }
 
+  const receivedFeedbacks = feedbacks?.given_to_me || [];
+  const givenFeedbacks = feedbacks?.given_by_me || [];
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
       <div className="flex justify-between items-center mb-4">
@@ -39,9 +42,9 @@ const FeedbackSection = () => {
         </TabsList>
         
         <TabsContent value="received" className="mt-4">
-          {feedbacks?.given_to_me && feedbacks.given_to_me.length > 0 ? (
+          {receivedFeedbacks.length > 0 ? (
             <div className="space-y-4">
-              {feedbacks.given_to_me.map((feedback, index) => (
+              {receivedFeedbacks.map((feedback, index) => (
                 <div key={index} className="bg-gray-50 p-4 rounded-md border">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-medium text-gray-800">
@@ -70,9 +73,9 @@ const FeedbackSection = () => {
         </TabsContent>
 
         <TabsContent value="my-feedback" className="mt-4">
-          {feedbacks?.given_by_me && feedbacks.given_by_me.length > 0 ? (
+          {givenFeedbacks.length > 0 ? (
             <div className="space-y-4">
-              {feedbacks.given_by_me.map((feedback, index) => (
+              {givenFeedbacks.map((feedback, index) => (
                 <div key={index} className="bg-gray-50 p-4 rounded-md border">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-medium text-gray-800">
