@@ -3,7 +3,7 @@ import { useEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Edit, RefreshCcw, Save, X } from "lucide-react";
+import { Edit, RefreshCcw, Save, X, ChevronLeft } from "lucide-react";
 import { toast } from "sonner";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL
@@ -45,6 +45,11 @@ const predefinedQuestions = [
 interface IceBreakerQuestion {
   name?: string;
   question: string;
+  answer: string;
+}
+
+interface QuestionHistory {
+  index: number;
   answer: string;
 }
 
@@ -118,12 +123,13 @@ const IceBreakersForm = ({
   predefinedQuestions: string[];
 }) => {
   const [currentQuestions, setCurrentQuestions] = useState<IceBreakerQuestion[]>(questions);
-  const [currentIndex, setCurrentIndex] = useState(questions.length === 0 ? 0 : -1); // -1 means viewing mode
+  const [currentIndex, setCurrentIndex] = useState(questions.length === 0 ? 0 : -1);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [answer, setAnswer] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inlineEditing, setInlineEditing] = useState<number | null>(null);
   const [editedAnswer, setEditedAnswer] = useState("");
+  const [questionHistory, setQuestionHistory] = useState<QuestionHistory[]>([]);
 
   // Initialize questions with randomly selected ones if needed
   useEffect(() => {
@@ -147,8 +153,8 @@ const IceBreakersForm = ({
   const handleStart = () => {
     setCurrentIndex(0);
     setAnswer("");
+    setQuestionHistory([]);
     if (currentQuestions.length === 0) {
-      // If no questions yet, use randomly selected ones
       generateRandomQuestions();
     }
   };
@@ -160,7 +166,31 @@ const IceBreakersForm = ({
     setAnswer("");
     setEditingIndex(null);
     setInlineEditing(null);
+    setQuestionHistory([]);
     toast.success("Ice breakers restarted with new questions");
+  };
+
+  // Handle back button
+  const handleBack = () => {
+    if (questionHistory.length > 0) {
+      // Save current answer before going back
+      const updatedQuestions = [...currentQuestions];
+      updatedQuestions[currentIndex] = {
+        ...updatedQuestions[currentIndex],
+        answer: answer.trim(),
+      };
+      setCurrentQuestions(updatedQuestions);
+
+      // Get the previous question from history
+      const previousQuestion = questionHistory[questionHistory.length - 1];
+      
+      // Remove the last item from history
+      setQuestionHistory(prev => prev.slice(0, -1));
+      
+      // Set the previous question as current
+      setCurrentIndex(previousQuestion.index);
+      setAnswer(previousQuestion.answer);
+    }
   };
 
   // Handle inline edit mode
@@ -239,42 +269,49 @@ const IceBreakersForm = ({
     }
   };
 
-  // Handle next question (with circular navigation)
-  // Handle next question (with circular navigation)
+  // Handle next question (with circular navigation and history tracking)
   const handleNext = () => {
     if (currentIndex >= 0 && currentIndex < currentQuestions.length) {
+      // Save current state to history
+      setQuestionHistory(prev => [...prev, {
+        index: currentIndex,
+        answer: answer
+      }]);
+
       const updatedQuestions = [...currentQuestions];
       updatedQuestions[currentIndex] = {
         ...updatedQuestions[currentIndex],
-        answer: answer.trim(), // Ensure the answer is trimmed and saved
+        answer: answer.trim(),
       };
       setCurrentQuestions(updatedQuestions);
 
       // Move to the next question
-      setCurrentIndex(prev => (prev + 1) % currentQuestions.length);
-      setAnswer(""); // Clear the answer for the next question
+      const nextIndex = (currentIndex + 1) % currentQuestions.length;
+      setCurrentIndex(nextIndex);
+      
+      // Load the answer for the next question if it exists
+      setAnswer(updatedQuestions[nextIndex]?.answer || "");
     }
   };
 
   // Handle submit
   const handleSubmit = async () => {
-    // Save the current answer if there is one
     if (currentIndex >= 0 && currentIndex < currentQuestions.length) {
       const updatedQuestions = [...currentQuestions];
       updatedQuestions[currentIndex] = {
         ...updatedQuestions[currentIndex],
-        answer: answer.trim(), // Ensure the current answer is saved
+        answer: answer.trim(),
       };
       setCurrentQuestions(updatedQuestions);
 
-      // Filter out questions that have answers
       const answeredQuestions = updatedQuestions.filter(q => q.answer.trim() !== "");
 
       setIsSubmitting(true);
       try {
         await saveIceBreakers(answeredQuestions);
         toast.success("Ice breakers submitted successfully!");
-        setCurrentIndex(-1); // Back to view mode
+        setCurrentIndex(-1);
+        setQuestionHistory([]);
       } catch (error) {
         toast.error("Failed to submit ice breakers");
       } finally {
@@ -283,15 +320,25 @@ const IceBreakersForm = ({
     }
   };
 
-  // Handle skip question (with circular navigation)
+  // Handle skip question (with circular navigation and history tracking)
   const handleSkip = () => {
-    setCurrentIndex(prev => (prev + 1) % currentQuestions.length);
-    setAnswer("");
+    // Save current state to history
+    setQuestionHistory(prev => [...prev, {
+      index: currentIndex,
+      answer: answer
+    }]);
+
+    const nextIndex = (currentIndex + 1) % currentQuestions.length;
+    setCurrentIndex(nextIndex);
+    
+    // Load the answer for the next question if it exists
+    setAnswer(currentQuestions[nextIndex]?.answer || "");
   };
 
   // Check if minimum questions are answered
   const answeredCount = currentQuestions.filter(q => q.answer.trim() !== "").length;
   const canSubmit = answeredCount >= 5;
+  const canGoBack = questionHistory.length > 0;
 
   // Render view mode (list of answered questions)
   if (currentIndex === -1) {
@@ -420,12 +467,24 @@ const IceBreakersForm = ({
       />
 
       <div className="flex justify-between mt-4">
-        <Button
-          variant="outline"
-          onClick={handleSkip}
-        >
-          Skip
-        </Button>
+        <div className="flex gap-2">
+          {canGoBack && (
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              className="flex items-center gap-2"
+            >
+              <ChevronLeft size={16} />
+              Back
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            onClick={handleSkip}
+          >
+            Skip
+          </Button>
+        </div>
         <div className="flex gap-2">
           {(canSubmit || answeredCount + (hasAnswer ? 1 : 0) >= 5) && (
             <Button
