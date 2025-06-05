@@ -1,16 +1,23 @@
-
 import { useState, useEffect } from "react";
 import { useFeedbackData, useEmployeeDetails } from "@/api/employeeService";
 import { hasRecentFeedback, formatDate } from "@/utils/dateUtils";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { X } from "lucide-react";
+import { X, Plus } from "lucide-react";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import FeedbackInitiation from "./FeedbackInitiation";
 
 interface FeedbackItem {
   name: string;
@@ -34,6 +41,7 @@ const FeedbackSection = () => {
     received: false
   });
   const [activeTab, setActiveTab] = useState("all");
+  const [isInitiationDialogOpen, setIsInitiationDialogOpen] = useState(false);
   
   useEffect(() => {
     if (employee) {
@@ -63,10 +71,41 @@ const FeedbackSection = () => {
   const displayedGiven = showAllGiven ? givenFeedbacks : givenFeedbacks.slice(0, initialDisplayCount);
   const displayedReceived = showAllReceived ? receivedFeedbacks : receivedFeedbacks.slice(0, initialDisplayCount);
   const displayedPending = showAllPending ? pendingFeedbacks : pendingFeedbacks.slice(0, initialDisplayCount);
+
+  // Filter feedbacks for "My Feedback" view (given by me and initiated by me)
+  const myFeedbacks = [...givenFeedbacks, ...initiatedFeedbacks];
+  const displayedMyFeedbacks = showAllGiven ? myFeedbacks : myFeedbacks.slice(0, initialDisplayCount);
+  
+  const handleInitiationSuccess = () => {
+    setIsInitiationDialogOpen(false);
+    // Optionally refresh the feedback data here
+    window.location.reload(); // Simple refresh for now
+  };
   
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Feedback</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold text-gray-800">Feedback</h2>
+        <Dialog open={isInitiationDialogOpen} onOpenChange={setIsInitiationDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Initiate Feedback
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden">
+            <DialogHeader>
+              <DialogTitle>Initiate Feedback Process</DialogTitle>
+            </DialogHeader>
+            <div className="overflow-y-auto">
+              <FeedbackInitiation 
+                currentEmployeeId={employeeId} 
+                onSuccess={handleInitiationSuccess}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
       
       {/* Warning messages */}
       {!recentFeedback.given && !dismissWarning.given && (
@@ -91,6 +130,9 @@ const FeedbackSection = () => {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
         <TabsList className="mb-4 bg-gray-100">
           <TabsTrigger value="all">All</TabsTrigger>
+          <TabsTrigger value="my-feedback">
+            My Feedback ({myFeedbacks.length})
+          </TabsTrigger>
           <TabsTrigger value="initiated">
             Initiated ({initiatedFeedbacks.length})
           </TabsTrigger>
@@ -104,6 +146,34 @@ const FeedbackSection = () => {
             Pending ({pendingFeedbacks.length})
           </TabsTrigger>
         </TabsList>
+        
+        <TabsContent value="my-feedback">
+          <div>
+            {myFeedbacks.length > 0 ? (
+              <div className="space-y-2">
+                {displayedMyFeedbacks.map((feedback) => (
+                  <FeedbackItemComponent 
+                    key={feedback.name} 
+                    feedback={feedback} 
+                    currentEmployeeId={employeeId}
+                  />
+                ))}
+                
+                {myFeedbacks.length > initialDisplayCount && (
+                  <Button 
+                    variant="link" 
+                    onClick={() => setShowAllGiven(!showAllGiven)}
+                    className="p-0 h-auto text-sm"
+                  >
+                    {showAllGiven ? "Show Less" : `View ${myFeedbacks.length - initialDisplayCount} More`}
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <p className="text-gray-500 italic">You haven't given or initiated any feedback yet.</p>
+            )}
+          </div>
+        </TabsContent>
         
         <TabsContent value="all">
           <div className="space-y-6">

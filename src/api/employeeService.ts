@@ -1,4 +1,3 @@
-
 // API service for employee data
 import { useState, useEffect } from 'react';
 
@@ -126,6 +125,16 @@ export interface EmployeeDetails {
   custom_city: string;
   custom_state: string;
   custom_pin: string;
+}
+
+// New interfaces for feedback functionality
+export interface Employee {
+  name: string;
+  employee_name: string;
+}
+
+export interface FeedbackTemplate {
+  name: string;
 }
 
 // Mock data for calibration
@@ -696,4 +705,77 @@ export const useAvailableTechStacks = () => {
   }, []);
 
   return { techStacks, loading, error };
+};
+
+// New API functions for feedback functionality
+export const fetchAllEmployees = async (): Promise<Employee[]> => {
+  try {
+    const response = await fetch(`${BASE_URL}user.get_all_employees`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch employees');
+    }
+
+    const data = await response.json();
+    return data.message || [];
+  } catch (error) {
+    console.error('Error fetching employees:', error);
+    // Return mock data for development
+    return [
+      { name: 'E0034', employee_name: 'Sachin Tripathi' },
+      { name: 'E0009', employee_name: 'Akshay Vadher' },
+      { name: 'E0002', employee_name: 'Arohi Shah' },
+    ];
+  }
+};
+
+export const fetchFeedbackTemplates = async (): Promise<FeedbackTemplate[]> => {
+  try {
+    const response = await fetch(`${BASE_URL}user.get_feedback_templat_list`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch feedback templates');
+    }
+
+    const data = await response.json();
+    return data.message || [];
+  } catch (error) {
+    console.error('Error fetching feedback templates:', error);
+    // Return mock data for development
+    return [
+      { name: 'Future Leaders Readiness Feedback' },
+      { name: 'Milestone Feedback' },
+      { name: 'Lead Effectiveness Feedback' },
+      { name: 'Peer Feedback' },
+    ];
+  }
+};
+
+export const sendFeedbackForm = async (initiator: string, recipients: string[], template: string) => {
+  try {
+    const response = await fetch(`${BASE_URL}user.send_feedback_form`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify([initiator, recipients, template]),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to send feedback form');
+    }
+
+    const data = await response.json();
+    return data.message;
+  } catch (error) {
+    console.error('Error sending feedback form:', error);
+    throw error;
+  }
 };
