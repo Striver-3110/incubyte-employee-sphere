@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useEmployeeDetails } from "@/api/employeeService";
 import { Button } from "@/components/ui/button";
@@ -188,14 +189,14 @@ const SkillsMatrix = () => {
                 {groupedSkills[level].map((skill) => (
                   <div
                     key={skill.name}
-                    className="flex items-center bg-gray-50 p-2 rounded-md border shadow-sm space-x-2"
+                    className="flex items-center bg-blue-50 p-2 rounded-md border border-blue-200 shadow-sm space-x-2"
                   >
-                    <span className="text-gray-800 text-sm">{skill.skill}</span>
+                    <span className="text-blue-800 text-sm font-medium">{skill.skill}</span>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleDeleteSkill(skill.name)}
-                      className="h-6 w-6 text-gray-500 hover:text-red-500"
+                      className="h-6 w-6 text-blue-500 hover:text-red-500"
                       disabled={isSaving}
                     >
                       <Trash className="h-4 w-4" />
@@ -210,9 +211,9 @@ const SkillsMatrix = () => {
         ))}
       </div>
 
-      {/* Add Skill Dialog - No backdrop */}
-      <Dialog open={isAddDialogOpen} onOpenChange={closeDialog}>
-        <DialogContent className="max-w-md" showOverlay={false}>
+      {/* Add Skill Dialog - No backdrop, centered in viewport */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="max-w-md fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" showOverlay={false}>
           <DialogHeader>
             <DialogTitle>Add Skill</DialogTitle>
           </DialogHeader>
@@ -224,7 +225,7 @@ const SkillsMatrix = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Enter a new skill or search"
               />
-              {searchTerm && (
+              {searchTerm.trim() && (
                 <div className="max-h-32 overflow-y-auto border rounded-md mt-2 bg-white z-50">
                   {availableSkills
                     .filter((skill) =>
@@ -265,7 +266,7 @@ const SkillsMatrix = () => {
             <Button variant="outline" onClick={closeDialog}>
               Cancel
             </Button>
-            <Button onClick={handleAddSkill} disabled={isSaving}>
+            <Button onClick={handleAddSkill} disabled={isSaving || !searchTerm.trim() || !selectedProficiency}>
               {isSaving ? "Saving..." : "Add Skill"}
             </Button>
           </DialogFooter>
