@@ -53,8 +53,10 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
           fetchAllEmployees(),
           fetchFeedbackTemplates()
         ]);
-        setEmployees(employeesData || []);
-        setFeedbackTemplates(templatesData || []);
+        
+        // Ensure we always have arrays, even if API returns null/undefined
+        setEmployees(Array.isArray(employeesData) ? employeesData : []);
+        setFeedbackTemplates(Array.isArray(templatesData) ? templatesData : []);
       } catch (error) {
         console.error("Error loading data:", error);
         toast.error("Failed to load data");
@@ -69,14 +71,28 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
     loadData();
   }, []);
   
-  // Ensure employees is always an array before filtering
-  const filteredEmployees = Array.isArray(employees) ? employees.filter(
-    employee => 
-      employee && 
-      !selectedEmployees.some(selected => selected?.name === employee?.name) &&
-      (employee.employee_name?.toLowerCase().includes(inputValue.toLowerCase()) || 
-       employee.name?.toLowerCase().includes(inputValue.toLowerCase()))
-  ) : [];
+  // Ensure employees is always an array before filtering and add more robust filtering
+  const filteredEmployees = React.useMemo(() => {
+    if (!Array.isArray(employees)) return [];
+    
+    return employees.filter(employee => {
+      // Skip if employee is null/undefined or missing required fields
+      if (!employee || !employee.name) return false;
+      
+      // Skip if already selected
+      if (selectedEmployees.some(selected => selected?.name === employee?.name)) return false;
+      
+      // Apply search filter
+      if (inputValue.trim()) {
+        const searchLower = inputValue.toLowerCase();
+        const employeeName = employee.employee_name?.toLowerCase() || '';
+        const name = employee.name?.toLowerCase() || '';
+        return employeeName.includes(searchLower) || name.includes(searchLower);
+      }
+      
+      return true;
+    });
+  }, [employees, selectedEmployees, inputValue]);
 
   const handleRemoveEmployee = (employeeId: string) => {
     setSelectedEmployees(prev => prev.filter(emp => emp?.name !== employeeId));
@@ -97,7 +113,6 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
 
     setIsSubmitting(true);
     try {
-      // Convert the selected employees array to an array of employee IDs
       const selectedEmployeeIds = selectedEmployees.map(emp => emp.name).filter(Boolean);
       await sendFeedbackForm(selectedEmployee, selectedEmployeeIds, selectedTemplate);
       toast.success("Feedback form sent successfully!");
@@ -140,10 +155,12 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
               <SelectValue placeholder="Select employee" />
             </SelectTrigger>
             <SelectContent>
-              {Array.isArray(employees) && employees.map((employee) => (
-                <SelectItem key={employee?.name || ''} value={employee?.name || ''}>
-                  {employee?.employee_name || ''} ({employee?.name || ''})
-                </SelectItem>
+              {employees.map((employee) => (
+                employee?.name && (
+                  <SelectItem key={employee.name} value={employee.name}>
+                    {employee.employee_name || employee.name} ({employee.name})
+                  </SelectItem>
+                )
               ))}
             </SelectContent>
           </Select>
@@ -193,26 +210,28 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
               </PopoverTrigger>
               <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                 <Command>
-                  <CommandInput placeholder="Search employees..." value={inputValue} onValueChange={setInputValue} />
+                  <CommandInput 
+                    placeholder="Search employees..." 
+                    value={inputValue} 
+                    onValueChange={setInputValue} 
+                  />
                   <CommandEmpty>No employee found.</CommandEmpty>
                   <CommandGroup className="max-h-64 overflow-y-auto">
                     {filteredEmployees.map((employee) => (
-                      employee?.name && (
-                        <CommandItem 
-                          key={employee.name}
-                          onSelect={() => {
-                            handleAddEmployee(employee);
-                            setOpen(true);
-                          }}
-                          className="flex items-center gap-2"
-                        >
-                          <Check className={cn(
-                            "mr-2 h-4 w-4",
-                            selectedEmployees.some(e => e?.name === employee?.name) ? "opacity-100" : "opacity-0"
-                          )} />
-                          {employee.employee_name || employee.name} ({employee.name})
-                        </CommandItem>
-                      )
+                      <CommandItem 
+                        key={employee.name}
+                        onSelect={() => {
+                          handleAddEmployee(employee);
+                          setOpen(true);
+                        }}
+                        className="flex items-center gap-2"
+                      >
+                        <Check className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedEmployees.some(e => e?.name === employee?.name) ? "opacity-100" : "opacity-0"
+                        )} />
+                        {employee.employee_name || employee.name} ({employee.name})
+                      </CommandItem>
                     ))}
                   </CommandGroup>
                 </Command>
@@ -234,10 +253,12 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
               <SelectValue placeholder="Select feedback template" />
             </SelectTrigger>
             <SelectContent>
-              {Array.isArray(feedbackTemplates) && feedbackTemplates.map((template) => (
-                <SelectItem key={template?.name || ''} value={template?.name || ''}>
-                  {template?.name || ''}
-                </SelectItem>
+              {feedbackTemplates.map((template) => (
+                template?.name && (
+                  <SelectItem key={template.name} value={template.name}>
+                    {template.name}
+                  </SelectItem>
+                )
               ))}
             </SelectContent>
           </Select>
