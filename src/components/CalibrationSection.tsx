@@ -1,4 +1,3 @@
-
 import { useCalibrationData, useCalibrationDataForAllEmployees, useEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
@@ -9,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Upload, FileText } from "lucide-react";
 import { getRoleCategory } from "@/utils/roleUtils";
 import { useState } from "react";
-
 
 const BASE_URL = import.meta.env.VITE_BASE_URL
 
@@ -267,21 +265,19 @@ const CalibrationSection = ({
         </div>
       )}
 
-      {/* Overall Level Section */}
+      {/* Overall Level Section - Compact Version */}
       {overallLevel && (
-        <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50">
-          <h3 className="font-medium text-gray-700 mb-3">Overall Level</h3>
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-3">
-                <Progress
-                  value={getProgressValue(overallLevel.level)}
-                  className="h-3 flex-1"
-                />
-                <span className={`px-3 py-1 text-sm font-medium rounded-full border ${getLevelBadgeColor(overallLevel.level)}`}>
-                  {overallLevel.level}
-                </span>
-              </div>
+        <div className="mb-4 p-3 border border-gray-200 rounded-lg bg-gray-50">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-gray-700 text-sm">Overall Level</h3>
+            <div className="flex items-center gap-2">
+              <Progress
+                value={getProgressValue(overallLevel.level)}
+                className="h-2 w-24"
+              />
+              <span className={`px-2 py-1 text-xs font-medium rounded border ${getLevelBadgeColor(overallLevel.level)}`}>
+                {overallLevel.level}
+              </span>
             </div>
           </div>
         </div>
