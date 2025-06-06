@@ -83,11 +83,12 @@ const ProfileHeader = () => {
 
     try {
       setProcessingPlatform(platformId);
+      
       const updatedPlatforms = employee.custom_platforms.map((platform) =>
         platform.name === platformId ? { ...platform, url: trimmedUrl } : platform
       );
 
-      await fetch(`${BASE_URL}user.set_employee_details`, {
+      const response = await fetch(`${BASE_URL}user.set_employee_details`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -95,6 +96,10 @@ const ProfileHeader = () => {
         }),
         credentials: "include",
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to update platform');
+      }
 
       const platformIndex = employee.custom_platforms.findIndex(
         (platform) => platform.name === platformId
@@ -131,7 +136,7 @@ const ProfileHeader = () => {
 
   const handleAddPlatform = async () => {
     const trimmedUrl = platformUrl.trim();
-    
+
     if (!selectedPlatform || !trimmedUrl) {
       toast({
         title: "Error",
@@ -165,7 +170,7 @@ const ProfileHeader = () => {
 
       const updatedPlatforms = [...employee.custom_platforms, newPlatform];
 
-      await fetch(`${BASE_URL}user.set_employee_details`, {
+      const response = await fetch(`${BASE_URL}user.set_employee_details`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -173,6 +178,10 @@ const ProfileHeader = () => {
         }),
         credentials: "include",
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to add platform');
+      }
 
       employee.custom_platforms.push(newPlatform);
 
@@ -206,7 +215,7 @@ const ProfileHeader = () => {
       );
 
       // Send the updated list to the backend
-      await fetch(`${BASE_URL}user.set_employee_details`, {
+      const response = await fetch(`${BASE_URL}user.set_employee_details`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -214,6 +223,10 @@ const ProfileHeader = () => {
         }),
         credentials: "include",
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete platform');
+      }
 
       // Use the setEmployee hook to update the employee state
       setEmployee((prevEmployee) => ({
@@ -282,7 +295,9 @@ const ProfileHeader = () => {
             <div className="flex flex-wrap items-center gap-3 mt-2">
               {employee.custom_platforms.map((platform) => (
                 <div key={platform.name} className="flex items-center">
-                  {editingSocial === platform.name ? (
+                  {processingPlatform === platform.name ? (
+                    <Skeleton className="h-8 w-32" />
+                  ) : editingSocial === platform.name ? (
                     <div className="flex items-center space-x-2">
                       <Input
                         value={newUrl}
@@ -357,7 +372,11 @@ const ProfileHeader = () => {
               )}
 
               {isAddingPlatformLoading ? (
-                <Skeleton className="h-8 w-48" />
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-8 w-32" />
+                  <Skeleton className="h-8 w-48" />
+                  <Skeleton className="h-8 w-16" />
+                </div>
               ) : (
                 isAddingPlatform && (
                   <div className="flex flex-wrap items-center gap-2 p-2 border rounded-md bg-gray-50">
