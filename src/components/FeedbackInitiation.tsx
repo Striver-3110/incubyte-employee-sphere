@@ -1,11 +1,25 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { fetchAllEmployees, fetchFeedbackTemplates, sendFeedbackForm } from "@/api/employeeService";
 import { toast } from "sonner";
+import { X, Check, Search } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface Employee {
   name: string;
@@ -23,11 +37,13 @@ interface FeedbackInitiationProps {
 export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose }) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [feedbackTemplates, setFeedbackTemplates] = useState<FeedbackTemplate[]>([]);
-  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+  const [selectedEmployees, setSelectedEmployees] = useState<Employee[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState<string>("");
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [inputValue, setInputValue] = useState("");
 
   useEffect(() => {
     const loadData = async () => {
@@ -49,13 +65,21 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
 
     loadData();
   }, []);
+  
+  const filteredEmployees = employees.filter(
+    employee => 
+      !selectedEmployees.some(selected => selected.name === employee.name) &&
+      (employee.employee_name.toLowerCase().includes(inputValue.toLowerCase()) || 
+       employee.name.toLowerCase().includes(inputValue.toLowerCase()))
+  );
 
-  const handleEmployeeToggle = (employeeId: string) => {
-    setSelectedEmployees(prev =>
-      prev.includes(employeeId)
-        ? prev.filter(id => id !== employeeId)
-        : [...prev, employeeId]
-    );
+  const handleRemoveEmployee = (employeeId: string) => {
+    setSelectedEmployees(prev => prev.filter(emp => emp.name !== employeeId));
+  };
+
+  const handleAddEmployee = (employee: Employee) => {
+    setSelectedEmployees(prev => [...prev, employee]);
+    setInputValue("");
   };
 
   const handleSubmit = async () => {
@@ -66,7 +90,9 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
 
     setIsSubmitting(true);
     try {
-      await sendFeedbackForm(selectedEmployee, selectedEmployees, selectedTemplate);
+      // Convert the selected employees array to an array of employee IDs
+      const selectedEmployeeIds = selectedEmployees.map(emp => emp.name);
+      await sendFeedbackForm(selectedEmployee, selectedEmployeeIds, selectedTemplate);
       toast.success("Feedback form sent successfully!");
       onClose();
     } catch (error) {
@@ -116,28 +142,75 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
           </Select>
         </div>
 
-        {/* Select employees to give feedback */}
+        {/* Select employees to give feedback - Multi-select with chips */}
         <div>
           <label className="text-sm font-medium mb-2 block">
             Select employees to provide feedback <span className="text-red-500">*</span>
           </label>
-          <div className="max-h-48 overflow-y-auto border rounded-md p-3 space-y-2">
-            {employees.map((employee) => (
-              <div key={employee.name} className="flex items-center space-x-2">
-                <Checkbox
-                  id={employee.name}
-                  checked={selectedEmployees.includes(employee.name)}
-                  onCheckedChange={() => handleEmployeeToggle(employee.name)}
-                />
-                <label htmlFor={employee.name} className="text-sm cursor-pointer">
-                  {employee.employee_name} ({employee.name})
-                </label>
-              </div>
-            ))}
+          <div className="relative">
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <div 
+                  className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[80px] cursor-text focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
+                  onClick={() => setOpen(true)}
+                >
+                  {selectedEmployees.length > 0 && selectedEmployees.map(employee => (
+                    <Badge 
+                      key={employee.name} 
+                      variant="secondary" 
+                      className="px-2 py-1 flex items-center gap-1"
+                    >
+                      {employee.employee_name}
+                      <X 
+                        className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveEmployee(employee.name);
+                        }} 
+                      />
+                    </Badge>
+                  ))}
+                  <input
+                    className={cn(
+                      "flex-1 h-8 outline-none bg-transparent placeholder:text-muted-foreground min-w-[120px]",
+                      !selectedEmployees.length && "w-full"
+                    )}
+                    placeholder={selectedEmployees.length ? "Add more employees..." : "Search employees..."}
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onFocus={() => setOpen(true)}
+                  />
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search employees..." value={inputValue} onValueChange={setInputValue} />
+                  <CommandEmpty>No employee found.</CommandEmpty>
+                  <CommandGroup className="max-h-64 overflow-y-auto">
+                    {filteredEmployees.map((employee) => (
+                      <CommandItem 
+                        key={employee.name}
+                        onSelect={() => {
+                          handleAddEmployee(employee);
+                          setOpen(true);
+                        }}
+                        className="flex items-center gap-2"
+                      >
+                        <Check className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedEmployees.some(e => e.name === employee.name) ? "opacity-100" : "opacity-0"
+                        )} />
+                        {employee.employee_name} ({employee.name})
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            <p className="text-xs text-gray-500 mt-1">
+              Selected: {selectedEmployees.length} employee(s)
+            </p>
           </div>
-          <p className="text-xs text-gray-500 mt-1">
-            Selected: {selectedEmployees.length} employee(s)
-          </p>
         </div>
 
         {/* Select feedback template */}
