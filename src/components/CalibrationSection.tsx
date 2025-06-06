@@ -1,3 +1,4 @@
+
 import { useCalibrationData, useCalibrationDataForAllEmployees, useEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
@@ -106,23 +107,43 @@ const CalibrationSection = ({
     }
   };
 
-  // Get progress bar color based on level
+  // Get progress bar color based on level - updated to match page color scheme
   const getProgressColor = (level: string) => {
     switch (level) {
       case "L0":
-        return "bg-gray-200";
+        return "bg-gray-400";
       case "L1":
-        return "bg-red-400";
+        return "bg-red-500";
       case "L2":
-        return "bg-orange-400";
+        return "bg-orange-500";
       case "L3":
-        return "bg-yellow-400";
+        return "bg-yellow-500";
       case "L4":
-        return "bg-blue-500";
+        return "bg-blue-600";
       case "L5":
-        return "bg-purple-500";
+        return "bg-indigo-600";
       default:
-        return "bg-gray-200";
+        return "bg-gray-400";
+    }
+  };
+
+  // Get background color for level badge
+  const getLevelBadgeColor = (level: string) => {
+    switch (level) {
+      case "L0":
+        return "bg-gray-100 text-gray-700 border-gray-300";
+      case "L1":
+        return "bg-red-50 text-red-700 border-red-200";
+      case "L2":
+        return "bg-orange-50 text-orange-700 border-orange-200";
+      case "L3":
+        return "bg-yellow-50 text-yellow-700 border-yellow-200";
+      case "L4":
+        return "bg-blue-50 text-blue-700 border-blue-200";
+      case "L5":
+        return "bg-indigo-50 text-indigo-700 border-indigo-200";
+      default:
+        return "bg-gray-100 text-gray-700 border-gray-300";
     }
   };
 
@@ -132,6 +153,19 @@ const CalibrationSection = ({
     day: "numeric",
     year: "numeric",
   });
+
+  // Extract overall level and other skills
+  const skillCategories = calibrationData.calibration_skill_categories || [];
+  const overallLevel = skillCategories.find(skill => 
+    skill.skill.toLowerCase().includes('overall') || 
+    skill.skill.toLowerCase().includes('total') ||
+    skill.skill === 'Overall Level'
+  );
+  const otherSkills = skillCategories.filter(skill => 
+    !skill.skill.toLowerCase().includes('overall') && 
+    !skill.skill.toLowerCase().includes('total') &&
+    skill.skill !== 'Overall Level'
+  );
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -233,6 +267,26 @@ const CalibrationSection = ({
         </div>
       )}
 
+      {/* Overall Level Section */}
+      {overallLevel && (
+        <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50">
+          <h3 className="font-medium text-gray-700 mb-3">Overall Level</h3>
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-3">
+                <Progress
+                  value={getProgressValue(overallLevel.level)}
+                  className="h-3 flex-1"
+                />
+                <span className={`px-3 py-1 text-sm font-medium rounded-full border ${getLevelBadgeColor(overallLevel.level)}`}>
+                  {overallLevel.level}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className={`grid ${showPerformanceMatrix ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'} gap-8`}>
         {/* Performance & Potential Matrix - Only show if showPerformanceMatrix is true */}
         {showPerformanceMatrix && (
@@ -312,7 +366,7 @@ const CalibrationSection = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {calibrationData.calibration_skill_categories.map((skill, index) => (
+              {otherSkills.map((skill, index) => (
                 <TableRow key={index} className="hover:bg-gray-50">
                   <TableCell className="font-medium">{index + 1}</TableCell>
                   <TableCell>{skill.skill}</TableCell>
@@ -320,9 +374,11 @@ const CalibrationSection = ({
                     <div className="flex items-center gap-2">
                       <Progress
                         value={getProgressValue(skill.level)}
-                        className={`h-2 ${getProgressColor(skill.level)}`}
+                        className="h-2 flex-1"
                       />
-                      <span className="text-xs font-medium">{skill.level}</span>
+                      <span className={`px-2 py-1 text-xs font-medium rounded border ${getLevelBadgeColor(skill.level)}`}>
+                        {skill.level}
+                      </span>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -365,4 +421,3 @@ const CalibrationSectionSkeleton = () => (
 );
 
 export default CalibrationSection;
-
