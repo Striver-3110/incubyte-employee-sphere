@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useEmployeeDetails } from "@/api/employeeService";
 import { Button } from "@/components/ui/button";
@@ -64,12 +63,41 @@ const SkillsMatrix = () => {
     {}
   ) || {};
 
+  // Filter available skills to exclude already added skills
+  const getFilteredSkills = () => {
+    if (!searchTerm.trim()) return [];
+    
+    const addedSkillNames = (employee?.custom_tech_stack || []).map(skill => 
+      skill.skill.toLowerCase().trim()
+    );
+    
+    return availableSkills
+      .filter(skill => {
+        const skillLower = skill.toLowerCase().trim();
+        return (
+          skillLower.includes(searchTerm.toLowerCase().trim()) &&
+          !addedSkillNames.includes(skillLower)
+        );
+      })
+      .slice(0, 10); // Limit to 10 suggestions for better UX
+  };
+
   // Add a new skill
   const handleAddSkill = async () => {
     const trimmedSkill = searchTerm.trim();
     
     if (!trimmedSkill || !selectedProficiency) {
       toast.error("Please fill out all fields.");
+      return;
+    }
+
+    // Check if skill already exists
+    const existingSkill = employee?.custom_tech_stack?.find(
+      skill => skill.skill.toLowerCase().trim() === trimmedSkill.toLowerCase()
+    );
+    
+    if (existingSkill) {
+      toast.error("This skill has already been added.");
       return;
     }
 
@@ -162,6 +190,8 @@ const SkillsMatrix = () => {
     setSelectedProficiency("");
   };
 
+  const filteredSkills = getFilteredSkills();
+
   if (loading) {
     return <SkillsMatrixSkeleton />;
   }
@@ -225,21 +255,17 @@ const SkillsMatrix = () => {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Enter a new skill or search"
               />
-              {searchTerm.trim() && (
+              {filteredSkills.length > 0 && (
                 <div className="max-h-32 overflow-y-auto border rounded-md mt-2 bg-white z-50">
-                  {availableSkills
-                    .filter((skill) =>
-                      skill.toLowerCase().includes(searchTerm.toLowerCase())
-                    )
-                    .map((skill, index) => (
-                      <div
-                        key={index}
-                        className="p-2 cursor-pointer hover:bg-gray-100"
-                        onClick={() => handleSkillSelect(skill)}
-                      >
-                        {skill}
-                      </div>
-                    ))}
+                  {filteredSkills.map((skill, index) => (
+                    <div
+                      key={index}
+                      className="p-2 cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSkillSelect(skill)}
+                    >
+                      {skill}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
