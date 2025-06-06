@@ -207,7 +207,14 @@ const ProfileHeader = () => {
 
   const handleDeletePlatform = async (platformName: string) => {
     try {
-      setProcessingPlatform(platformName);
+      // Use platform.name for consistency with other operations
+      const platformToDelete = employee.custom_platforms.find(
+        (platform) => platform.platform_name === platformName
+      );
+      
+      if (!platformToDelete) return;
+      
+      setProcessingPlatform(platformToDelete.name);
 
       // Filter out the platform being deleted
       const updatedPlatforms = employee.custom_platforms.filter(
@@ -269,9 +276,9 @@ const ProfileHeader = () => {
         <div className="flex flex-col md:flex-row gap-6 items-start">
           {/* Profile Image */}
           <div className="flex-shrink-0">
-            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-gray-100 shadow-inner">
+            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-md overflow-hidden border-4 border-gray-100 shadow-inner">
               <img
-                src="/placeholder.svg"
+                src={employee.image || ''}
                 alt={employee.employee_name}
                 className="w-full h-full object-cover"
               />
@@ -327,7 +334,7 @@ const ProfileHeader = () => {
                   ) : (
                     <>
                       <a
-                        href={platform.url}
+                        href={platform.url.startsWith("http") ? platform.url : `https://${platform.url}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
@@ -340,7 +347,7 @@ const ProfileHeader = () => {
                         size="icon"
                         onClick={() => handleEditSocial(platform.name, platform.url)}
                         className="h-6 w-6 ml-1"
-                        disabled={isAnyOperationInProgress}
+                        disabled={processingPlatform === platform.name}
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
@@ -349,7 +356,7 @@ const ProfileHeader = () => {
                         size="icon"
                         onClick={() => handleDeletePlatform(platform.platform_name)}
                         className="h-6 w-6 ml-1 text-red-500"
-                        disabled={isAnyOperationInProgress}
+                        disabled={processingPlatform === platform.name}
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
