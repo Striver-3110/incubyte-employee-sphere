@@ -1,3 +1,4 @@
+
 import { useEmployeeDetails } from "@/api/employeeService";
 import { calculateTenure, formatDate } from "@/utils/dateUtils";
 import { Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, Plus, Save, Trash2 } from "lucide-react";
@@ -32,6 +33,9 @@ const ProfileHeader = () => {
   const [isAddingPlatformLoading, setIsAddingPlatformLoading] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState("");
   const [platformUrl, setPlatformUrl] = useState("");
+
+  // Check if any operation is in progress
+  const isAnyOperationInProgress = !!processingPlatform || isAddingPlatformLoading;
 
   if (loading || !employee) {
     return <ProfileHeaderSkeleton />;
@@ -194,7 +198,7 @@ const ProfileHeader = () => {
 
   const handleDeletePlatform = async (platformName: string) => {
     try {
-      setProcessingPlatform(platformName); // Show loading state for the platform being deleted
+      setProcessingPlatform(platformName);
 
       // Filter out the platform being deleted
       const updatedPlatforms = employee.custom_platforms.filter(
@@ -229,7 +233,7 @@ const ProfileHeader = () => {
         variant: "destructive",
       });
     } finally {
-      setProcessingPlatform(null); // Re-enable buttons
+      setProcessingPlatform(null);
     }
   };
 
@@ -284,14 +288,14 @@ const ProfileHeader = () => {
                         value={newUrl}
                         onChange={(e) => setNewUrl(e.target.value)}
                         className="h-8 w-48"
-                        disabled={!!processingPlatform}
+                        disabled={isAnyOperationInProgress}
                       />
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => handleSaveSocial(platform.name)}
                         className="h-8 w-8"
-                        disabled={!!processingPlatform}
+                        disabled={isAnyOperationInProgress}
                       >
                         <Check className="h-4 w-4" />
                       </Button>
@@ -300,7 +304,7 @@ const ProfileHeader = () => {
                         size="icon"
                         onClick={handleCancelEdit}
                         className="h-8 w-8"
-                        disabled={!!processingPlatform}
+                        disabled={isAnyOperationInProgress}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -321,7 +325,7 @@ const ProfileHeader = () => {
                         size="icon"
                         onClick={() => handleEditSocial(platform.name, platform.url)}
                         className="h-6 w-6 ml-1"
-                        disabled={processingPlatform === platform.name}
+                        disabled={isAnyOperationInProgress}
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
@@ -330,7 +334,7 @@ const ProfileHeader = () => {
                         size="icon"
                         onClick={() => handleDeletePlatform(platform.platform_name)}
                         className="h-6 w-6 ml-1 text-red-500"
-                        disabled={processingPlatform === platform.name}
+                        disabled={isAnyOperationInProgress}
                       >
                         <Trash2 className="h-3 w-3" />
                       </Button>
@@ -346,6 +350,7 @@ const ProfileHeader = () => {
                   size="sm"
                   onClick={() => setIsAddingPlatform(true)}
                   className="flex items-center gap-1"
+                  disabled={isAnyOperationInProgress}
                 >
                   <Plus className="h-3 w-3" /> Add Platform
                 </Button>
@@ -356,7 +361,11 @@ const ProfileHeader = () => {
               ) : (
                 isAddingPlatform && (
                   <div className="flex flex-wrap items-center gap-2 p-2 border rounded-md bg-gray-50">
-                    <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
+                    <Select 
+                      value={selectedPlatform} 
+                      onValueChange={setSelectedPlatform}
+                      disabled={isAnyOperationInProgress}
+                    >
                       <SelectTrigger className="w-[120px] h-8">
                         <SelectValue placeholder="Platform" />
                       </SelectTrigger>
@@ -377,6 +386,7 @@ const ProfileHeader = () => {
                       value={platformUrl}
                       onChange={(e) => setPlatformUrl(e.target.value)}
                       className="h-8 w-48"
+                      disabled={isAnyOperationInProgress}
                     />
 
                     <div className="flex gap-1">
@@ -385,6 +395,7 @@ const ProfileHeader = () => {
                         variant="default"
                         onClick={handleAddPlatform}
                         className="h-8"
+                        disabled={isAnyOperationInProgress}
                       >
                         <Save className="h-3 w-3 mr-1" /> Save
                       </Button>
@@ -393,6 +404,7 @@ const ProfileHeader = () => {
                         variant="ghost"
                         onClick={handleCancelAddPlatform}
                         className="h-8"
+                        disabled={isAnyOperationInProgress}
                       >
                         <X className="h-3 w-3" />
                       </Button>
