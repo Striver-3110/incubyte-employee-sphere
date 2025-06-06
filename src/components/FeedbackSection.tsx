@@ -53,6 +53,11 @@ const FeedbackSection = () => {
   const initiatedFeedbacks = typedFeedbacks?.initiated_by_me || [];
   const pendingFeedbacks = typedFeedbacks?.pending_to_give || [];
 
+  // Filter given feedbacks to show only completed ones
+  const completedGivenFeedbacks = givenFeedbacks.filter(feedback => 
+    feedback.custom_feedback_status === 'Completed'
+  );
+
   const hasRecentlyReceivedFeedback = checkRecentFeedback(receivedFeedbacks, 2);
   const hasRecentlyGivenFeedback = checkRecentFeedback(givenFeedbacks, 2);
 
@@ -76,18 +81,23 @@ const FeedbackSection = () => {
   const handleShowLess = (type: 'received' | 'given' | 'initiated' | 'pending') => {
     switch (type) {
       case 'received':
-        setReceivedDisplayCount(Math.max(5, prev => prev - 5));
+        setReceivedDisplayCount(prev => Math.max(5, prev - 5));
         break;
       case 'given':
-        setGivenDisplayCount(Math.max(5, prev => prev - 5));
+        setGivenDisplayCount(prev => Math.max(5, prev - 5));
         break;
       case 'initiated':
-        setInitiatedDisplayCount(Math.max(5, prev => prev - 5));
+        setInitiatedDisplayCount(prev => Math.max(5, prev - 5));
         break;
       case 'pending':
-        setPendingDisplayCount(Math.max(5, prev => prev - 5));
+        setPendingDisplayCount(prev => Math.max(5, prev - 5));
         break;
     }
+  };
+
+  const handlePendingFeedbackClick = (feedbackName: string) => {
+    const url = `http://127.0.0.1:8004/app/employee-feedback-rag/${feedbackName}`;
+    window.open(url, '_blank');
   };
 
   return (
@@ -207,9 +217,9 @@ const FeedbackSection = () => {
           </TabsTrigger>
           <TabsTrigger value="given" className="flex justify-center items-center gap-2">
             Given
-            {givenFeedbacks.length > 0 && (
+            {completedGivenFeedbacks.length > 0 && (
               <Badge variant="secondary" className="h-5 min-w-5 px-1.5 flex justify-center items-center rounded-full">
-                {givenFeedbacks.length}
+                {completedGivenFeedbacks.length}
               </Badge>
             )}
           </TabsTrigger>
@@ -287,9 +297,9 @@ const FeedbackSection = () => {
         </TabsContent>
 
         <TabsContent value="given" className="mt-4">
-          {givenFeedbacks.length > 0 ? (
+          {completedGivenFeedbacks.length > 0 ? (
             <div className="space-y-4">
-              {givenFeedbacks.slice(0, givenDisplayCount).map((feedback, index) => (
+              {completedGivenFeedbacks.slice(0, givenDisplayCount).map((feedback, index) => (
                 <div key={index} className="bg-gray-50 p-4 rounded-md border">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-medium text-gray-800">
@@ -334,7 +344,7 @@ const FeedbackSection = () => {
                     <ChevronUp className="h-4 w-4" /> See Less
                   </Button>
                 )}
-                {givenDisplayCount < givenFeedbacks.length && (
+                {givenDisplayCount < completedGivenFeedbacks.length && (
                   <Button 
                     variant="outline" 
                     size="sm" 
@@ -347,7 +357,7 @@ const FeedbackSection = () => {
               </div>
             </div>
           ) : (
-            <p className="text-gray-500 italic">No feedback given yet.</p>
+            <p className="text-gray-500 italic">No completed feedback given yet.</p>
           )}
         </TabsContent>
         
@@ -420,7 +430,11 @@ const FeedbackSection = () => {
           {pendingFeedbacks.length > 0 ? (
             <div className="space-y-4">
               {pendingFeedbacks.slice(0, pendingDisplayCount).map((feedback, index) => (
-                <div key={index} className="bg-gray-50 p-4 rounded-md border">
+                <div 
+                  key={index} 
+                  className="bg-gray-50 p-4 rounded-md border cursor-pointer hover:bg-gray-100 transition-colors"
+                  onClick={() => handlePendingFeedbackClick(feedback.name)}
+                >
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-medium text-gray-800">
                       {feedback.name || "Pending Feedback"}
