@@ -53,11 +53,14 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
           fetchAllEmployees(),
           fetchFeedbackTemplates()
         ]);
-        setEmployees(employeesData);
-        setFeedbackTemplates(templatesData);
+        setEmployees(employeesData || []);
+        setFeedbackTemplates(templatesData || []);
       } catch (error) {
         console.error("Error loading data:", error);
         toast.error("Failed to load data");
+        // Set empty arrays as fallback
+        setEmployees([]);
+        setFeedbackTemplates([]);
       } finally {
         setIsLoading(false);
       }
@@ -66,20 +69,24 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
     loadData();
   }, []);
   
-  const filteredEmployees = employees.filter(
+  // Ensure employees is always an array before filtering
+  const filteredEmployees = Array.isArray(employees) ? employees.filter(
     employee => 
-      !selectedEmployees.some(selected => selected.name === employee.name) &&
-      (employee.employee_name.toLowerCase().includes(inputValue.toLowerCase()) || 
-       employee.name.toLowerCase().includes(inputValue.toLowerCase()))
-  );
+      employee && 
+      !selectedEmployees.some(selected => selected?.name === employee?.name) &&
+      (employee.employee_name?.toLowerCase().includes(inputValue.toLowerCase()) || 
+       employee.name?.toLowerCase().includes(inputValue.toLowerCase()))
+  ) : [];
 
   const handleRemoveEmployee = (employeeId: string) => {
-    setSelectedEmployees(prev => prev.filter(emp => emp.name !== employeeId));
+    setSelectedEmployees(prev => prev.filter(emp => emp?.name !== employeeId));
   };
 
   const handleAddEmployee = (employee: Employee) => {
-    setSelectedEmployees(prev => [...prev, employee]);
-    setInputValue("");
+    if (employee && employee.name) {
+      setSelectedEmployees(prev => [...prev, employee]);
+      setInputValue("");
+    }
   };
 
   const handleSubmit = async () => {
@@ -91,7 +98,7 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
     setIsSubmitting(true);
     try {
       // Convert the selected employees array to an array of employee IDs
-      const selectedEmployeeIds = selectedEmployees.map(emp => emp.name);
+      const selectedEmployeeIds = selectedEmployees.map(emp => emp.name).filter(Boolean);
       await sendFeedbackForm(selectedEmployee, selectedEmployeeIds, selectedTemplate);
       toast.success("Feedback form sent successfully!");
       onClose();
@@ -133,9 +140,9 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
               <SelectValue placeholder="Select employee" />
             </SelectTrigger>
             <SelectContent>
-              {employees.map((employee) => (
-                <SelectItem key={employee.name} value={employee.name}>
-                  {employee.employee_name} ({employee.name})
+              {Array.isArray(employees) && employees.map((employee) => (
+                <SelectItem key={employee?.name || ''} value={employee?.name || ''}>
+                  {employee?.employee_name || ''} ({employee?.name || ''})
                 </SelectItem>
               ))}
             </SelectContent>
@@ -155,20 +162,22 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
                   onClick={() => setOpen(true)}
                 >
                   {selectedEmployees.length > 0 && selectedEmployees.map(employee => (
-                    <Badge 
-                      key={employee.name} 
-                      variant="secondary" 
-                      className="px-2 py-1 flex items-center gap-1"
-                    >
-                      {employee.employee_name}
-                      <X 
-                        className="h-3 w-3 cursor-pointer hover:text-destructive" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveEmployee(employee.name);
-                        }} 
-                      />
-                    </Badge>
+                    employee?.name && (
+                      <Badge 
+                        key={employee.name} 
+                        variant="secondary" 
+                        className="px-2 py-1 flex items-center gap-1"
+                      >
+                        {employee.employee_name || employee.name}
+                        <X 
+                          className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveEmployee(employee.name);
+                          }} 
+                        />
+                      </Badge>
+                    )
                   ))}
                   <input
                     className={cn(
@@ -188,20 +197,22 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
                   <CommandEmpty>No employee found.</CommandEmpty>
                   <CommandGroup className="max-h-64 overflow-y-auto">
                     {filteredEmployees.map((employee) => (
-                      <CommandItem 
-                        key={employee.name}
-                        onSelect={() => {
-                          handleAddEmployee(employee);
-                          setOpen(true);
-                        }}
-                        className="flex items-center gap-2"
-                      >
-                        <Check className={cn(
-                          "mr-2 h-4 w-4",
-                          selectedEmployees.some(e => e.name === employee.name) ? "opacity-100" : "opacity-0"
-                        )} />
-                        {employee.employee_name} ({employee.name})
-                      </CommandItem>
+                      employee?.name && (
+                        <CommandItem 
+                          key={employee.name}
+                          onSelect={() => {
+                            handleAddEmployee(employee);
+                            setOpen(true);
+                          }}
+                          className="flex items-center gap-2"
+                        >
+                          <Check className={cn(
+                            "mr-2 h-4 w-4",
+                            selectedEmployees.some(e => e?.name === employee?.name) ? "opacity-100" : "opacity-0"
+                          )} />
+                          {employee.employee_name || employee.name} ({employee.name})
+                        </CommandItem>
+                      )
                     ))}
                   </CommandGroup>
                 </Command>
@@ -223,9 +234,9 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
               <SelectValue placeholder="Select feedback template" />
             </SelectTrigger>
             <SelectContent>
-              {feedbackTemplates.map((template) => (
-                <SelectItem key={template.name} value={template.name}>
-                  {template.name}
+              {Array.isArray(feedbackTemplates) && feedbackTemplates.map((template) => (
+                <SelectItem key={template?.name || ''} value={template?.name || ''}>
+                  {template?.name || ''}
                 </SelectItem>
               ))}
             </SelectContent>
