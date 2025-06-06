@@ -59,3 +59,20 @@ export const hasRecentFeedback = (feedbacks: any[], employeeId: string, months: 
     received: mostRecentReceivedDate >= threeMonthsAgo.getTime()
   };
 };
+
+export const checkRecentFeedback = (feedbackList: any[], monthsThreshold: number = 2): boolean => {
+  if (!feedbackList || feedbackList.length === 0) {
+    return false;
+  }
+  
+  const currentDate = new Date();
+  const thresholdDate = new Date();
+  thresholdDate.setMonth(currentDate.getMonth() - monthsThreshold);
+  
+  // Check if any feedback was received within the threshold period
+  return feedbackList.some(feedback => {
+    const feedbackDate = feedback.added_on ? new Date(feedback.added_on) : null;
+    return feedbackDate && feedbackDate > thresholdDate;
+  });
+};
+

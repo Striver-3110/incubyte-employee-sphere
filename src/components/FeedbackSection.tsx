@@ -3,24 +3,51 @@ import React, { useState } from "react";
 import { useFeedbackData } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, X, AlertCircle } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { FeedbackInitiation } from "./FeedbackInitiation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { checkRecentFeedback } from "@/utils/dateUtils";
+
+interface Feedback {
+  name: string;
+  for_employee: string;
+  employee_name: string;
+  reviewer_name: string;
+  reviewer: string;
+  custom_feedback_status?: string | null;
+  additional_comments?: string | null;
+  added_on?: string;
+}
+
+interface FeedbackData {
+  initiated_by_me: Feedback[];
+  given_to_me: Feedback[];
+  given_by_me: Feedback[];
+  pending_to_give: Feedback[];
+}
 
 const FeedbackSection = () => {
   const { feedbacks, loading } = useFeedbackData();
   const [isInitiateDialogOpen, setIsInitiateDialogOpen] = useState(false);
+  const [showReceivedWarning, setShowReceivedWarning] = useState(true);
+  const [showGivenWarning, setShowGivenWarning] = useState(true);
 
   if (loading) {
     return <FeedbackSkeleton />;
   }
 
-  const receivedFeedbacks = feedbacks?.given_to_me || [];
-  const givenFeedbacks = feedbacks?.given_by_me || [];
-  const initiatedFeedbacks = feedbacks?.initiated_by_me || [];
-  const pendingFeedbacks = feedbacks?.pending_to_give || [];
+  const typedFeedbacks = feedbacks as FeedbackData;
+
+  const receivedFeedbacks = typedFeedbacks?.given_to_me || [];
+  const givenFeedbacks = typedFeedbacks?.given_by_me || [];
+  const initiatedFeedbacks = typedFeedbacks?.initiated_by_me || [];
+  const pendingFeedbacks = typedFeedbacks?.pending_to_give || [];
+
+  const hasRecentlyReceivedFeedback = checkRecentFeedback(receivedFeedbacks, 2);
+  const hasRecentlyGivenFeedback = checkRecentFeedback(givenFeedbacks, 2);
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -36,6 +63,47 @@ const FeedbackSection = () => {
             <FeedbackInitiation onClose={() => setIsInitiateDialogOpen(false)} />
           </DialogContent>
         </Dialog>
+      </div>
+
+      {/* Feedback Warning Alerts */}
+      <div className="space-y-3 mb-4">
+        {!hasRecentlyReceivedFeedback && showReceivedWarning && (
+          <Alert variant="destructive" className="bg-amber-50 border-amber-200">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <AlertDescription className="flex justify-between items-center">
+              <span className="text-amber-800">
+                You haven't received any feedback in the last 2 months. Consider requesting feedback from your colleagues.
+              </span>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6 text-amber-600 hover:text-amber-800 hover:bg-amber-100"
+                onClick={() => setShowReceivedWarning(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {!hasRecentlyGivenFeedback && showGivenWarning && (
+          <Alert variant="destructive" className="bg-blue-50 border-blue-200">
+            <AlertCircle className="h-4 w-4 text-blue-600" />
+            <AlertDescription className="flex justify-between items-center">
+              <span className="text-blue-800">
+                You haven't given any feedback in the last 2 months. Providing feedback helps your team grow!
+              </span>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-6 w-6 text-blue-600 hover:text-blue-800 hover:bg-blue-100"
+                onClick={() => setShowGivenWarning(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
 
       <Tabs defaultValue="received" className="w-full">
