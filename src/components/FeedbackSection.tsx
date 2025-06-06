@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useFeedbackData } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Plus, X, AlertCircle } from "lucide-react";
+import { Plus, X, AlertCircle, ChevronDown, ChevronUp, Eye } from "lucide-react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { FeedbackInitiation } from "./FeedbackInitiation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,6 +34,13 @@ const FeedbackSection = () => {
   const [isInitiateDialogOpen, setIsInitiateDialogOpen] = useState(false);
   const [showReceivedWarning, setShowReceivedWarning] = useState(true);
   const [showGivenWarning, setShowGivenWarning] = useState(true);
+  const [viewFeedbackDialog, setViewFeedbackDialog] = useState<Feedback | null>(null);
+  
+  // Pagination states for each tab
+  const [receivedDisplayCount, setReceivedDisplayCount] = useState(5);
+  const [givenDisplayCount, setGivenDisplayCount] = useState(5);
+  const [initiatedDisplayCount, setInitiatedDisplayCount] = useState(5);
+  const [pendingDisplayCount, setPendingDisplayCount] = useState(5);
 
   if (loading) {
     return <FeedbackSkeleton />;
@@ -48,6 +55,40 @@ const FeedbackSection = () => {
 
   const hasRecentlyReceivedFeedback = checkRecentFeedback(receivedFeedbacks, 2);
   const hasRecentlyGivenFeedback = checkRecentFeedback(givenFeedbacks, 2);
+
+  const handleShowMore = (type: 'received' | 'given' | 'initiated' | 'pending') => {
+    switch (type) {
+      case 'received':
+        setReceivedDisplayCount(prev => prev + 5);
+        break;
+      case 'given':
+        setGivenDisplayCount(prev => prev + 5);
+        break;
+      case 'initiated':
+        setInitiatedDisplayCount(prev => prev + 5);
+        break;
+      case 'pending':
+        setPendingDisplayCount(prev => prev + 5);
+        break;
+    }
+  };
+
+  const handleShowLess = (type: 'received' | 'given' | 'initiated' | 'pending') => {
+    switch (type) {
+      case 'received':
+        setReceivedDisplayCount(Math.max(5, prev => prev - 5));
+        break;
+      case 'given':
+        setGivenDisplayCount(Math.max(5, prev => prev - 5));
+        break;
+      case 'initiated':
+        setInitiatedDisplayCount(Math.max(5, prev => prev - 5));
+        break;
+      case 'pending':
+        setPendingDisplayCount(Math.max(5, prev => prev - 5));
+        break;
+    }
+  };
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -106,6 +147,54 @@ const FeedbackSection = () => {
         )}
       </div>
 
+      {/* View Feedback Dialog */}
+      <Dialog open={!!viewFeedbackDialog} onOpenChange={(open) => !open && setViewFeedbackDialog(null)}>
+        <DialogContent className="max-w-2xl">
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold">{viewFeedbackDialog?.name || "Feedback Details"}</h3>
+            
+            <div className="grid grid-cols-2 gap-4 py-2">
+              <div>
+                <p className="text-sm text-gray-500">For</p>
+                <p className="font-medium">{viewFeedbackDialog?.employee_name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">From</p>
+                <p className="font-medium">{viewFeedbackDialog?.reviewer_name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Status</p>
+                <span className={`px-2 py-1 text-xs rounded-full inline-block mt-1 ${
+                  viewFeedbackDialog?.custom_feedback_status === 'Pending' 
+                    ? 'bg-yellow-100 text-yellow-800'
+                    : viewFeedbackDialog?.custom_feedback_status === 'Completed'
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {viewFeedbackDialog?.custom_feedback_status || "Status Unknown"}
+                </span>
+              </div>
+              {viewFeedbackDialog?.added_on && (
+                <div>
+                  <p className="text-sm text-gray-500">Date</p>
+                  <p className="font-medium">{new Date(viewFeedbackDialog.added_on).toLocaleDateString()}</p>
+                </div>
+              )}
+            </div>
+            
+            {viewFeedbackDialog?.additional_comments && (
+              <div className="border-t pt-4 mt-4">
+                <p className="font-medium mb-2">Comments:</p>
+                <div
+                  className="prose prose-sm max-w-none"
+                  dangerouslySetInnerHTML={{ __html: viewFeedbackDialog.additional_comments }}
+                />
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Tabs defaultValue="received" className="w-full">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="received" className="flex justify-center items-center gap-2">
@@ -145,7 +234,7 @@ const FeedbackSection = () => {
         <TabsContent value="received" className="mt-4">
           {receivedFeedbacks.length > 0 ? (
             <div className="space-y-4">
-              {receivedFeedbacks.map((feedback, index) => (
+              {receivedFeedbacks.slice(0, receivedDisplayCount).map((feedback, index) => (
                 <div key={index} className="bg-gray-50 p-4 rounded-md border">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-medium text-gray-800">
@@ -167,6 +256,30 @@ const FeedbackSection = () => {
                   </div>
                 </div>
               ))}
+              
+              {/* Pagination controls */}
+              <div className="flex justify-center gap-4 mt-4">
+                {receivedDisplayCount > 5 && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleShowLess('received')}
+                    className="flex items-center gap-1"
+                  >
+                    <ChevronUp className="h-4 w-4" /> See Less
+                  </Button>
+                )}
+                {receivedDisplayCount < receivedFeedbacks.length && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleShowMore('received')}
+                    className="flex items-center gap-1"
+                  >
+                    <ChevronDown className="h-4 w-4" /> See More
+                  </Button>
+                )}
+              </div>
             </div>
           ) : (
             <p className="text-gray-500 italic">No feedback received yet.</p>
@@ -176,37 +289,62 @@ const FeedbackSection = () => {
         <TabsContent value="given" className="mt-4">
           {givenFeedbacks.length > 0 ? (
             <div className="space-y-4">
-              {givenFeedbacks.map((feedback, index) => (
+              {givenFeedbacks.slice(0, givenDisplayCount).map((feedback, index) => (
                 <div key={index} className="bg-gray-50 p-4 rounded-md border">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-medium text-gray-800">
                       {feedback.name || "Feedback Given"}
                     </h3>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      feedback.custom_feedback_status === 'Pending' 
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : feedback.custom_feedback_status === 'Completed'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {feedback.custom_feedback_status || "Status Unknown"}
-                    </span>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 rounded-full"
+                        onClick={() => setViewFeedbackDialog(feedback)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        feedback.custom_feedback_status === 'Pending' 
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : feedback.custom_feedback_status === 'Completed'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {feedback.custom_feedback_status || "Status Unknown"}
+                      </span>
+                    </div>
                   </div>
                   <div className="text-sm text-gray-600 space-y-1">
                     <p><strong>To:</strong> {feedback.employee_name}</p>
                     <p><strong>Reviewer:</strong> {feedback.reviewer_name}</p>
-                    {feedback.additional_comments && (
-                      <div className="mt-2 pt-2 border-t">
-                        <p className="font-medium text-sm">Comments:</p>
-                        <div
-                          className="text-sm prose prose-sm max-w-none"
-                          dangerouslySetInnerHTML={{ __html: feedback.additional_comments }}
-                        />
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}
+              
+              {/* Pagination controls */}
+              <div className="flex justify-center gap-4 mt-4">
+                {givenDisplayCount > 5 && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleShowLess('given')}
+                    className="flex items-center gap-1"
+                  >
+                    <ChevronUp className="h-4 w-4" /> See Less
+                  </Button>
+                )}
+                {givenDisplayCount < givenFeedbacks.length && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleShowMore('given')}
+                    className="flex items-center gap-1"
+                  >
+                    <ChevronDown className="h-4 w-4" /> See More
+                  </Button>
+                )}
+              </div>
             </div>
           ) : (
             <p className="text-gray-500 italic">No feedback given yet.</p>
@@ -216,37 +354,62 @@ const FeedbackSection = () => {
         <TabsContent value="initiated" className="mt-4">
           {initiatedFeedbacks.length > 0 ? (
             <div className="space-y-4">
-              {initiatedFeedbacks.map((feedback, index) => (
+              {initiatedFeedbacks.slice(0, initiatedDisplayCount).map((feedback, index) => (
                 <div key={index} className="bg-gray-50 p-4 rounded-md border">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-medium text-gray-800">
                       {feedback.name || "Feedback Initiated"}
                     </h3>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
-                      feedback.custom_feedback_status === 'Pending' 
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : feedback.custom_feedback_status === 'Completed'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {feedback.custom_feedback_status || "Status Unknown"}
-                    </span>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 rounded-full"
+                        onClick={() => setViewFeedbackDialog(feedback)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        feedback.custom_feedback_status === 'Pending' 
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : feedback.custom_feedback_status === 'Completed'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {feedback.custom_feedback_status || "Status Unknown"}
+                      </span>
+                    </div>
                   </div>
                   <div className="text-sm text-gray-600 space-y-1">
                     <p><strong>For:</strong> {feedback.employee_name}</p>
                     <p><strong>Reviewer:</strong> {feedback.reviewer_name}</p>
-                    {feedback.additional_comments && (
-                      <div className="mt-2 pt-2 border-t">
-                        <p className="font-medium text-sm">Comments:</p>
-                        <div
-                          className="text-sm prose prose-sm max-w-none"
-                          dangerouslySetInnerHTML={{ __html: feedback.additional_comments }}
-                        />
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}
+              
+              {/* Pagination controls */}
+              <div className="flex justify-center gap-4 mt-4">
+                {initiatedDisplayCount > 5 && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleShowLess('initiated')}
+                    className="flex items-center gap-1"
+                  >
+                    <ChevronUp className="h-4 w-4" /> See Less
+                  </Button>
+                )}
+                {initiatedDisplayCount < initiatedFeedbacks.length && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleShowMore('initiated')}
+                    className="flex items-center gap-1"
+                  >
+                    <ChevronDown className="h-4 w-4" /> See More
+                  </Button>
+                )}
+              </div>
             </div>
           ) : (
             <p className="text-gray-500 italic">No feedback initiated yet.</p>
@@ -256,7 +419,7 @@ const FeedbackSection = () => {
         <TabsContent value="pending" className="mt-4">
           {pendingFeedbacks.length > 0 ? (
             <div className="space-y-4">
-              {pendingFeedbacks.map((feedback, index) => (
+              {pendingFeedbacks.slice(0, pendingDisplayCount).map((feedback, index) => (
                 <div key={index} className="bg-gray-50 p-4 rounded-md border">
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-medium text-gray-800">
@@ -272,6 +435,30 @@ const FeedbackSection = () => {
                   </div>
                 </div>
               ))}
+              
+              {/* Pagination controls */}
+              <div className="flex justify-center gap-4 mt-4">
+                {pendingDisplayCount > 5 && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleShowLess('pending')}
+                    className="flex items-center gap-1"
+                  >
+                    <ChevronUp className="h-4 w-4" /> See Less
+                  </Button>
+                )}
+                {pendingDisplayCount < pendingFeedbacks.length && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleShowMore('pending')}
+                    className="flex items-center gap-1"
+                  >
+                    <ChevronDown className="h-4 w-4" /> See More
+                  </Button>
+                )}
+              </div>
             </div>
           ) : (
             <p className="text-gray-500 italic">No pending feedback to give.</p>
