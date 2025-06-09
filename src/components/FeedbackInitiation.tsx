@@ -53,6 +53,9 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
           fetchFeedbackTemplates()
         ]);
         
+        console.log('Loaded employees:', employeesData);
+        console.log('Loaded templates:', templatesData);
+        
         // Ensure we always have arrays, even if API returns null/undefined
         setEmployees(Array.isArray(employeesData) ? employeesData : []);
         setFeedbackTemplates(Array.isArray(templatesData) ? templatesData : []);
@@ -70,17 +73,33 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
     loadData();
   }, []);
   
-  // Filter out already selected employees
+  // Filter out already selected employees with better safety checks
   const availableEmployees = React.useMemo(() => {
-    if (!Array.isArray(employees)) return [];
+    console.log('Computing available employees, all employees:', employees);
+    console.log('Selected employees:', selectedEmployees);
     
-    return employees.filter(employee => {
+    if (!Array.isArray(employees)) {
+      console.log('Employees is not an array:', employees);
+      return [];
+    }
+    
+    const filtered = employees.filter(employee => {
       // Skip if employee is null/undefined or missing required fields
-      if (!employee || !employee.name) return false;
+      if (!employee || typeof employee !== 'object' || !employee.name) {
+        console.log('Skipping invalid employee:', employee);
+        return false;
+      }
       
       // Skip if already selected
-      return !selectedEmployees.some(selected => selected?.name === employee?.name);
+      const isSelected = selectedEmployees.some(selected => 
+        selected && selected.name === employee.name
+      );
+      
+      return !isSelected;
     });
+    
+    console.log('Available employees after filtering:', filtered);
+    return filtered;
   }, [employees, selectedEmployees]);
 
   const handleRemoveEmployee = (employeeId: string) => {
@@ -88,6 +107,7 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
   };
 
   const handleAddEmployee = (employee: Employee) => {
+    console.log('Adding employee:', employee);
     if (employee && employee.name) {
       setSelectedEmployees(prev => [...prev, employee]);
       setOpen(false);
@@ -196,23 +216,36 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
                 </div>
               </PopoverTrigger>
               <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                <Command>
-                  <CommandInput placeholder="Search employees..." />
-                  <CommandEmpty>No employee found.</CommandEmpty>
-                  <CommandGroup className="max-h-64 overflow-y-auto">
-                    {availableEmployees.map((employee) => (
-                      <CommandItem 
-                        key={employee.name}
-                        value={`${employee.employee_name || employee.name} ${employee.name}`}
-                        onSelect={() => handleAddEmployee(employee)}
-                        className="flex items-center gap-2"
-                      >
-                        <Check className="mr-2 h-4 w-4 opacity-0" />
-                        {employee.employee_name || employee.name} ({employee.name})
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </Command>
+                {availableEmployees.length > 0 ? (
+                  <Command>
+                    <CommandInput placeholder="Search employees..." />
+                    <CommandEmpty>No employee found.</CommandEmpty>
+                    <CommandGroup className="max-h-64 overflow-y-auto">
+                      {availableEmployees.map((employee) => {
+                        // Additional safety check before rendering
+                        if (!employee || !employee.name) {
+                          return null;
+                        }
+                        
+                        return (
+                          <CommandItem
+                            key={employee.name}
+                            value={`${employee.employee_name || employee.name} ${employee.name}`}
+                            onSelect={() => handleAddEmployee(employee)}
+                            className="flex items-center gap-2"
+                          >
+                            <Check className="mr-2 h-4 w-4 opacity-0" />
+                            {employee.employee_name || employee.name} ({employee.name})
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  </Command>
+                ) : (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    No employees available
+                  </div>
+                )}
               </PopoverContent>
             </Popover>
             <p className="text-xs text-gray-500 mt-1">
