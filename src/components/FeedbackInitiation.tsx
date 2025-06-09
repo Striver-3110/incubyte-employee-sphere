@@ -1,11 +1,11 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fetchAllEmployees, fetchFeedbackTemplates, sendFeedbackForm } from "@/api/employeeService";
 import { toast } from "sonner";
-import { X, Check, Search } from "lucide-react";
+import { X, Check } from "lucide-react";
 import {
   Command,
   CommandEmpty,
@@ -43,7 +43,6 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
-  const [inputValue, setInputValue] = useState("");
 
   useEffect(() => {
     const loadData = async () => {
@@ -71,8 +70,8 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
     loadData();
   }, []);
   
-  // Ensure employees is always an array before filtering and add more robust filtering
-  const filteredEmployees = React.useMemo(() => {
+  // Filter out already selected employees
+  const availableEmployees = React.useMemo(() => {
     if (!Array.isArray(employees)) return [];
     
     return employees.filter(employee => {
@@ -80,19 +79,9 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
       if (!employee || !employee.name) return false;
       
       // Skip if already selected
-      if (selectedEmployees.some(selected => selected?.name === employee?.name)) return false;
-      
-      // Apply search filter
-      if (inputValue.trim()) {
-        const searchLower = inputValue.toLowerCase();
-        const employeeName = employee.employee_name?.toLowerCase() || '';
-        const name = employee.name?.toLowerCase() || '';
-        return employeeName.includes(searchLower) || name.includes(searchLower);
-      }
-      
-      return true;
+      return !selectedEmployees.some(selected => selected?.name === employee?.name);
     });
-  }, [employees, selectedEmployees, inputValue]);
+  }, [employees, selectedEmployees]);
 
   const handleRemoveEmployee = (employeeId: string) => {
     setSelectedEmployees(prev => prev.filter(emp => emp?.name !== employeeId));
@@ -101,7 +90,7 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
   const handleAddEmployee = (employee: Employee) => {
     if (employee && employee.name) {
       setSelectedEmployees(prev => [...prev, employee]);
-      setInputValue("");
+      setOpen(false);
     }
   };
 
@@ -196,40 +185,29 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
                       </Badge>
                     )
                   ))}
-                  <input
-                    className={cn(
-                      "flex-1 h-8 outline-none bg-transparent placeholder:text-muted-foreground min-w-[120px]",
-                      !selectedEmployees.length && "w-full"
-                    )}
-                    placeholder={selectedEmployees.length ? "Add more employees..." : "Search employees..."}
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onFocus={() => setOpen(true)}
-                  />
+                  <div className={cn(
+                    "flex-1 h-8 flex items-center",
+                    !selectedEmployees.length && "w-full"
+                  )}>
+                    <span className="text-muted-foreground text-sm">
+                      {selectedEmployees.length ? "Add more employees..." : "Search employees..."}
+                    </span>
+                  </div>
                 </div>
               </PopoverTrigger>
               <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
                 <Command>
-                  <CommandInput 
-                    placeholder="Search employees..." 
-                    value={inputValue} 
-                    onValueChange={setInputValue} 
-                  />
+                  <CommandInput placeholder="Search employees..." />
                   <CommandEmpty>No employee found.</CommandEmpty>
                   <CommandGroup className="max-h-64 overflow-y-auto">
-                    {filteredEmployees.map((employee) => (
+                    {availableEmployees.map((employee) => (
                       <CommandItem 
                         key={employee.name}
-                        onSelect={() => {
-                          handleAddEmployee(employee);
-                          setOpen(true);
-                        }}
+                        value={`${employee.employee_name || employee.name} ${employee.name}`}
+                        onSelect={() => handleAddEmployee(employee)}
                         className="flex items-center gap-2"
                       >
-                        <Check className={cn(
-                          "mr-2 h-4 w-4",
-                          selectedEmployees.some(e => e?.name === employee?.name) ? "opacity-100" : "opacity-0"
-                        )} />
+                        <Check className="mr-2 h-4 w-4 opacity-0" />
                         {employee.employee_name || employee.name} ({employee.name})
                       </CommandItem>
                     ))}
