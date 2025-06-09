@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useFeedbackData } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -109,7 +110,7 @@ const FeedbackSection = () => {
               <Plus className="h-4 w-4 mr-1" /> Initiate Feedback
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl" showOverlay={true}>
             <FeedbackInitiation onClose={() => setIsInitiateDialogOpen(false)} />
           </DialogContent>
         </Dialog>
@@ -158,51 +159,55 @@ const FeedbackSection = () => {
 
       {/* View Feedback Dialog - Fixed backdrop and scrolling issues */}
       <Dialog open={!!viewFeedbackDialog} onOpenChange={(open) => !open && setViewFeedbackDialog(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          {viewFeedbackDialog && (
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold">{viewFeedbackDialog.name || "Feedback Details"}</h3>
-              
-              <div className="grid grid-cols-2 gap-4 py-2">
-                <div>
-                  <p className="text-sm text-gray-500">For</p>
-                  <p className="font-medium">{viewFeedbackDialog.employee_name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">From</p>
-                  <p className="font-medium">{viewFeedbackDialog.reviewer_name}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Status</p>
-                  <span className={`px-2 py-1 text-xs rounded-full inline-block mt-1 ${
-                    viewFeedbackDialog.custom_feedback_status === 'Pending' 
-                      ? 'bg-yellow-100 text-yellow-800'
-                      : viewFeedbackDialog.custom_feedback_status === 'Completed'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {viewFeedbackDialog.custom_feedback_status || "Status Unknown"}
-                  </span>
-                </div>
-                {viewFeedbackDialog.added_on && (
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden" showOverlay={false}>
+          <div className="max-h-[70vh] overflow-y-auto pr-2">
+            {viewFeedbackDialog && (
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold sticky top-0 bg-white pb-2">
+                  {viewFeedbackDialog.name || "Feedback Details"}
+                </h3>
+                
+                <div className="grid grid-cols-2 gap-4 py-2">
                   <div>
-                    <p className="text-sm text-gray-500">Date</p>
-                    <p className="font-medium">{new Date(viewFeedbackDialog.added_on).toLocaleDateString()}</p>
+                    <p className="text-sm text-gray-500">For</p>
+                    <p className="font-medium">{viewFeedbackDialog.employee_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">From</p>
+                    <p className="font-medium">{viewFeedbackDialog.reviewer_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Status</p>
+                    <span className={`px-2 py-1 text-xs rounded-full inline-block mt-1 ${
+                      viewFeedbackDialog.custom_feedback_status === 'Pending' 
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : viewFeedbackDialog.custom_feedback_status === 'Completed'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {viewFeedbackDialog.custom_feedback_status || "Status Unknown"}
+                    </span>
+                  </div>
+                  {viewFeedbackDialog.added_on && (
+                    <div>
+                      <p className="text-sm text-gray-500">Date</p>
+                      <p className="font-medium">{new Date(viewFeedbackDialog.added_on).toLocaleDateString()}</p>
+                    </div>
+                  )}
+                </div>
+                
+                {viewFeedbackDialog.additional_comments && (
+                  <div className="border-t pt-4 mt-4">
+                    <p className="font-medium mb-2">Comments:</p>
+                    <div
+                      className="prose prose-sm max-w-none"
+                      dangerouslySetInnerHTML={{ __html: viewFeedbackDialog.additional_comments }}
+                    />
                   </div>
                 )}
               </div>
-              
-              {viewFeedbackDialog.additional_comments && (
-                <div className="border-t pt-4 mt-4">
-                  <p className="font-medium mb-2">Comments:</p>
-                  <div
-                    className="prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{ __html: viewFeedbackDialog.additional_comments }}
-                  />
-                </div>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </DialogContent>
       </Dialog>
 
