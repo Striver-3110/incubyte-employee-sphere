@@ -5,12 +5,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, FileText } from "lucide-react";
+import { Upload, FileText, BarChart3, Radar } from "lucide-react";
 import { getRoleCategory } from "@/utils/roleUtils";
 import { useState } from "react";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
+import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar as RechartsRadar, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL
-
 
 interface CalibrationSectionProps {
   employeeCalibration?: any;
@@ -30,6 +31,7 @@ const CalibrationSection = ({
   const { calibrationDataForAllEmployees } = useCalibrationDataForAllEmployees();
   const { employee } = useEmployeeDetails();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [chartView, setChartView] = useState<'table' | 'radar' | 'bar'>('table');
 
   // Check if current user is business role
   const userRoleCategory = getRoleCategory(employee?.designation);
@@ -165,6 +167,22 @@ const CalibrationSection = ({
     skill.skill !== 'Overall Level'
   );
 
+  // Prepare data for charts
+  const chartData = otherSkills.map(skill => ({
+    skill: skill.skill,
+    level: getProgressValue(skill.level),
+    levelText: skill.level,
+    fullMark: 100
+  }));
+
+  const chartConfig = {
+    level: {
+      label: "Skill Level",
+      color: "hsl(var(--chart-1))",
+    },
+  };
+
+  // Handle file change
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -172,6 +190,7 @@ const CalibrationSection = ({
     }
   };
 
+  // Handle file upload
   const handleFileUpload = async () => {
     if (!selectedFile) {
       alert("No file selected for upload.");
@@ -351,36 +370,127 @@ const CalibrationSection = ({
 
         {/* Skill Calibration Levels */}
         <div>
-          <h3 className="font-medium text-gray-700 mb-4">Skill Calibration Levels</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-medium text-gray-700">Skill Calibration Levels</h3>
+            <div className="flex gap-2">
+              <Button
+                variant={chartView === 'table' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setChartView('table')}
+              >
+                Table
+              </Button>
+              <Button
+                variant={chartView === 'radar' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setChartView('radar')}
+              >
+                <Radar className="h-4 w-4 mr-1" />
+                Radar
+              </Button>
+              <Button
+                variant={chartView === 'bar' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setChartView('bar')}
+              >
+                <BarChart3 className="h-4 w-4 mr-1" />
+                Bar
+              </Button>
+            </div>
+          </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12">No.</TableHead>
-                <TableHead>Skill</TableHead>
-                <TableHead className="w-32">Level</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {otherSkills.map((skill, index) => (
-                <TableRow key={index} className="hover:bg-gray-50">
-                  <TableCell className="font-medium">{index + 1}</TableCell>
-                  <TableCell>{skill.skill}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Progress
-                        value={getProgressValue(skill.level)}
-                        className="h-2 flex-1"
-                      />
-                      <span className={`px-2 py-1 text-xs font-medium rounded border ${getLevelBadgeColor(skill.level)}`}>
-                        {skill.level}
-                      </span>
-                    </div>
-                  </TableCell>
+          {chartView === 'table' && (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-12">No.</TableHead>
+                  <TableHead>Skill</TableHead>
+                  <TableHead className="w-32">Level</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {otherSkills.map((skill, index) => (
+                  <TableRow key={index} className="hover:bg-gray-50">
+                    <TableCell className="font-medium">{index + 1}</TableCell>
+                    <TableCell>{skill.skill}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Progress
+                          value={getProgressValue(skill.level)}
+                          className="h-2 flex-1"
+                        />
+                        <span className={`px-2 py-1 text-xs font-medium rounded border ${getLevelBadgeColor(skill.level)}`}>
+                          {skill.level}
+                        </span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+
+          {chartView === 'radar' && (
+            <ChartContainer config={chartConfig} className="h-[400px]">
+              <RadarChart data={chartData}>
+                <ChartTooltip 
+                  content={
+                    <ChartTooltipContent 
+                      formatter={(value, name, props) => [
+                        `${props.payload.levelText} (${value}%)`,
+                        "Level"
+                      ]}
+                    />
+                  }
+                />
+                <PolarGrid />
+                <PolarAngleAxis dataKey="skill" className="text-xs" />
+                <PolarRadiusAxis 
+                  angle={90} 
+                  domain={[0, 100]} 
+                  className="text-xs"
+                />
+                <RechartsRadar
+                  name="Skill Level"
+                  dataKey="level"
+                  stroke="hsl(var(--chart-1))"
+                  fill="hsl(var(--chart-1))"
+                  fillOpacity={0.6}
+                />
+              </RadarChart>
+            </ChartContainer>
+          )}
+
+          {chartView === 'bar' && (
+            <ChartContainer config={chartConfig} className="h-[400px]">
+              <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="skill" 
+                  angle={-45}
+                  textAnchor="end"
+                  height={100}
+                  className="text-xs"
+                />
+                <YAxis domain={[0, 100]} className="text-xs" />
+                <ChartTooltip 
+                  content={
+                    <ChartTooltipContent 
+                      formatter={(value, name, props) => [
+                        `${props.payload.levelText} (${value}%)`,
+                        "Level"
+                      ]}
+                    />
+                  }
+                />
+                <Bar 
+                  dataKey="level" 
+                  fill="hsl(var(--chart-1))"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ChartContainer>
+          )}
         </div>
       </div>
     </div>
