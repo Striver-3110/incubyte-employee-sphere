@@ -186,8 +186,8 @@ const CreativePursuits = () => {
               )}
             </Button>
           </DialogFooter>
-        </Dialog>
-      </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
