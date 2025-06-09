@@ -147,6 +147,46 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
     );
   }
 
+  const renderEmployeeList = () => {
+    // Ensure we always have a valid array
+    const validEmployees = Array.isArray(availableEmployees) ? availableEmployees : [];
+    
+    if (validEmployees.length === 0) {
+      return (
+        <div className="p-4 text-center text-sm text-muted-foreground">
+          No employees available
+        </div>
+      );
+    }
+
+    return (
+      <Command>
+        <CommandInput placeholder="Search employees..." />
+        <CommandEmpty>No employee found.</CommandEmpty>
+        <CommandGroup className="max-h-64 overflow-y-auto">
+          {validEmployees.map((employee) => {
+            // Additional safety check before rendering
+            if (!employee || !employee.name) {
+              return null;
+            }
+            
+            return (
+              <CommandItem
+                key={employee.name}
+                value={`${employee.employee_name || employee.name} ${employee.name}`}
+                onSelect={() => handleAddEmployee(employee)}
+                className="flex items-center gap-2"
+              >
+                <Check className="mr-2 h-4 w-4 opacity-0" />
+                {employee.employee_name || employee.name} ({employee.name})
+              </CommandItem>
+            );
+          })}
+        </CommandGroup>
+      </Command>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <DialogHeader>
@@ -216,36 +256,7 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
                 </div>
               </PopoverTrigger>
               <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-                {availableEmployees.length > 0 ? (
-                  <Command>
-                    <CommandInput placeholder="Search employees..." />
-                    <CommandEmpty>No employee found.</CommandEmpty>
-                    <CommandGroup className="max-h-64 overflow-y-auto">
-                      {availableEmployees.map((employee) => {
-                        // Additional safety check before rendering
-                        if (!employee || !employee.name) {
-                          return null;
-                        }
-                        
-                        return (
-                          <CommandItem
-                            key={employee.name}
-                            value={`${employee.employee_name || employee.name} ${employee.name}`}
-                            onSelect={() => handleAddEmployee(employee)}
-                            className="flex items-center gap-2"
-                          >
-                            <Check className="mr-2 h-4 w-4 opacity-0" />
-                            {employee.employee_name || employee.name} ({employee.name})
-                          </CommandItem>
-                        );
-                      })}
-                    </CommandGroup>
-                  </Command>
-                ) : (
-                  <div className="p-4 text-center text-sm text-muted-foreground">
-                    No employees available
-                  </div>
-                )}
+                {renderEmployeeList()}
               </PopoverContent>
             </Popover>
             <p className="text-xs text-gray-500 mt-1">
