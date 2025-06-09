@@ -1,3 +1,4 @@
+
 import { useCalibrationData, useCalibrationDataForAllEmployees, useEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
@@ -242,11 +243,20 @@ const CalibrationSection = ({
     }
   };
 
+  // Get compact styling for admin view
+  const containerPadding = isAdminView ? "p-3" : "p-6";
+  const headerMargin = isAdminView ? "mb-2" : "mb-4";
+  const gridGap = isAdminView ? "gap-3" : "gap-8";
+  const matrixSize = isAdminView ? "h-12" : "h-24";
+  const chartHeight = isAdminView ? "h-[200px]" : "h-[400px]";
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <div className="flex flex-col sm:flex-row justify-between items-start mb-4">
-        <h2 className="text-xl font-semibold text-gray-800">Calibration</h2>
-        <p className="text-sm text-gray-500">Last updated on: {lastUpdatedOn}</p>
+    <div className={`bg-white ${containerPadding} rounded-lg shadow-sm`}>
+      <div className={`flex flex-col sm:flex-row justify-between items-start ${headerMargin}`}>
+        <h2 className={`${isAdminView ? 'text-lg' : 'text-xl'} font-semibold text-gray-800`}>Calibration</h2>
+        {!isAdminView && (
+          <p className="text-sm text-gray-500">Last updated on: {lastUpdatedOn}</p>
+        )}
       </div>
 
       {/* Self Evaluation Upload Section */}
@@ -286,15 +296,15 @@ const CalibrationSection = ({
 
       {/* Overall Level Section - Compact Version */}
       {overallLevel && (
-        <div className="mb-4 p-3 border border-gray-200 rounded-lg bg-gray-50">
+        <div className={`${isAdminView ? 'mb-2 p-2' : 'mb-4 p-3'} border border-gray-200 rounded-lg bg-gray-50`}>
           <div className="flex items-center justify-between">
-            <h3 className="font-medium text-gray-700 text-sm">Overall Level</h3>
+            <h3 className={`font-medium text-gray-700 ${isAdminView ? 'text-xs' : 'text-sm'}`}>Overall Level</h3>
             <div className="flex items-center gap-2">
               <Progress
                 value={getProgressValue(overallLevel.level)}
-                className="h-2 w-24"
+                className={`${isAdminView ? 'h-1 w-16' : 'h-2 w-24'}`}
               />
-              <span className={`px-2 py-1 text-xs font-medium rounded border ${getLevelBadgeColor(overallLevel.level)}`}>
+              <span className={`px-2 py-1 ${isAdminView ? 'text-xs' : 'text-xs'} font-medium rounded border ${getLevelBadgeColor(overallLevel.level)}`}>
                 {overallLevel.level}
               </span>
             </div>
@@ -302,13 +312,13 @@ const CalibrationSection = ({
         </div>
       )}
 
-      <div className={`grid ${showPerformanceMatrix ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'} gap-8`}>
+      <div className={`grid ${showPerformanceMatrix ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'} ${gridGap}`}>
         {/* Performance & Potential Matrix - Only show if showPerformanceMatrix is true */}
         {showPerformanceMatrix && (
           <div>
-            <h3 className="font-medium text-gray-700 mb-4">Performance & Potential Matrix</h3>
+            <h3 className={`font-medium text-gray-700 ${isAdminView ? 'mb-2 text-sm' : 'mb-4'}`}>Performance & Potential Matrix</h3>
 
-            <div className="relative pl-16 pb-12">
+            <div className={`relative ${isAdminView ? 'pl-8 pb-6' : 'pl-16 pb-12'}`}>
               {/* The 3x3 grid */}
               <div className="grid grid-cols-3 gap-0.5 border border-gray-200">
                 {Array(9)
@@ -321,12 +331,12 @@ const CalibrationSection = ({
                     return (
                       <div
                         key={idx}
-                        className={`w-full h-24 p-2 flex items-center justify-center text-center transition-colors
+                        className={`w-full ${matrixSize} ${isAdminView ? 'p-1' : 'p-2'} flex items-center justify-center text-center transition-colors
                         ${isHighlighted ? "bg-indigo-500 text-white" : cellColors[row][col]}
                         border border-gray-200`}
                       >
-                        <span className="text-sm font-medium">
-                          {matrixCellTitles[row][col]}
+                        <span className={`${isAdminView ? 'text-xs' : 'text-sm'} font-medium`}>
+                          {isAdminView ? matrixCellTitles[row][col].split(' ')[0] : matrixCellTitles[row][col]}
                         </span>
                       </div>
                     );
@@ -334,12 +344,12 @@ const CalibrationSection = ({
               </div>
 
               {/* Y-axis label */}
-              <div className="absolute -left-10 top-1/2 -translate-y-6 -rotate-90 text-sm font-medium text-gray-600 whitespace-nowrap">
+              <div className={`absolute ${isAdminView ? '-left-6' : '-left-10'} top-1/2 -translate-y-6 -rotate-90 ${isAdminView ? 'text-xs' : 'text-sm'} font-medium text-gray-600 whitespace-nowrap`}>
                 Potential
               </div>
 
               {/* X-axis label */}
-              <div className="absolute -bottom-2 left-1/2 -translate-x-5 text-sm font-medium text-gray-600">
+              <div className={`absolute ${isAdminView ? '-bottom-1' : '-bottom-2'} left-1/2 -translate-x-5 ${isAdminView ? 'text-xs' : 'text-sm'} font-medium text-gray-600`}>
                 Performance
               </div>
 
@@ -347,10 +357,10 @@ const CalibrationSection = ({
               {matrixRowLabels.map((label, idx) => (
                 <div
                   key={`row-${idx}`}
-                  className="absolute -left-0 text-sm font-medium text-gray-600"
-                  style={{ top: `${idx * 33.33 + 10}%` }}
+                  className={`absolute -left-0 ${isAdminView ? 'text-xs' : 'text-sm'} font-medium text-gray-600`}
+                  style={{ top: `${idx * 33.33 + (isAdminView ? 5 : 10)}%` }}
                 >
-                  {label}
+                  {isAdminView ? label.substring(0, 1) : label}
                 </div>
               ))}
 
@@ -358,10 +368,10 @@ const CalibrationSection = ({
               {matrixColLabels.map((label, idx) => (
                 <div
                   key={`col-${idx}`}
-                  className="absolute bottom-4 text-sm font-medium text-gray-600"
-                  style={{ left: `${idx * 33.33 + 16.5}%` }}
+                  className={`absolute ${isAdminView ? 'bottom-2' : 'bottom-4'} ${isAdminView ? 'text-xs' : 'text-sm'} font-medium text-gray-600`}
+                  style={{ left: `${idx * 33.33 + (isAdminView ? 8 : 16.5)}%` }}
                 >
-                  {label}
+                  {isAdminView ? label.substring(0, 1) : label}
                 </div>
               ))}
             </div>
@@ -370,8 +380,8 @@ const CalibrationSection = ({
 
         {/* Skill Calibration Levels */}
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-medium text-gray-700">Skill Calibration Levels</h3>
+          <div className={`flex items-center justify-between ${isAdminView ? 'mb-2' : 'mb-4'}`}>
+            <h3 className={`font-medium text-gray-700 ${isAdminView ? 'text-sm' : ''}`}>Skill Calibration Levels</h3>
             <div className="flex gap-2">
               <Button
                 variant={chartView === 'table' ? 'default' : 'outline'}
@@ -380,22 +390,26 @@ const CalibrationSection = ({
               >
                 Table
               </Button>
-              <Button
-                variant={chartView === 'radar' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setChartView('radar')}
-              >
-                <Radar className="h-4 w-4 mr-1" />
-                Radar
-              </Button>
-              <Button
-                variant={chartView === 'bar' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setChartView('bar')}
-              >
-                <BarChart3 className="h-4 w-4 mr-1" />
-                Bar
-              </Button>
+              {!isAdminView && (
+                <>
+                  <Button
+                    variant={chartView === 'radar' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setChartView('radar')}
+                  >
+                    <Radar className="h-4 w-4 mr-1" />
+                    Radar
+                  </Button>
+                  <Button
+                    variant={chartView === 'bar' ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setChartView('bar')}
+                  >
+                    <BarChart3 className="h-4 w-4 mr-1" />
+                    Bar
+                  </Button>
+                </>
+              )}
             </div>
           </div>
 
@@ -409,15 +423,15 @@ const CalibrationSection = ({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {otherSkills.map((skill, index) => (
+                {otherSkills.slice(0, isAdminView ? 4 : otherSkills.length).map((skill, index) => (
                   <TableRow key={index} className="hover:bg-gray-50">
                     <TableCell className="font-medium">{index + 1}</TableCell>
-                    <TableCell>{skill.skill}</TableCell>
+                    <TableCell className={isAdminView ? 'text-xs' : ''}>{skill.skill}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Progress
                           value={getProgressValue(skill.level)}
-                          className="h-2 flex-1"
+                          className={`${isAdminView ? 'h-1' : 'h-2'} flex-1`}
                         />
                         <span className={`px-2 py-1 text-xs font-medium rounded border ${getLevelBadgeColor(skill.level)}`}>
                           {skill.level}
@@ -430,8 +444,8 @@ const CalibrationSection = ({
             </Table>
           )}
 
-          {chartView === 'radar' && (
-            <ChartContainer config={chartConfig} className="h-[400px]">
+          {chartView === 'radar' && !isAdminView && (
+            <ChartContainer config={chartConfig} className={chartHeight}>
               <RadarChart data={chartData}>
                 <ChartTooltip 
                   content={
@@ -461,8 +475,8 @@ const CalibrationSection = ({
             </ChartContainer>
           )}
 
-          {chartView === 'bar' && (
-            <ChartContainer config={chartConfig} className="h-[400px]">
+          {chartView === 'bar' && !isAdminView && (
+            <ChartContainer config={chartConfig} className={chartHeight}>
               <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
