@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useEmployeeDetails } from "@/api/employeeService";
 import { Button } from "@/components/ui/button";
@@ -22,16 +23,20 @@ const CreativePursuits = () => {
   const [newPursuit, setNewPursuit] = useState("");
   const [pursuits, setPursuits] = useState<PassionateAbout[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [deletingPursuit, setDeletingPursuit] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && employee?.custom_passionate_about) {
       setPursuits(employee.custom_passionate_about);
+      console.log("Updated pursuits from employee data:", employee.custom_passionate_about);
     }
-  }, [loading, employee]);
+  }, [loading, employee?.custom_passionate_about]);
 
   const updatePursuitsInAPI = async (updatedPursuits: PassionateAbout[]) => {
     setIsSaving(true);
     try {
+      console.log("Updating pursuits:", updatedPursuits);
+      
       const response = await fetch(`${BASE_URL}user.set_employee_details`, {
         method: "POST",
         headers: {
@@ -46,10 +51,14 @@ const CreativePursuits = () => {
 
       if (data.message?.status === "success") {
         toast.success("Pursuits updated successfully.");
+        
+        // Update the global state immediately with the API response
         setEmployee((prev) => ({
           ...prev,
           custom_passionate_about: data.message.data.custom_passionate_about,
         }));
+        
+        // Update local state as well
         setPursuits(data.message.data.custom_passionate_about);
       } else {
         throw new Error(data.message?.message || "Failed to update pursuits.");
@@ -92,7 +101,9 @@ const CreativePursuits = () => {
 
   const handleDeletePursuit = async (name: string) => {
     const updatedPursuits = pursuits.filter((p) => p.name !== name);
+    setDeletingPursuit(name);
     await updatePursuitsInAPI(updatedPursuits);
+    setDeletingPursuit(null);
   };
 
   if (loading) {
@@ -123,15 +134,21 @@ const CreativePursuits = () => {
               className="flex items-center justify-between bg-gray-50 p-3 rounded-md"
             >
               <span>{pursuit.passionate_about}</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => handleDeletePursuit(pursuit.name)}
-                className="h-8 w-8 text-gray-500 hover:text-red-500"
-                disabled={isSaving}
-              >
-                <Trash className="h-4 w-4" />
-              </Button>
+              {deletingPursuit === pursuit.name ? (
+                <div className="h-8 w-8 flex items-center justify-center">
+                  <div className="h-4 w-4 border-2 border-gray-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDeletePursuit(pursuit.name)}
+                  className="h-8 w-8 text-gray-500 hover:text-red-500"
+                  disabled={isSaving || deletingPursuit !== null}
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           ))}
         </div>
@@ -158,12 +175,19 @@ const CreativePursuits = () => {
             >
               Cancel
             </Button>
-            <Button onClick={handleAddPursuit} disabled={isSaving}>
-              {isSaving ? "Saving..." : "Add"}
+            <Button onClick={handleAddPursuit} disabled={isSaving || !newPursuit.trim()}>
+              {isSaving ? (
+                <>
+                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  Adding...
+                </>
+              ) : (
+                "Add"
+              )}
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </Dialog>
+      </div>
     </div>
   );
 };

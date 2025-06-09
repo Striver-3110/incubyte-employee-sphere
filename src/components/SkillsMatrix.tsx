@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useEmployeeDetails } from "@/api/employeeService";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ const SkillsMatrix = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [availableSkills, setAvailableSkills] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [deletingSkill, setDeletingSkill] = useState<string | null>(null);
 
   // Fetch available skills from the API
   useEffect(() => {
@@ -71,15 +73,25 @@ const SkillsMatrix = () => {
       skill.skill.toLowerCase().trim()
     );
     
-    return availableSkills
+    console.log("Current search term:", searchTerm);
+    console.log("Already added skills:", addedSkillNames);
+    console.log("Available skills:", availableSkills);
+    
+    const filtered = availableSkills
       .filter(skill => {
         const skillLower = skill.toLowerCase().trim();
-        return (
-          skillLower.includes(searchTerm.toLowerCase().trim()) &&
-          !addedSkillNames.includes(skillLower)
-        );
+        const searchLower = searchTerm.toLowerCase().trim();
+        const matchesSearch = skillLower.includes(searchLower);
+        const notAlreadyAdded = !addedSkillNames.includes(skillLower);
+        
+        console.log(`Skill: ${skill}, Matches search: ${matchesSearch}, Not already added: ${notAlreadyAdded}`);
+        
+        return matchesSearch && notAlreadyAdded;
       })
-      .slice(0, 10); // Limit to 10 suggestions for better UX
+      .slice(0, 10);
+    
+    console.log("Filtered skills:", filtered);
+    return filtered;
   };
 
   // Add a new skill
@@ -91,7 +103,7 @@ const SkillsMatrix = () => {
       return;
     }
 
-    // Check if skill already exists
+    // Check if skill already exists (case-insensitive)
     const existingSkill = employee?.custom_tech_stack?.find(
       skill => skill.skill.toLowerCase().trim() === trimmedSkill.toLowerCase()
     );
@@ -110,7 +122,8 @@ const SkillsMatrix = () => {
 
     try {
       setIsSaving(true);
-      // Call API to save the new skill
+      console.log("Adding skill:", newSkill);
+      
       const response = await fetch(`${BASE_URL}user.set_employee_details`, {
         method: "POST",
         headers: {
@@ -125,11 +138,14 @@ const SkillsMatrix = () => {
 
       if (data.message?.status === "success") {
         toast.success(data.message.message || "Skill added successfully.");
+        
+        // Update the global state immediately with the API response
         setEmployee((prev) => ({
           ...prev,
           custom_tech_stack: data.message.data.custom_tech_stack,
         }));
-        // Auto-close modal and reset form
+        
+        // Close dialog and reset form
         closeDialog();
       } else {
         throw new Error(data.message?.message || "Failed to add skill.");
@@ -143,14 +159,19 @@ const SkillsMatrix = () => {
   };
 
   // Delete a skill
-  const handleDeleteSkill = async (name: string) => {
-    const updatedSkills = (employee?.custom_tech_stack || []).map((skill) =>
-      skill.name === name ? { ...skill, skill: "", proficiency_level: "" } : skill
+  const handleDeleteSkill = async (skillName: string) => {
+    const skillToDelete = employee?.custom_tech_stack?.find(skill => skill.name === skillName);
+    if (!skillToDelete) return;
+
+    // Filter out the skill to delete
+    const updatedSkills = (employee?.custom_tech_stack || []).filter(
+      skill => skill.name !== skillName
     );
 
     try {
-      setIsSaving(true);
-      // Call API to delete the skill
+      setDeletingSkill(skillName);
+      console.log("Deleting skill:", skillName);
+      
       const response = await fetch(`${BASE_URL}user.set_employee_details`, {
         method: "POST",
         headers: {
@@ -165,6 +186,8 @@ const SkillsMatrix = () => {
 
       if (data.message?.status === "success") {
         toast.success(data.message.message || "Skill deleted successfully.");
+        
+        // Update the global state immediately with the API response
         setEmployee((prev) => ({
           ...prev,
           custom_tech_stack: data.message.data.custom_tech_stack,
@@ -176,7 +199,7 @@ const SkillsMatrix = () => {
       console.error("Error deleting skill:", error);
       toast.error("Failed to delete skill.");
     } finally {
-      setIsSaving(false);
+      setDeletingSkill(null);
     }
   };
 
@@ -205,6 +228,7 @@ const SkillsMatrix = () => {
           size="sm"
           onClick={() => setIsAddDialogOpen(true)}
           className="h-8"
+          disabled={isSaving}
         >
           <Plus className="h-4 w-4 mr-1" /> Add Skill
         </Button>
@@ -222,15 +246,21 @@ const SkillsMatrix = () => {
                     className="flex items-center bg-blue-50 p-2 rounded-md border border-blue-200 shadow-sm space-x-2"
                   >
                     <span className="text-blue-800 text-sm font-medium">{skill.skill}</span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteSkill(skill.name)}
-                      className="h-6 w-6 text-blue-500 hover:text-red-500"
-                      disabled={isSaving}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
+                    {deletingSkill === skill.name ? (
+                      <div className="h-6 w-6 flex items-center justify-center">
+                        <div className="h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDeleteSkill(skill.name)}
+                        className="h-6 w-6 text-blue-500 hover:text-red-500"
+                        disabled={isSaving || deletingSkill !== null}
+                      >
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -241,7 +271,7 @@ const SkillsMatrix = () => {
         ))}
       </div>
 
-      {/* Add Skill Dialog - No backdrop, centered in viewport */}
+      {/* Add Skill Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="max-w-md fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" showOverlay={false}>
           <DialogHeader>
@@ -254,6 +284,7 @@ const SkillsMatrix = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Enter a new skill or search"
+                disabled={isSaving}
               />
               {filteredSkills.length > 0 && (
                 <div className="max-h-32 overflow-y-auto border rounded-md mt-2 bg-white z-50">
@@ -274,6 +305,7 @@ const SkillsMatrix = () => {
               <Select
                 value={selectedProficiency}
                 onValueChange={setSelectedProficiency}
+                disabled={isSaving}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select proficiency" />
@@ -289,11 +321,21 @@ const SkillsMatrix = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={closeDialog}>
+            <Button variant="outline" onClick={closeDialog} disabled={isSaving}>
               Cancel
             </Button>
-            <Button onClick={handleAddSkill} disabled={isSaving || !searchTerm.trim() || !selectedProficiency}>
-              {isSaving ? "Saving..." : "Add Skill"}
+            <Button 
+              onClick={handleAddSkill} 
+              disabled={isSaving || !searchTerm.trim() || !selectedProficiency}
+            >
+              {isSaving ? (
+                <>
+                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  Adding...
+                </>
+              ) : (
+                "Add Skill"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
