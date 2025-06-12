@@ -1,3 +1,4 @@
+
 import { useEmployeeDetails } from "@/api/employeeService";
 import { formatDate } from "@/utils/dateUtils";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,9 +16,7 @@ const CareerProgression = () => {
   });
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Career Progression</h2>
-
+    <div>
       {sortedProjects.length === 0 ? (
         <p className="text-gray-500 italic">No career progression data available.</p>
       ) : (
@@ -63,9 +62,7 @@ const CareerProgression = () => {
 };
 
 const CareerProgressionSkeleton = () => (
-  <div className="bg-white p-6 rounded-lg shadow-sm">
-    <Skeleton className="h-7 w-40 mb-4" />
-
+  <div>
     <div className="space-y-6 pl-8">
       <div>
         <Skeleton className="h-6 w-48 mb-2" />

@@ -3,7 +3,7 @@ import { useEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Edit, RefreshCcw, Save, X, ChevronLeft } from "lucide-react";
+import { Edit, RefreshCcw, Save, X, ChevronLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL
@@ -90,22 +90,34 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 
 const IceBreakers = () => {
   const { employee, loading } = useEmployeeDetails();
+  const [isComponentLoading, setIsComponentLoading] = useState(false);
 
   if (loading || !employee) {
     return <IceBreakersSkeleton />;
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
+    <div className="bg-white p-6 rounded-lg shadow-sm relative">
+      {isComponentLoading && (
+        <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-lg z-10">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        </div>
+      )}
+      
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Ice Breakers</h2>
 
       {employee.custom_employee_icebreaker_question ? (
         employee.custom_employee_icebreaker_question.length === 0 ? (
-          <IceBreakersForm questions={[]} predefinedQuestions={predefinedQuestions} />
+          <IceBreakersForm 
+            questions={[]} 
+            predefinedQuestions={predefinedQuestions} 
+            setIsComponentLoading={setIsComponentLoading}
+          />
         ) : (
           <IceBreakersForm
             questions={employee.custom_employee_icebreaker_question}
             predefinedQuestions={predefinedQuestions}
+            setIsComponentLoading={setIsComponentLoading}
           />
         )
       ) : (
@@ -117,10 +129,12 @@ const IceBreakers = () => {
 
 const IceBreakersForm = ({
   questions,
-  predefinedQuestions
+  predefinedQuestions,
+  setIsComponentLoading
 }: {
   questions: IceBreakerQuestion[];
   predefinedQuestions: string[];
+  setIsComponentLoading: (loading: boolean) => void;
 }) => {
   const [currentQuestions, setCurrentQuestions] = useState<IceBreakerQuestion[]>(questions);
   const [currentIndex, setCurrentIndex] = useState(questions.length === 0 ? 0 : -1);
@@ -213,6 +227,7 @@ const IceBreakersForm = ({
 
       // Save the updates to the server
       setIsSubmitting(true);
+      setIsComponentLoading(true);
       try {
         // Filter out questions that have answers
         const answeredQuestions = updatedQuestions.filter(q => q.answer.trim() !== "");
@@ -223,6 +238,7 @@ const IceBreakersForm = ({
         console.error("Error saving edited answer:", error);
       } finally {
         setIsSubmitting(false);
+        setIsComponentLoading(false);
       }
 
       setInlineEditing(null);
@@ -254,6 +270,7 @@ const IceBreakersForm = ({
 
       // Save the updates to the server
       setIsSubmitting(true);
+      setIsComponentLoading(true);
       try {
         // Filter out questions that have answers
         const answeredQuestions = updatedQuestions.filter(q => q.answer.trim() !== "");
@@ -264,6 +281,7 @@ const IceBreakersForm = ({
         console.error("Error saving edited answer:", error);
       } finally {
         setIsSubmitting(false);
+        setIsComponentLoading(false);
       }
 
       setEditingIndex(null);
@@ -309,6 +327,7 @@ const IceBreakersForm = ({
       const answeredQuestions = updatedQuestions.filter(q => q.answer.trim() !== "");
 
       setIsSubmitting(true);
+      setIsComponentLoading(true);
       try {
         await saveIceBreakers(answeredQuestions);
         toast.success("Ice breakers submitted successfully!");
@@ -318,6 +337,7 @@ const IceBreakersForm = ({
         toast.error("Failed to submit ice breakers");
       } finally {
         setIsSubmitting(false);
+        setIsComponentLoading(false);
       }
     }
   };
@@ -363,6 +383,7 @@ const IceBreakersForm = ({
                         variant="ghost"
                         size="sm"
                         onClick={() => handleCancelInlineEdit()}
+                        disabled={isSubmitting}
                       >
                         <X size={16} />
                       </Button>
@@ -372,7 +393,7 @@ const IceBreakersForm = ({
                         onClick={() => handleSaveInlineEdit(index)}
                         disabled={isSubmitting}
                       >
-                        <Save size={16} />
+                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save size={16} />}
                       </Button>
                     </div>
                   ) : (
@@ -381,6 +402,7 @@ const IceBreakersForm = ({
                       size="sm"
                       className="absolute top-2 right-2"
                       onClick={() => handleInlineEdit(index)}
+                      disabled={isSubmitting}
                     >
                       <Edit size={16} />
                     </Button>
@@ -399,15 +421,6 @@ const IceBreakersForm = ({
                 )}
               </div>
             ))}
-            {/* <div className="flex space-x-2 mt-4 pt-4 border-t">
-              <Button 
-                variant="outline"
-                onClick={handleRestart}
-                className="flex items-center gap-2"
-              >
-                <RefreshCcw size={16} /> Start Fresh
-              </Button>
-            </div> */}
           </div>
         ) : (
           <div className="text-center my-8">
@@ -429,6 +442,7 @@ const IceBreakersForm = ({
           onChange={(e) => setAnswer(e.target.value)}
           placeholder="Your answer..."
           className="w-full min-h-[100px]"
+          disabled={isSubmitting}
         />
         <div className="flex justify-between mt-4">
           <Button
@@ -437,6 +451,7 @@ const IceBreakersForm = ({
               setEditingIndex(null);
               setAnswer("");
             }}
+            disabled={isSubmitting}
           >
             Cancel
           </Button>
@@ -444,7 +459,14 @@ const IceBreakersForm = ({
             onClick={handleSaveEdit}
             disabled={answer.trim() === "" || isSubmitting}
           >
-            {isSubmitting ? "Saving..." : "Save"}
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Save"
+            )}
           </Button>
         </div>
       </div>
@@ -468,6 +490,7 @@ const IceBreakersForm = ({
         onChange={(e) => setAnswer(e.target.value)}
         placeholder="Your answer..."
         className="w-full min-h-[100px]"
+        disabled={isSubmitting}
       />
 
       <div className="flex justify-between mt-4">
@@ -477,6 +500,7 @@ const IceBreakersForm = ({
               variant="outline"
               onClick={handleBack}
               className="flex items-center gap-2"
+              disabled={isSubmitting}
             >
               <ChevronLeft size={16} />
               Back
@@ -485,6 +509,7 @@ const IceBreakersForm = ({
           <Button
             variant="outline"
             onClick={handleSkip}
+            disabled={isSubmitting}
           >
             Skip
           </Button>
@@ -495,7 +520,14 @@ const IceBreakersForm = ({
               onClick={handleSubmit}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Submitting..." : "Submit"}
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Submit"
+              )}
             </Button>
           )}
           <Button

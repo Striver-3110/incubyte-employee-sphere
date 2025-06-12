@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Edit, Check, X } from "lucide-react";
+import { Edit, Check, X, Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
@@ -67,7 +67,13 @@ const AboutSection = () => {
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
+    <div className="bg-white p-6 rounded-lg shadow-sm relative">
+      {isSaving && (
+        <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-lg z-10">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        </div>
+      )}
+      
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-gray-800">About</h2>
         {!isEditing && (
@@ -76,6 +82,7 @@ const AboutSection = () => {
             size="sm"
             onClick={() => setIsEditing(true)}
             className="flex items-center gap-1"
+            disabled={isSaving}
           >
             <Edit className="h-4 w-4" />
             <span className="sr-only">Edit</span>
@@ -106,7 +113,16 @@ const AboutSection = () => {
               <X className="h-4 w-4 mr-1" /> Cancel
             </Button>
             <Button onClick={handleSave} disabled={isSaveDisabled}>
-              {isSaving ? "Saving..." : <><Check className="h-4 w-4 mr-1" /> Save</>}
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4 mr-1" /> Save
+                </>
+              )}
             </Button>
           </div>
         </div>

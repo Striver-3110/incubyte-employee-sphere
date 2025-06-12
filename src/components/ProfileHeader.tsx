@@ -1,7 +1,6 @@
-
-import { useEmployeeDetails } from "@/api/employeeService";
+import { useEmployeeDetails, useTeamEmployees } from "@/api/employeeService";
 import { calculateTenure, formatDate } from "@/utils/dateUtils";
-import { Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, Plus, Save, Trash2 } from "lucide-react";
+import { Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, Plus, Save, Trash2, Users } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import TeamMembersModal from "./TeamMembersModal";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -25,9 +25,11 @@ const socialPlatforms = [
 
 const ProfileHeader = () => {
   const { employee, setEmployee, loading } = useEmployeeDetails();
+  const { employees: teamMembers } = useTeamEmployees();
   const [editingSocial, setEditingSocial] = useState<string | null>(null);
   const [newUrl, setNewUrl] = useState("");
   const [processingPlatform, setProcessingPlatform] = useState<string | null>(null);
+  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
 
   const [isAddingPlatform, setIsAddingPlatform] = useState(false);
   const [isAddingPlatformLoading, setIsAddingPlatformLoading] = useState(false);
@@ -207,7 +209,6 @@ const ProfileHeader = () => {
 
   const handleDeletePlatform = async (platformName: string) => {
     try {
-      // Use platform.name for consistency with other operations
       const platformToDelete = employee.custom_platforms.find(
         (platform) => platform.platform_name === platformName
       );
@@ -216,12 +217,10 @@ const ProfileHeader = () => {
       
       setProcessingPlatform(platformToDelete.name);
 
-      // Filter out the platform being deleted
       const updatedPlatforms = employee.custom_platforms.filter(
         (platform) => platform.platform_name !== platformName
       );
 
-      // Send the updated list to the backend
       const response = await fetch(`${BASE_URL}user.set_employee_details`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -235,7 +234,6 @@ const ProfileHeader = () => {
         throw new Error('Failed to delete platform');
       }
 
-      // Use the setEmployee hook to update the employee state
       setEmployee((prevEmployee) => ({
         ...prevEmployee,
         custom_platforms: updatedPlatforms,
@@ -270,10 +268,14 @@ const ProfileHeader = () => {
 
   const availablePlatforms = getAvailablePlatforms();
 
+  // Check if user is co-founder to show team members
+  const isCoFounder = employee && employee.designation === "Co-Founder";
+  const hasTeamMembers = teamMembers && teamMembers.length > 0;
+
   return (
     <div className="w-full bg-white rounded-lg shadow-md overflow-hidden">
       <div className="p-6 sm:p-8">
-        <div className="flex flex-col md:flex-row gap-6 items-start">
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
           {/* Profile Image */}
           <div className="flex-shrink-0">
             <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-md overflow-hidden border-4 border-gray-100 shadow-inner">
@@ -440,32 +442,69 @@ const ProfileHeader = () => {
               )}
             </div>
 
-            {/* Contact Information */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+            {/* Contact Information - Single Row */}
+            <div className="flex flex-wrap items-center gap-6 mt-6 text-sm text-gray-600">
+              <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
                 <a href={`mailto:${employee.company_email}`} className="hover:underline">
                   {employee.company_email}
                 </a>
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+              <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
                 <a href={`tel:${employee.cell_number}`} className="hover:underline">
                   {employee.cell_number}
                 </a>
               </div>
 
-              <div className="flex items-start gap-2 text-sm text-gray-600 sm:col-span-2">
-                <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
                 <span>
                   {employee.custom_city}, {employee.custom_state}
                 </span>
               </div>
             </div>
           </div>
+
+          {/* Team Members Section - Right side */}
+          {!isCoFounder && hasTeamMembers && (
+            <div className="flex-shrink-0 bg-gray-50 p-4 rounded-lg min-w-[280px]">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Team Members
+                </h3>
+              </div>
+              
+              <div className="space-y-2">
+                {teamMembers.slice(0, 3).map((member, index) => (
+                  <div key={member.name} className="text-sm">
+                    <div className="font-medium text-gray-800">{member.employee_name}</div>
+                    <div className="text-gray-500 text-xs">{member.designation}</div>
+                  </div>
+                ))}
+                
+                {teamMembers.length > 3 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsTeamModalOpen(true)}
+                    className="text-blue-600 hover:text-blue-700 p-0 h-auto font-normal"
+                  >
+                    +{teamMembers.length - 3} more
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      <TeamMembersModal 
+        isOpen={isTeamModalOpen} 
+        onClose={() => setIsTeamModalOpen(false)} 
+      />
     </div>
   );
 };
@@ -483,10 +522,10 @@ const ProfileHeaderSkeleton = () => (
             <Skeleton className="h-8 w-24" />
             <Skeleton className="h-8 w-24" />
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-            <Skeleton className="h-5 w-full" />
-            <Skeleton className="h-5 w-full" />
-            <Skeleton className="h-5 w-full sm:col-span-2" />
+          <div className="flex gap-6 mt-6">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-5 w-36" />
           </div>
         </div>
       </div>

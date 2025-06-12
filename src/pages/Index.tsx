@@ -46,7 +46,6 @@ const Index = () => {
               <TabsTrigger value="career">Career</TabsTrigger>
               <TabsTrigger value="feedback">Feedback</TabsTrigger>
               <TabsTrigger value="calibration">Calibration</TabsTrigger>
-              {/* <TabsTrigger value="contributions">Contributions</TabsTrigger> */}
               {hasBusinessAccess && (
                 <TabsTrigger value="calibration-dashboard">Calibration Dashboard</TabsTrigger>
               )}
@@ -56,9 +55,10 @@ const Index = () => {
             <TabsContent value="about" className="space-y-6 mt-6">
               <AboutSection />
               <SkillsMatrix />
-              <div className="">
-                {/* <CreativePursuits /> */}
-                <IceBreakers />
+              <IceBreakers />
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <h2 className="text-xl font-semibold text-gray-800 mb-4">My Career at Incubyte</h2>
+                <CareerProgression />
               </div>
             </TabsContent>
             
@@ -85,27 +85,6 @@ const Index = () => {
                 showSelfEvaluationUpload={true}
               />
             </TabsContent>
-
-            {/* Contributions Tab */}
-            {/* <TabsContent value="contributions" className="mt-6">
-              <div className="bg-white p-6 rounded-lg shadow-sm">
-                <div className="text-center">
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4">Contributions</h2>
-                  <p className="text-gray-600 mb-6">
-                    Manage your lightning talks, SCI talks, and volunteering activities
-                  </p>
-                  <Link to="/contributions">
-                    <Button>
-                      Go to Contributions Page
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </TabsContent> */}
-            {/* Contribution Tab */}
-            {/* <TabsContent value="contributions" className="mt-6">
-              <Contributions />
-            </TabsContent> */}
 
             {/* Calibration Dashboard Tab - Only for Business roles */}
             {hasBusinessAccess && (

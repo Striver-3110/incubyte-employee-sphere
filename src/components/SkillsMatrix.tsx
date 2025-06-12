@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from "react";
 import { useEmployeeDetails } from "@/api/employeeService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Trash } from "lucide-react";
+import { Plus, Trash, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
@@ -32,6 +31,7 @@ const SkillsMatrix = () => {
   const [availableSkills, setAvailableSkills] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [deletingSkill, setDeletingSkill] = useState<string | null>(null);
+  const [isComponentLoading, setIsComponentLoading] = useState(false);
 
   // Fetch available skills from the API
   useEffect(() => {
@@ -122,6 +122,7 @@ const SkillsMatrix = () => {
 
     try {
       setIsSaving(true);
+      setIsComponentLoading(true);
       console.log("Adding skill:", newSkill);
       
       const response = await fetch(`${BASE_URL}user.set_employee_details`, {
@@ -155,6 +156,7 @@ const SkillsMatrix = () => {
       toast.error("Failed to add skill.");
     } finally {
       setIsSaving(false);
+      setIsComponentLoading(false);
     }
   };
 
@@ -170,6 +172,7 @@ const SkillsMatrix = () => {
 
     try {
       setDeletingSkill(skillName);
+      setIsComponentLoading(true);
       console.log("Deleting skill:", skillName);
       
       const response = await fetch(`${BASE_URL}user.set_employee_details`, {
@@ -200,6 +203,7 @@ const SkillsMatrix = () => {
       toast.error("Failed to delete skill.");
     } finally {
       setDeletingSkill(null);
+      setIsComponentLoading(false);
     }
   };
 
@@ -220,7 +224,13 @@ const SkillsMatrix = () => {
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
+    <div className="bg-white p-6 rounded-lg shadow-md relative">
+      {isComponentLoading && (
+        <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-lg z-10">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        </div>
+      )}
+      
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-semibold text-gray-800">Skills Matrix</h2>
         <Button
@@ -228,7 +238,7 @@ const SkillsMatrix = () => {
           size="sm"
           onClick={() => setIsAddDialogOpen(true)}
           className="h-8"
-          disabled={isSaving}
+          disabled={isSaving || isComponentLoading}
         >
           <Plus className="h-4 w-4 mr-1" /> Add Skill
         </Button>
@@ -248,7 +258,7 @@ const SkillsMatrix = () => {
                     <span className="text-blue-800 text-sm font-medium">{skill.skill}</span>
                     {deletingSkill === skill.name ? (
                       <div className="h-6 w-6 flex items-center justify-center">
-                        <div className="h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
                       </div>
                     ) : (
                       <Button
@@ -256,7 +266,7 @@ const SkillsMatrix = () => {
                         size="icon"
                         onClick={() => handleDeleteSkill(skill.name)}
                         className="h-6 w-6 text-blue-500 hover:text-red-500"
-                        disabled={isSaving || deletingSkill !== null}
+                        disabled={isSaving || deletingSkill !== null || isComponentLoading}
                       >
                         <Trash className="h-4 w-4" />
                       </Button>
@@ -330,7 +340,7 @@ const SkillsMatrix = () => {
             >
               {isSaving ? (
                 <>
-                  <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   Adding...
                 </>
               ) : (
