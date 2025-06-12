@@ -110,7 +110,7 @@ const FeedbackSection = () => {
               <Plus className="h-4 w-4 mr-1" /> Initiate Feedback
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl" showOverlay={true}>
+          <DialogContent className="max-w-2xl" showOverlay={false}>
             <FeedbackInitiation onClose={() => setIsInitiateDialogOpen(false)} />
           </DialogContent>
         </Dialog>
