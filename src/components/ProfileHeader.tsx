@@ -276,9 +276,9 @@ const ProfileHeader = () => {
   return (
     <div className="w-full bg-white rounded-lg shadow-md overflow-hidden">
       <div className="p-4 sm:p-6 lg:p-8">
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Section - Profile Info */}
-          <div className="xl:col-span-2">
+          <div className="lg:col-span-2">
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
               {/* Profile Image */}
               <div className="flex-shrink-0">
@@ -477,7 +477,7 @@ const ProfileHeader = () => {
 
           {/* Right Section - Team Members */}
           {!isCoFounder && hasTeamMembers && (
-            <div className="xl:col-span-1">
+            <div className="lg:col-span-1">
               <div className="bg-gray-50 p-4 sm:p-6 rounded-lg h-full">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm sm:text-base font-medium text-gray-700 flex items-center gap-2">
@@ -486,22 +486,22 @@ const ProfileHeader = () => {
                   </h3>
                 </div>
                 
-                <div className="space-y-3">
-                  {teamMembers.slice(0, 4).map((member, index) => (
+                <div className="grid grid-cols-1 gap-3">
+                  {teamMembers.slice(0, 6).map((member, index) => (
                     <div key={member.name} className="text-sm border-b border-gray-200 pb-2 last:border-b-0 last:pb-0">
                       <div className="font-medium text-gray-800 truncate">{member.employee_name}</div>
                       <div className="text-gray-500 text-xs truncate">{member.designation}</div>
                     </div>
                   ))}
                   
-                  {teamMembers.length > 4 && (
+                  {teamMembers.length > 6 && (
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setIsTeamModalOpen(true)}
                       className="text-blue-600 hover:text-blue-700 p-0 h-auto font-normal text-sm w-full justify-start"
                     >
-                      +{teamMembers.length - 4} more team members
+                      +{teamMembers.length - 6} more team members
                     </Button>
                   )}
                 </div>
@@ -522,8 +522,8 @@ const ProfileHeader = () => {
 const ProfileHeaderSkeleton = () => (
   <div className="w-full bg-white rounded-lg shadow-md overflow-hidden">
     <div className="p-4 sm:p-6 lg:p-8">
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
           <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
             <Skeleton className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-md" />
             <div className="flex-grow min-w-0">
@@ -542,10 +542,10 @@ const ProfileHeaderSkeleton = () => (
             </div>
           </div>
         </div>
-        <div className="xl:col-span-1">
+        <div className="lg:col-span-1">
           <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
             <Skeleton className="h-6 w-32 mb-4" />
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3">
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
