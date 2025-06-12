@@ -1,6 +1,6 @@
 import { useEmployeeDetails, useTeamEmployees } from "@/api/employeeService";
 import { calculateTenure, formatDate } from "@/utils/dateUtils";
-import { Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, Plus, Save, Trash2, Users } from "lucide-react";
+import { Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, Plus, Save, Trash2, Users, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -274,7 +274,14 @@ const ProfileHeader = () => {
 
   return (
     <div className="w-full bg-white rounded-lg shadow-md overflow-hidden">
-      <div className="p-4 sm:p-6 lg:p-8">
+      {/* Spinner overlay for platform operations */}
+      {isAnyOperationInProgress && (
+        <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10 rounded-lg">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        </div>
+      )}
+      
+      <div className="relative p-4 sm:p-6 lg:p-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Section - Profile Info */}
           <div className="lg:col-span-2">
@@ -307,14 +314,7 @@ const ProfileHeader = () => {
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2 mb-4">
                   {employee.custom_platforms.map((platform) => (
                     <div key={platform.name} className="flex items-center">
-                      {processingPlatform === platform.name ? (
-                        <div className="flex items-center gap-1">
-                          <Skeleton className="h-8 w-8 rounded-md" />
-                          <Skeleton className="h-8 w-16 sm:w-20 rounded-md" />
-                          <Skeleton className="h-6 w-6 rounded" />
-                          <Skeleton className="h-6 w-6 rounded" />
-                        </div>
-                      ) : editingSocial === platform.name ? (
+                      {editingSocial === platform.name ? (
                         <div className="flex items-center space-x-2">
                           <Input
                             value={newUrl}
@@ -357,7 +357,7 @@ const ProfileHeader = () => {
                             size="icon"
                             onClick={() => handleEditSocial(platform.name, platform.url)}
                             className="h-6 w-6 ml-1"
-                            disabled={processingPlatform === platform.name}
+                            disabled={isAnyOperationInProgress}
                           >
                             <Edit className="h-3 w-3" />
                           </Button>
@@ -366,7 +366,7 @@ const ProfileHeader = () => {
                             size="icon"
                             onClick={() => handleDeletePlatform(platform.platform_name)}
                             className="h-6 w-6 ml-1 text-red-500"
-                            disabled={processingPlatform === platform.name}
+                            disabled={isAnyOperationInProgress}
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -390,65 +390,57 @@ const ProfileHeader = () => {
                     </Button>
                   )}
 
-                  {isAddingPlatformLoading ? (
-                    <div className="flex items-center gap-2 p-2 border rounded-md bg-gray-50">
-                      <Skeleton className="h-8 w-24 sm:w-32" />
-                      <Skeleton className="h-8 w-36 sm:w-48" />
-                      <Skeleton className="h-8 w-16" />
-                    </div>
-                  ) : (
-                    isAddingPlatform && (
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2 border rounded-md bg-gray-50 w-full sm:w-auto">
-                        <Select 
-                          value={selectedPlatform} 
-                          onValueChange={setSelectedPlatform}
+                  {isAddingPlatform && (
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2 border rounded-md bg-gray-50 w-full sm:w-auto">
+                      <Select 
+                        value={selectedPlatform} 
+                        onValueChange={setSelectedPlatform}
+                        disabled={isAnyOperationInProgress}
+                      >
+                        <SelectTrigger className="w-full sm:w-[120px] h-8">
+                          <SelectValue placeholder="Platform" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availablePlatforms.map((platform) => (
+                            <SelectItem key={platform.id} value={platform.id}>
+                              <div className="flex items-center gap-2">
+                                <platform.icon className="h-4 w-4" />
+                                <span>{platform.name}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      <Input
+                        placeholder="Enter URL"
+                        value={platformUrl}
+                        onChange={(e) => setPlatformUrl(e.target.value)}
+                        className="h-8 w-full sm:w-48"
+                        disabled={isAnyOperationInProgress}
+                      />
+
+                      <div className="flex gap-1 w-full sm:w-auto">
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={handleAddPlatform}
+                          className="h-8 flex-1 sm:flex-none"
                           disabled={isAnyOperationInProgress}
                         >
-                          <SelectTrigger className="w-full sm:w-[120px] h-8">
-                            <SelectValue placeholder="Platform" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availablePlatforms.map((platform) => (
-                              <SelectItem key={platform.id} value={platform.id}>
-                                <div className="flex items-center gap-2">
-                                  <platform.icon className="h-4 w-4" />
-                                  <span>{platform.name}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-
-                        <Input
-                          placeholder="Enter URL"
-                          value={platformUrl}
-                          onChange={(e) => setPlatformUrl(e.target.value)}
-                          className="h-8 w-full sm:w-48"
+                          <Save className="h-3 w-3 mr-1" /> Save
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={handleCancelAddPlatform}
+                          className="h-8"
                           disabled={isAnyOperationInProgress}
-                        />
-
-                        <div className="flex gap-1 w-full sm:w-auto">
-                          <Button
-                            size="sm"
-                            variant="default"
-                            onClick={handleAddPlatform}
-                            className="h-8 flex-1 sm:flex-none"
-                            disabled={isAnyOperationInProgress}
-                          >
-                            <Save className="h-3 w-3 mr-1" /> Save
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={handleCancelAddPlatform}
-                            className="h-8"
-                            disabled={isAnyOperationInProgress}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
                       </div>
-                    )
+                    </div>
                   )}
                 </div>
 
@@ -490,23 +482,35 @@ const ProfileHeader = () => {
                   </h3>
                 </div>
                 
-                <div className="grid grid-cols-1 gap-3">
+                <div className="grid grid-cols-3 gap-2">
                   {teamMembers.slice(0, 6).map((member, index) => (
-                    <div key={member.name} className="text-sm border-b border-gray-200 pb-2 last:border-b-0 last:pb-0">
-                      <div className="font-medium text-gray-800 truncate">{member.employee_name}</div>
-                      <div className="text-gray-500 text-xs truncate">{member.designation}</div>
+                    <div key={member.name || index} className="text-center">
+                      <div className="w-12 h-12 rounded-full bg-gray-200 mx-auto mb-2 overflow-hidden">
+                        <img
+                          src={member.image || '/placeholder.svg'}
+                          alt={member.employee_name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="text-xs font-medium text-gray-800 truncate">{member.employee_name}</div>
+                      <div className="text-xs text-gray-500 truncate">{member.designation}</div>
                     </div>
                   ))}
                   
                   {teamMembers.length > 6 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setIsTeamModalOpen(true)}
-                      className="text-blue-600 hover:text-blue-700 p-0 h-auto font-normal text-sm w-full justify-start"
-                    >
-                      +{teamMembers.length - 6} more team members
-                    </Button>
+                    <div className="text-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsTeamModalOpen(true)}
+                        className="w-12 h-12 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 p-0 mb-2"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      <div className="text-xs text-blue-600 font-medium">
+                        +{teamMembers.length - 6} more
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -549,10 +553,10 @@ const ProfileHeaderSkeleton = () => (
         <div className="lg:col-span-1">
           <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
             <Skeleton className="h-6 w-32 mb-4" />
-            <div className="grid grid-cols-1 gap-3">
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
-              <Skeleton className="h-12 w-full" />
+            <div className="grid grid-cols-3 gap-2">
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-16 w-full" />
             </div>
           </div>
         </div>
