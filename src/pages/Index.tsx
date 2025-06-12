@@ -56,7 +56,7 @@ const Index = () => {
             <TabsContent value="about" className="space-y-6 mt-6">
               <AboutSection />
               <SkillsMatrix />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="">
                 {/* <CreativePursuits /> */}
                 <IceBreakers />
               </div>
