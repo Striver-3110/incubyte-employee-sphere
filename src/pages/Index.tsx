@@ -42,7 +42,6 @@ const Index = () => {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="w-full justify-start overflow-x-auto">
               <TabsTrigger value="about">About</TabsTrigger>
-              <TabsTrigger value="people">My People</TabsTrigger>
               <TabsTrigger value="career">Career</TabsTrigger>
               <TabsTrigger value="feedback">Feedback</TabsTrigger>
               <TabsTrigger value="calibration">Calibration</TabsTrigger>
@@ -54,17 +53,13 @@ const Index = () => {
             {/* About Tab */}
             <TabsContent value="about" className="space-y-6 mt-6">
               <AboutSection />
+              <MyPeople />
               <SkillsMatrix />
               <IceBreakers />
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">My Career at Incubyte</h2>
                 <CareerProgression />
               </div>
-            </TabsContent>
-            
-            {/* My People Tab */}
-            <TabsContent value="people" className="mt-6">
-              <MyPeople />
             </TabsContent>
             
             {/* Career Tab */}

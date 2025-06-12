@@ -1,15 +1,7 @@
-import { useEmployeeDetails, useTeamEmployees } from "@/api/employeeService";
+
+import { useEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { shouldShowTechAdvisor, isTechnicalRole } from "@/utils/roleUtils";
-import { useEffect } from "react";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -27,9 +19,6 @@ const PeopleItem = ({ label, value }: PeopleItemProps) => (
 
 const MyPeople = () => {
   const { employee, loading: employeeLoading } = useEmployeeDetails();
-  const { employees, loading: teamLoading } = useTeamEmployees();
-
-  const loading = employeeLoading || teamLoading;
 
   // Check if the employee is in a technical role based on role utils
   const isTechnical = employee ? isTechnicalRole(employee.designation) : false;
@@ -40,7 +29,7 @@ const MyPeople = () => {
   // Check if the employee is a co-founder
   const isCoFounder = employee && employee.designation === "Co-Founder";
 
-  if (loading || !employee) {
+  if (employeeLoading || !employee) {
     return <MyPeopleSkeleton />;
   }
 
@@ -67,33 +56,6 @@ const MyPeople = () => {
             </>
           )}
         </div>
-
-        {/* Team members table */}
-        {!isCoFounder && employee.custom_team && employees.length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-lg font-medium text-gray-800 mb-3">Team Members</h3>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-16">#</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Designation</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {employees.map((teamMember, index) => (
-                    <TableRow key={teamMember.name}>
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell className="font-medium">{teamMember.employee_name}</TableCell>
-                      <TableCell>{teamMember.designation}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
