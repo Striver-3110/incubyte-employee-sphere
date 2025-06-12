@@ -11,9 +11,9 @@ interface PeopleItemProps {
 }
 
 const PeopleItem = ({ label, value }: PeopleItemProps) => (
-  <div className="flex flex-col sm:flex-row sm:items-center py-2 border-b border-gray-100">
-    <span className="text-sm font-medium text-gray-500 sm:w-1/3">{label}</span>
-    <span className="font-medium text-gray-800">{value || "—"}</span>
+  <div className="flex items-center gap-2">
+    <span className="text-sm font-medium text-gray-500">{label}:</span>
+    <span className="text-sm text-gray-800">{value || "—"}</span>
   </div>
 );
 
@@ -37,25 +37,22 @@ const MyPeople = () => {
     <div className="bg-white p-6 rounded-lg shadow-sm">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">My People</h2>
 
-      <div className="space-y-4">
-        {/* Employee's direct relationships */}
-        <div className="space-y-1">
-          <PeopleItem label="Team" value={employee.custom_team || ""} />
-          <PeopleItem label="Pod" value={employee.custom_pod || ""} />
+      <div className="flex flex-wrap gap-x-8 gap-y-2">
+        <PeopleItem label="Team" value={employee.custom_team || ""} />
+        <PeopleItem label="Pod" value={employee.custom_pod || ""} />
 
-          {/* Show additional fields only if not a co-founder */}
-          {!isCoFounder && (
-            <>
-              <PeopleItem label="Lead" value={employee.custom_tech_lead_name || ""} />
-              <PeopleItem label="Buddy" value={employee.custom_buddy_name || ""} />
+        {/* Show additional fields only if not a co-founder */}
+        {!isCoFounder && (
+          <>
+            <PeopleItem label="Lead" value={employee.custom_tech_lead_name || ""} />
+            <PeopleItem label="Buddy" value={employee.custom_buddy_name || ""} />
 
-              {/* Only show Tech Advisor for technical roles and not PSM/Business */}
-              {showTechAdvisor && (
-                <PeopleItem label="Tech Advisor" value={employee.custom_tech_advisor_name || ""} />
-              )}
-            </>
-          )}
-        </div>
+            {/* Only show Tech Advisor for technical roles and not PSM/Business */}
+            {showTechAdvisor && (
+              <PeopleItem label="Tech Advisor" value={employee.custom_tech_advisor_name || ""} />
+            )}
+          </>
+        )}
       </div>
     </div>
   );
@@ -64,12 +61,12 @@ const MyPeople = () => {
 const MyPeopleSkeleton = () => (
   <div className="bg-white p-6 rounded-lg shadow-sm">
     <Skeleton className="h-7 w-32 mb-4" />
-    <div className="space-y-2">
-      <Skeleton className="h-6 w-full" />
-      <Skeleton className="h-6 w-full" />
-      <Skeleton className="h-6 w-full" />
-      <Skeleton className="h-6 w-full" />
-      <Skeleton className="h-6 w-full" />
+    <div className="flex flex-wrap gap-x-8 gap-y-2">
+      <Skeleton className="h-5 w-24" />
+      <Skeleton className="h-5 w-20" />
+      <Skeleton className="h-5 w-28" />
+      <Skeleton className="h-5 w-24" />
+      <Skeleton className="h-5 w-32" />
     </div>
   </div>
 );
