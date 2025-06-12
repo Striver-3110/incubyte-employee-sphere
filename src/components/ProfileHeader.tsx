@@ -1,4 +1,3 @@
-
 import { useEmployeeDetails, useTeamEmployees } from "@/api/employeeService";
 import { calculateTenure, formatDate } from "@/utils/dateUtils";
 import { Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, Plus, Save, Trash2, Users } from "lucide-react";
@@ -309,7 +308,12 @@ const ProfileHeader = () => {
                   {employee.custom_platforms.map((platform) => (
                     <div key={platform.name} className="flex items-center">
                       {processingPlatform === platform.name ? (
-                        <Skeleton className="h-8 w-28 sm:w-32" />
+                        <div className="flex items-center gap-1">
+                          <Skeleton className="h-8 w-8 rounded-md" />
+                          <Skeleton className="h-8 w-16 sm:w-20 rounded-md" />
+                          <Skeleton className="h-6 w-6 rounded" />
+                          <Skeleton className="h-6 w-6 rounded" />
+                        </div>
                       ) : editingSocial === platform.name ? (
                         <div className="flex items-center space-x-2">
                           <Input
@@ -387,7 +391,7 @@ const ProfileHeader = () => {
                   )}
 
                   {isAddingPlatformLoading ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 p-2 border rounded-md bg-gray-50">
                       <Skeleton className="h-8 w-24 sm:w-32" />
                       <Skeleton className="h-8 w-36 sm:w-48" />
                       <Skeleton className="h-8 w-16" />
