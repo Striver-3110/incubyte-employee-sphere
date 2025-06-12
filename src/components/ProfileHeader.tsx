@@ -1,3 +1,4 @@
+
 import { useEmployeeDetails, useTeamEmployees } from "@/api/employeeService";
 import { calculateTenure, formatDate } from "@/utils/dateUtils";
 import { Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, Plus, Save, Trash2, Users } from "lucide-react";
@@ -274,227 +275,236 @@ const ProfileHeader = () => {
 
   return (
     <div className="w-full bg-white rounded-lg shadow-md overflow-hidden">
-      <div className="p-6 sm:p-8">
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
-          {/* Profile Image */}
-          <div className="flex-shrink-0">
-            <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-md overflow-hidden border-4 border-gray-100 shadow-inner">
-              <img
-                src={employee.image || ''}
-                alt={employee.employee_name}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
-
-          {/* Profile Details */}
-          <div className="flex flex-col flex-grow">
-            <div className="mb-4">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">{employee.employee_name}</h1>
-              <p className="text-sm sm:text-base font-medium text-blue-600 mt-1">{employee.designation}</p>
-
-              <div className="flex items-center mt-2 text-gray-600 text-sm">
-                <span>Joined {formatDate(employee.date_of_joining)}</span>
-                <span className="mx-2">•</span>
-                <span>Tenure: {calculateTenure(employee.date_of_joining)}</span>
+      <div className="p-4 sm:p-6 lg:p-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          {/* Left Section - Profile Info */}
+          <div className="xl:col-span-2">
+            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
+              {/* Profile Image */}
+              <div className="flex-shrink-0">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-md overflow-hidden border-4 border-gray-100 shadow-inner">
+                  <img
+                    src={employee.image || ''}
+                    alt={employee.employee_name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Social Links */}
-            <div className="flex flex-wrap items-center gap-3 mt-2">
-              {employee.custom_platforms.map((platform) => (
-                <div key={platform.name} className="flex items-center">
-                  {processingPlatform === platform.name ? (
-                    <Skeleton className="h-8 w-32" />
-                  ) : editingSocial === platform.name ? (
-                    <div className="flex items-center space-x-2">
-                      <Input
-                        value={newUrl}
-                        onChange={(e) => setNewUrl(e.target.value)}
-                        className="h-8 w-48"
-                        disabled={isAnyOperationInProgress}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleSaveSocial(platform.name)}
-                        className="h-8 w-8"
-                        disabled={isAnyOperationInProgress}
-                      >
-                        <Check className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleCancelEdit}
-                        className="h-8 w-8"
-                        disabled={isAnyOperationInProgress}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
+              {/* Profile Details */}
+              <div className="flex flex-col flex-grow min-w-0">
+                <div className="mb-4">
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 break-words">{employee.employee_name}</h1>
+                  <p className="text-sm sm:text-base font-medium text-blue-600 mt-1">{employee.designation}</p>
+
+                  <div className="flex flex-col sm:flex-row sm:items-center mt-2 text-gray-600 text-sm gap-1 sm:gap-0">
+                    <span>Joined {formatDate(employee.date_of_joining)}</span>
+                    <span className="hidden sm:inline mx-2">•</span>
+                    <span>Tenure: {calculateTenure(employee.date_of_joining)}</span>
+                  </div>
+                </div>
+
+                {/* Social Links */}
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2 mb-4">
+                  {employee.custom_platforms.map((platform) => (
+                    <div key={platform.name} className="flex items-center">
+                      {processingPlatform === platform.name ? (
+                        <Skeleton className="h-8 w-28 sm:w-32" />
+                      ) : editingSocial === platform.name ? (
+                        <div className="flex items-center space-x-2">
+                          <Input
+                            value={newUrl}
+                            onChange={(e) => setNewUrl(e.target.value)}
+                            className="h-8 w-36 sm:w-48"
+                            disabled={isAnyOperationInProgress}
+                          />
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleSaveSocial(platform.name)}
+                            className="h-8 w-8"
+                            disabled={isAnyOperationInProgress}
+                          >
+                            <Check className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleCancelEdit}
+                            className="h-8 w-8"
+                            disabled={isAnyOperationInProgress}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <a
+                            href={platform.url.startsWith("http") ? platform.url : `https://${platform.url}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
+                          >
+                            {getPlatformIcon(platform.platform_name.toLowerCase())}
+                            <span className="hidden sm:inline">{platform.platform_name}</span>
+                          </a>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleEditSocial(platform.name, platform.url)}
+                            className="h-6 w-6 ml-1"
+                            disabled={processingPlatform === platform.name}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeletePlatform(platform.platform_name)}
+                            className="h-6 w-6 ml-1 text-red-500"
+                            disabled={processingPlatform === platform.name}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </>
+                      )}
                     </div>
-                  ) : (
-                    <>
-                      <a
-                        href={platform.url.startsWith("http") ? platform.url : `https://${platform.url}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
-                      >
-                        {getPlatformIcon(platform.platform_name.toLowerCase())}
-                        <span>{platform.platform_name}</span>
-                      </a>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleEditSocial(platform.name, platform.url)}
-                        className="h-6 w-6 ml-1"
-                        disabled={processingPlatform === platform.name}
-                      >
-                        <Edit className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeletePlatform(platform.platform_name)}
-                        className="h-6 w-6 ml-1 text-red-500"
-                        disabled={processingPlatform === platform.name}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </>
-                  )}
-                </div>
-              ))}
+                  ))}
 
-              {/* Add Platform Button & Form */}
-              {availablePlatforms.length > 0 && !isAddingPlatform && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsAddingPlatform(true)}
-                  className="flex items-center gap-1"
-                  disabled={isAnyOperationInProgress}
-                >
-                  <Plus className="h-3 w-3" /> Add Platform
-                </Button>
-              )}
-
-              {isAddingPlatformLoading ? (
-                <div className="flex items-center gap-2">
-                  <Skeleton className="h-8 w-32" />
-                  <Skeleton className="h-8 w-48" />
-                  <Skeleton className="h-8 w-16" />
-                </div>
-              ) : (
-                isAddingPlatform && (
-                  <div className="flex flex-wrap items-center gap-2 p-2 border rounded-md bg-gray-50">
-                    <Select 
-                      value={selectedPlatform} 
-                      onValueChange={setSelectedPlatform}
+                  {/* Add Platform Button & Form */}
+                  {availablePlatforms.length > 0 && !isAddingPlatform && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsAddingPlatform(true)}
+                      className="flex items-center gap-1 text-xs sm:text-sm"
                       disabled={isAnyOperationInProgress}
                     >
-                      <SelectTrigger className="w-[120px] h-8">
-                        <SelectValue placeholder="Platform" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availablePlatforms.map((platform) => (
-                          <SelectItem key={platform.id} value={platform.id}>
-                            <div className="flex items-center gap-2">
-                              <platform.icon className="h-4 w-4" />
-                              <span>{platform.name}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      <Plus className="h-3 w-3" /> 
+                      <span className="hidden sm:inline">Add Platform</span>
+                      <span className="sm:hidden">Add</span>
+                    </Button>
+                  )}
 
-                    <Input
-                      placeholder="Enter URL"
-                      value={platformUrl}
-                      onChange={(e) => setPlatformUrl(e.target.value)}
-                      className="h-8 w-48"
-                      disabled={isAnyOperationInProgress}
-                    />
-
-                    <div className="flex gap-1">
-                      <Button
-                        size="sm"
-                        variant="default"
-                        onClick={handleAddPlatform}
-                        className="h-8"
-                        disabled={isAnyOperationInProgress}
-                      >
-                        <Save className="h-3 w-3 mr-1" /> Save
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={handleCancelAddPlatform}
-                        className="h-8"
-                        disabled={isAnyOperationInProgress}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
+                  {isAddingPlatformLoading ? (
+                    <div className="flex items-center gap-2">
+                      <Skeleton className="h-8 w-24 sm:w-32" />
+                      <Skeleton className="h-8 w-36 sm:w-48" />
+                      <Skeleton className="h-8 w-16" />
                     </div>
+                  ) : (
+                    isAddingPlatform && (
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2 border rounded-md bg-gray-50 w-full sm:w-auto">
+                        <Select 
+                          value={selectedPlatform} 
+                          onValueChange={setSelectedPlatform}
+                          disabled={isAnyOperationInProgress}
+                        >
+                          <SelectTrigger className="w-full sm:w-[120px] h-8">
+                            <SelectValue placeholder="Platform" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availablePlatforms.map((platform) => (
+                              <SelectItem key={platform.id} value={platform.id}>
+                                <div className="flex items-center gap-2">
+                                  <platform.icon className="h-4 w-4" />
+                                  <span>{platform.name}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <Input
+                          placeholder="Enter URL"
+                          value={platformUrl}
+                          onChange={(e) => setPlatformUrl(e.target.value)}
+                          className="h-8 w-full sm:w-48"
+                          disabled={isAnyOperationInProgress}
+                        />
+
+                        <div className="flex gap-1 w-full sm:w-auto">
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={handleAddPlatform}
+                            className="h-8 flex-1 sm:flex-none"
+                            disabled={isAnyOperationInProgress}
+                          >
+                            <Save className="h-3 w-3 mr-1" /> Save
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={handleCancelAddPlatform}
+                            className="h-8"
+                            disabled={isAnyOperationInProgress}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    )
+                  )}
+                </div>
+
+                {/* Contact Information */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 text-sm text-gray-600">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Mail className="h-4 w-4 flex-shrink-0" />
+                    <a href={`mailto:${employee.company_email}`} className="hover:underline truncate">
+                      {employee.company_email}
+                    </a>
                   </div>
-                )
-              )}
-            </div>
 
-            {/* Contact Information - Single Row */}
-            <div className="flex flex-wrap items-center gap-6 mt-6 text-sm text-gray-600">
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                <a href={`mailto:${employee.company_email}`} className="hover:underline">
-                  {employee.company_email}
-                </a>
-              </div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 flex-shrink-0" />
+                    <a href={`tel:${employee.cell_number}`} className="hover:underline">
+                      {employee.cell_number}
+                    </a>
+                  </div>
 
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                <a href={`tel:${employee.cell_number}`} className="hover:underline">
-                  {employee.cell_number}
-                </a>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                <span>
-                  {employee.custom_city}, {employee.custom_state}
-                </span>
+                  <div className="flex items-center gap-2 min-w-0 sm:col-span-2 lg:col-span-1">
+                    <MapPin className="h-4 w-4 flex-shrink-0" />
+                    <span className="truncate">
+                      {employee.custom_city}, {employee.custom_state}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Team Members Section - Right side */}
+          {/* Right Section - Team Members */}
           {!isCoFounder && hasTeamMembers && (
-            <div className="flex-shrink-0 bg-gray-50 p-4 rounded-lg min-w-[280px]">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Team Members
-                </h3>
-              </div>
-              
-              <div className="space-y-2">
-                {teamMembers.slice(0, 3).map((member, index) => (
-                  <div key={member.name} className="text-sm">
-                    <div className="font-medium text-gray-800">{member.employee_name}</div>
-                    <div className="text-gray-500 text-xs">{member.designation}</div>
-                  </div>
-                ))}
+            <div className="xl:col-span-1">
+              <div className="bg-gray-50 p-4 sm:p-6 rounded-lg h-full">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm sm:text-base font-medium text-gray-700 flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Team Members
+                  </h3>
+                </div>
                 
-                {teamMembers.length > 3 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsTeamModalOpen(true)}
-                    className="text-blue-600 hover:text-blue-700 p-0 h-auto font-normal"
-                  >
-                    +{teamMembers.length - 3} more
-                  </Button>
-                )}
+                <div className="space-y-3">
+                  {teamMembers.slice(0, 4).map((member, index) => (
+                    <div key={member.name} className="text-sm border-b border-gray-200 pb-2 last:border-b-0 last:pb-0">
+                      <div className="font-medium text-gray-800 truncate">{member.employee_name}</div>
+                      <div className="text-gray-500 text-xs truncate">{member.designation}</div>
+                    </div>
+                  ))}
+                  
+                  {teamMembers.length > 4 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsTeamModalOpen(true)}
+                      className="text-blue-600 hover:text-blue-700 p-0 h-auto font-normal text-sm w-full justify-start"
+                    >
+                      +{teamMembers.length - 4} more team members
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -511,21 +521,35 @@ const ProfileHeader = () => {
 
 const ProfileHeaderSkeleton = () => (
   <div className="w-full bg-white rounded-lg shadow-md overflow-hidden">
-    <div className="p-6 sm:p-8">
-      <div className="flex flex-col md:flex-row gap-6 items-start">
-        <Skeleton className="w-28 h-28 sm:w-32 sm:h-32 rounded-full" />
-        <div className="flex-grow">
-          <Skeleton className="h-8 w-48 mb-2" />
-          <Skeleton className="h-5 w-32 mb-4" />
-          <Skeleton className="h-4 w-64 mb-6" />
-          <div className="flex gap-2">
-            <Skeleton className="h-8 w-24" />
-            <Skeleton className="h-8 w-24" />
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="xl:col-span-2">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
+            <Skeleton className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-md" />
+            <div className="flex-grow min-w-0">
+              <Skeleton className="h-6 sm:h-8 w-48 mb-2" />
+              <Skeleton className="h-4 sm:h-5 w-32 mb-4" />
+              <Skeleton className="h-4 w-64 mb-6" />
+              <div className="flex gap-2 mb-4">
+                <Skeleton className="h-8 w-20 sm:w-24" />
+                <Skeleton className="h-8 w-20 sm:w-24" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <Skeleton className="h-5 w-36 sm:w-40" />
+                <Skeleton className="h-5 w-28 sm:w-32" />
+                <Skeleton className="h-5 w-32 sm:w-36" />
+              </div>
+            </div>
           </div>
-          <div className="flex gap-6 mt-6">
-            <Skeleton className="h-5 w-40" />
-            <Skeleton className="h-5 w-32" />
-            <Skeleton className="h-5 w-36" />
+        </div>
+        <div className="xl:col-span-1">
+          <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
+            <Skeleton className="h-6 w-32 mb-4" />
+            <div className="space-y-3">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
           </div>
         </div>
       </div>
