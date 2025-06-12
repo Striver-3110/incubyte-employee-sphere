@@ -56,7 +56,7 @@ const ProfileHeader = () => {
     }
   };
 
-  const handleEditSocial = (platformId: string, url: string) => {
+  const handleEditSocial = async (platformId: string, url: string) => {
     setEditingSocial(platformId);
     setNewUrl(url);
   };
@@ -482,35 +482,23 @@ const ProfileHeader = () => {
                   </h3>
                 </div>
                 
-                <div className="grid grid-cols-3 gap-2">
-                  {teamMembers.slice(0, 6).map((member, index) => (
-                    <div key={member.name || index} className="text-center">
-                      <div className="w-12 h-12 rounded-full bg-gray-200 mx-auto mb-2 overflow-hidden">
-                        <img
-                          src={member.image || '/placeholder.svg'}
-                          alt={member.employee_name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="text-xs font-medium text-gray-800 truncate">{member.employee_name}</div>
-                      <div className="text-xs text-gray-500 truncate">{member.designation}</div>
+                <div className="grid grid-cols-1 gap-3">
+                  {teamMembers.slice(0, 3).map((member, index) => (
+                    <div key={member.name || index} className="text-sm border-b border-gray-200 pb-2 last:border-b-0 last:pb-0">
+                      <div className="font-medium text-gray-800 truncate">{member.employee_name}</div>
+                      <div className="text-gray-500 text-xs truncate">{member.designation}</div>
                     </div>
                   ))}
                   
-                  {teamMembers.length > 6 && (
-                    <div className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setIsTeamModalOpen(true)}
-                        className="w-12 h-12 rounded-full bg-gray-200 text-gray-600 hover:bg-gray-300 p-0 mb-2"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                      <div className="text-xs text-blue-600 font-medium">
-                        +{teamMembers.length - 6} more
-                      </div>
-                    </div>
+                  {teamMembers.length > 3 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsTeamModalOpen(true)}
+                      className="text-blue-600 hover:text-blue-700 p-0 h-auto font-normal text-sm w-full justify-start"
+                    >
+                      +{teamMembers.length - 3} more team members
+                    </Button>
                   )}
                 </div>
               </div>
@@ -553,7 +541,7 @@ const ProfileHeaderSkeleton = () => (
         <div className="lg:col-span-1">
           <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
             <Skeleton className="h-6 w-32 mb-4" />
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 gap-2">
               <Skeleton className="h-16 w-full" />
               <Skeleton className="h-16 w-full" />
               <Skeleton className="h-16 w-full" />
