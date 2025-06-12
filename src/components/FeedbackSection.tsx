@@ -101,16 +101,16 @@ const FeedbackSection = () => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <div className="flex justify-between items-center mb-4">
+    <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm w-full">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
         <h2 className="text-xl font-semibold text-gray-800">Feedback</h2>
         <Dialog open={isInitiateDialogOpen} onOpenChange={setIsInitiateDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="h-8">
+            <Button variant="outline" size="sm" className="h-8 w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-1" /> Initiate Feedback
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl" showOverlay={false}>
+          <DialogContent className="max-w-[95vw] sm:max-w-2xl w-full mx-4" showOverlay={false}>
             <FeedbackInitiation onClose={() => setIsInitiateDialogOpen(false)} />
           </DialogContent>
         </Dialog>
@@ -120,15 +120,15 @@ const FeedbackSection = () => {
       <div className="space-y-3 mb-4">
         {!hasRecentlyReceivedFeedback && showReceivedWarning && (
           <Alert variant="destructive" className="bg-amber-50 border-amber-200">
-            <AlertCircle className="h-4 w-4 text-amber-600" />
-            <AlertDescription className="flex justify-between items-center">
-              <span className="text-amber-800">
+            <AlertCircle className="h-4 w-4 text-amber-600 flex-shrink-0" />
+            <AlertDescription className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+              <span className="text-amber-800 text-sm">
                 You haven't received any feedback in the last 2 months. Consider requesting feedback from your colleagues.
               </span>
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-6 w-6 text-amber-600 hover:text-amber-800 hover:bg-amber-100"
+                className="h-6 w-6 text-amber-600 hover:text-amber-800 hover:bg-amber-100 self-end sm:self-auto"
                 onClick={() => setShowReceivedWarning(false)}
               >
                 <X className="h-4 w-4" />
@@ -139,15 +139,15 @@ const FeedbackSection = () => {
 
         {!hasRecentlyGivenFeedback && showGivenWarning && (
           <Alert variant="destructive" className="bg-blue-50 border-blue-200">
-            <AlertCircle className="h-4 w-4 text-blue-600" />
-            <AlertDescription className="flex justify-between items-center">
-              <span className="text-blue-800">
+            <AlertCircle className="h-4 w-4 text-blue-600 flex-shrink-0" />
+            <AlertDescription className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+              <span className="text-blue-800 text-sm">
                 You haven't given any feedback in the last 2 months. Providing feedback helps your team grow!
               </span>
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-6 w-6 text-blue-600 hover:text-blue-800 hover:bg-blue-100"
+                className="h-6 w-6 text-blue-600 hover:text-blue-800 hover:bg-blue-100 self-end sm:self-auto"
                 onClick={() => setShowGivenWarning(false)}
               >
                 <X className="h-4 w-4" />
@@ -159,22 +159,22 @@ const FeedbackSection = () => {
 
       {/* View Feedback Dialog - Fixed backdrop and scrolling issues */}
       <Dialog open={!!viewFeedbackDialog} onOpenChange={(open) => !open && setViewFeedbackDialog(null)}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden" showOverlay={false}>
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden" showOverlay={false}>
           <div className="max-h-[70vh] overflow-y-auto pr-2">
             {viewFeedbackDialog && (
               <div className="space-y-4">
-                <h3 className="text-xl font-semibold sticky top-0 bg-white pb-2">
+                <h3 className="text-lg sm:text-xl font-semibold sticky top-0 bg-white pb-2">
                   {viewFeedbackDialog.name || "Feedback Details"}
                 </h3>
                 
-                <div className="grid grid-cols-2 gap-4 py-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
                   <div>
                     <p className="text-sm text-gray-500">For</p>
-                    <p className="font-medium">{viewFeedbackDialog.employee_name}</p>
+                    <p className="font-medium text-sm sm:text-base break-words">{viewFeedbackDialog.employee_name}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">From</p>
-                    <p className="font-medium">{viewFeedbackDialog.reviewer_name}</p>
+                    <p className="font-medium text-sm sm:text-base break-words">{viewFeedbackDialog.reviewer_name}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Status</p>
@@ -191,7 +191,7 @@ const FeedbackSection = () => {
                   {viewFeedbackDialog.added_on && (
                     <div>
                       <p className="text-sm text-gray-500">Date</p>
-                      <p className="font-medium">{new Date(viewFeedbackDialog.added_on).toLocaleDateString()}</p>
+                      <p className="font-medium text-sm sm:text-base">{new Date(viewFeedbackDialog.added_on).toLocaleDateString()}</p>
                     </div>
                   )}
                 </div>
@@ -200,7 +200,7 @@ const FeedbackSection = () => {
                   <div className="border-t pt-4 mt-4">
                     <p className="font-medium mb-2">Comments:</p>
                     <div
-                      className="prose prose-sm max-w-none"
+                      className="prose prose-sm max-w-none text-sm"
                       dangerouslySetInnerHTML={{ __html: viewFeedbackDialog.additional_comments }}
                     />
                   </div>
@@ -212,35 +212,35 @@ const FeedbackSection = () => {
       </Dialog>
 
       <Tabs defaultValue="received" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="received" className="flex justify-center items-center gap-2">
-            Received
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
+          <TabsTrigger value="received" className="flex flex-col sm:flex-row justify-center items-center gap-1 sm:gap-2 text-xs sm:text-sm p-2">
+            <span>Received</span>
             {receivedFeedbacks.length > 0 && (
-              <Badge variant="secondary" className="h-5 min-w-5 px-1.5 flex justify-center items-center rounded-full">
+              <Badge variant="secondary" className="h-4 min-w-4 px-1 flex justify-center items-center rounded-full text-xs">
                 {receivedFeedbacks.length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="given" className="flex justify-center items-center gap-2">
-            Given
+          <TabsTrigger value="given" className="flex flex-col sm:flex-row justify-center items-center gap-1 sm:gap-2 text-xs sm:text-sm p-2">
+            <span>Given</span>
             {completedGivenFeedbacks.length > 0 && (
-              <Badge variant="secondary" className="h-5 min-w-5 px-1.5 flex justify-center items-center rounded-full">
+              <Badge variant="secondary" className="h-4 min-w-4 px-1 flex justify-center items-center rounded-full text-xs">
                 {completedGivenFeedbacks.length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="initiated" className="flex justify-center items-center gap-2">
-            Initiated
+          <TabsTrigger value="initiated" className="flex flex-col sm:flex-row justify-center items-center gap-1 sm:gap-2 text-xs sm:text-sm p-2">
+            <span>Initiated</span>
             {initiatedFeedbacks.length > 0 && (
-              <Badge variant="secondary" className="h-5 min-w-5 px-1.5 flex justify-center items-center rounded-full">
+              <Badge variant="secondary" className="h-4 min-w-4 px-1 flex justify-center items-center rounded-full text-xs">
                 {initiatedFeedbacks.length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="pending" className="flex justify-center items-center gap-2">
-            Pending
+          <TabsTrigger value="pending" className="flex flex-col sm:flex-row justify-center items-center gap-1 sm:gap-2 text-xs sm:text-sm p-2">
+            <span>Pending</span>
             {pendingFeedbacks.length > 0 && (
-              <Badge variant="secondary" className="h-5 min-w-5 px-1.5 flex justify-center items-center rounded-full">
+              <Badge variant="secondary" className="h-4 min-w-4 px-1 flex justify-center items-center rounded-full text-xs">
                 {pendingFeedbacks.length}
               </Badge>
             )}
@@ -251,12 +251,12 @@ const FeedbackSection = () => {
           {receivedFeedbacks.length > 0 ? (
             <div className="space-y-4">
               {receivedFeedbacks.slice(0, receivedDisplayCount).map((feedback, index) => (
-                <div key={index} className="bg-gray-50 p-4 rounded-md border">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-medium text-gray-800">
+                <div key={index} className="bg-gray-50 p-3 sm:p-4 rounded-md border">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+                    <h3 className="font-medium text-gray-800 text-sm sm:text-base break-words">
                       {feedback.name || "Feedback Request"}
                     </h3>
-                    <span className={`px-2 py-1 text-xs rounded-full ${
+                    <span className={`px-2 py-1 text-xs rounded-full self-start sm:self-auto flex-shrink-0 ${
                       feedback.custom_feedback_status === 'Pending' 
                         ? 'bg-yellow-100 text-yellow-800'
                         : feedback.custom_feedback_status === 'Completed'
@@ -267,20 +267,20 @@ const FeedbackSection = () => {
                     </span>
                   </div>
                   <div className="text-sm text-gray-600 space-y-1">
-                    <p><strong>From:</strong> {feedback.reviewer_name}</p>
-                    <p><strong>For:</strong> {feedback.employee_name}</p>
+                    <p><strong>From:</strong> <span className="break-words">{feedback.reviewer_name}</span></p>
+                    <p><strong>For:</strong> <span className="break-words">{feedback.employee_name}</span></p>
                   </div>
                 </div>
               ))}
               
               {/* Pagination controls */}
-              <div className="flex justify-center gap-4 mt-4">
+              <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4 mt-4">
                 {receivedDisplayCount > 5 && (
                   <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={() => handleShowLess('received')}
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 w-full sm:w-auto"
                   >
                     <ChevronUp className="h-4 w-4" /> See Less
                   </Button>
@@ -290,7 +290,7 @@ const FeedbackSection = () => {
                     variant="outline" 
                     size="sm" 
                     onClick={() => handleShowMore('received')}
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 w-full sm:w-auto"
                   >
                     <ChevronDown className="h-4 w-4" /> See More
                   </Button>
@@ -298,7 +298,7 @@ const FeedbackSection = () => {
               </div>
             </div>
           ) : (
-            <p className="text-gray-500 italic">No feedback received yet.</p>
+            <p className="text-gray-500 italic text-sm sm:text-base">No feedback received yet.</p>
           )}
         </TabsContent>
 
@@ -306,21 +306,21 @@ const FeedbackSection = () => {
           {completedGivenFeedbacks.length > 0 ? (
             <div className="space-y-4">
               {completedGivenFeedbacks.slice(0, givenDisplayCount).map((feedback, index) => (
-                <div key={index} className="bg-gray-50 p-4 rounded-md border">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-medium text-gray-800">
+                <div key={index} className="bg-gray-50 p-3 sm:p-4 rounded-md border">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+                    <h3 className="font-medium text-gray-800 text-sm sm:text-base break-words">
                       {feedback.name || "Feedback Given"}
                     </h3>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 self-start sm:self-auto">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 rounded-full"
+                        className="h-6 w-6 rounded-full flex-shrink-0"
                         onClick={() => setViewFeedbackDialog(feedback)}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <span className={`px-2 py-1 text-xs rounded-full ${
+                      <span className={`px-2 py-1 text-xs rounded-full flex-shrink-0 ${
                         feedback.custom_feedback_status === 'Pending' 
                           ? 'bg-yellow-100 text-yellow-800'
                           : feedback.custom_feedback_status === 'Completed'
@@ -332,20 +332,20 @@ const FeedbackSection = () => {
                     </div>
                   </div>
                   <div className="text-sm text-gray-600 space-y-1">
-                    <p><strong>To:</strong> {feedback.employee_name}</p>
-                    <p><strong>Reviewer:</strong> {feedback.reviewer_name}</p>
+                    <p><strong>To:</strong> <span className="break-words">{feedback.employee_name}</span></p>
+                    <p><strong>Reviewer:</strong> <span className="break-words">{feedback.reviewer_name}</span></p>
                   </div>
                 </div>
               ))}
               
               {/* Pagination controls */}
-              <div className="flex justify-center gap-4 mt-4">
+              <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4 mt-4">
                 {givenDisplayCount > 5 && (
                   <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={() => handleShowLess('given')}
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 w-full sm:w-auto"
                   >
                     <ChevronUp className="h-4 w-4" /> See Less
                   </Button>
@@ -355,7 +355,7 @@ const FeedbackSection = () => {
                     variant="outline" 
                     size="sm" 
                     onClick={() => handleShowMore('given')}
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 w-full sm:w-auto"
                   >
                     <ChevronDown className="h-4 w-4" /> See More
                   </Button>
@@ -363,7 +363,7 @@ const FeedbackSection = () => {
               </div>
             </div>
           ) : (
-            <p className="text-gray-500 italic">No completed feedback given yet.</p>
+            <p className="text-gray-500 italic text-sm sm:text-base">No completed feedback given yet.</p>
           )}
         </TabsContent>
         
@@ -371,21 +371,21 @@ const FeedbackSection = () => {
           {initiatedFeedbacks.length > 0 ? (
             <div className="space-y-4">
               {initiatedFeedbacks.slice(0, initiatedDisplayCount).map((feedback, index) => (
-                <div key={index} className="bg-gray-50 p-4 rounded-md border">
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-medium text-gray-800">
+                <div key={index} className="bg-gray-50 p-3 sm:p-4 rounded-md border">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+                    <h3 className="font-medium text-gray-800 text-sm sm:text-base break-words">
                       {feedback.name || "Feedback Initiated"}
                     </h3>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 self-start sm:self-auto">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 rounded-full"
+                        className="h-6 w-6 rounded-full flex-shrink-0"
                         onClick={() => setViewFeedbackDialog(feedback)}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <span className={`px-2 py-1 text-xs rounded-full ${
+                      <span className={`px-2 py-1 text-xs rounded-full flex-shrink-0 ${
                         feedback.custom_feedback_status === 'Pending' 
                           ? 'bg-yellow-100 text-yellow-800'
                           : feedback.custom_feedback_status === 'Completed'
@@ -397,20 +397,20 @@ const FeedbackSection = () => {
                     </div>
                   </div>
                   <div className="text-sm text-gray-600 space-y-1">
-                    <p><strong>For:</strong> {feedback.employee_name}</p>
-                    <p><strong>Reviewer:</strong> {feedback.reviewer_name}</p>
+                    <p><strong>For:</strong> <span className="break-words">{feedback.employee_name}</span></p>
+                    <p><strong>Reviewer:</strong> <span className="break-words">{feedback.reviewer_name}</span></p>
                   </div>
                 </div>
               ))}
               
               {/* Pagination controls */}
-              <div className="flex justify-center gap-4 mt-4">
+              <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4 mt-4">
                 {initiatedDisplayCount > 5 && (
                   <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={() => handleShowLess('initiated')}
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 w-full sm:w-auto"
                   >
                     <ChevronUp className="h-4 w-4" /> See Less
                   </Button>
@@ -420,7 +420,7 @@ const FeedbackSection = () => {
                     variant="outline" 
                     size="sm" 
                     onClick={() => handleShowMore('initiated')}
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 w-full sm:w-auto"
                   >
                     <ChevronDown className="h-4 w-4" /> See More
                   </Button>
@@ -428,7 +428,7 @@ const FeedbackSection = () => {
               </div>
             </div>
           ) : (
-            <p className="text-gray-500 italic">No feedback initiated yet.</p>
+            <p className="text-gray-500 italic text-sm sm:text-base">No feedback initiated yet.</p>
           )}
         </TabsContent>
 
@@ -438,32 +438,32 @@ const FeedbackSection = () => {
               {pendingFeedbacks.slice(0, pendingDisplayCount).map((feedback, index) => (
                 <div 
                   key={index} 
-                  className="bg-gray-50 p-4 rounded-md border cursor-pointer hover:bg-gray-100 transition-colors"
+                  className="bg-gray-50 p-3 sm:p-4 rounded-md border cursor-pointer hover:bg-gray-100 transition-colors"
                   onClick={() => handlePendingFeedbackClick(feedback.name)}
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-medium text-gray-800">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
+                    <h3 className="font-medium text-gray-800 text-sm sm:text-base break-words">
                       {feedback.name || "Pending Feedback"}
                     </h3>
-                    <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">
+                    <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 self-start sm:self-auto flex-shrink-0">
                       {feedback.custom_feedback_status}
                     </span>
                   </div>
                   <div className="text-sm text-gray-600 space-y-1">
-                    <p><strong>For:</strong> {feedback.employee_name}</p>
-                    <p><strong>Reviewer:</strong> {feedback.reviewer_name}</p>
+                    <p><strong>For:</strong> <span className="break-words">{feedback.employee_name}</span></p>
+                    <p><strong>Reviewer:</strong> <span className="break-words">{feedback.reviewer_name}</span></p>
                   </div>
                 </div>
               ))}
               
               {/* Pagination controls */}
-              <div className="flex justify-center gap-4 mt-4">
+              <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4 mt-4">
                 {pendingDisplayCount > 5 && (
                   <Button 
                     variant="outline" 
                     size="sm" 
                     onClick={() => handleShowLess('pending')}
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 w-full sm:w-auto"
                   >
                     <ChevronUp className="h-4 w-4" /> See Less
                   </Button>
@@ -473,7 +473,7 @@ const FeedbackSection = () => {
                     variant="outline" 
                     size="sm" 
                     onClick={() => handleShowMore('pending')}
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 w-full sm:w-auto"
                   >
                     <ChevronDown className="h-4 w-4" /> See More
                   </Button>
@@ -481,7 +481,7 @@ const FeedbackSection = () => {
               </div>
             </div>
           ) : (
-            <p className="text-gray-500 italic">No pending feedback to give.</p>
+            <p className="text-gray-500 italic text-sm sm:text-base">No pending feedback to give.</p>
           )}
         </TabsContent>
       </Tabs>
@@ -490,14 +490,14 @@ const FeedbackSection = () => {
 };
 
 const FeedbackSkeleton = () => (
-  <div className="bg-white p-6 rounded-lg shadow-sm">
-    <div className="flex justify-between items-center mb-4">
+  <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
+    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-4">
       <Skeleton className="h-7 w-32" />
-      <Skeleton className="h-8 w-32" />
+      <Skeleton className="h-8 w-full sm:w-32" />
     </div>
     <div className="space-y-4">
-      <div className="bg-gray-50 p-4 rounded-md">
-        <div className="flex justify-between items-start mb-2">
+      <div className="bg-gray-50 p-3 sm:p-4 rounded-md">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
           <Skeleton className="h-5 w-48" />
           <Skeleton className="h-6 w-20" />
         </div>
@@ -507,8 +507,8 @@ const FeedbackSkeleton = () => (
           <Skeleton className="h-4 w-36" />
         </div>
       </div>
-      <div className="bg-gray-50 p-4 rounded-md">
-        <div className="flex justify-between items-start mb-2">
+      <div className="bg-gray-50 p-3 sm:p-4 rounded-md">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
           <Skeleton className="h-5 w-48" />
           <Skeleton className="h-6 w-20" />
         </div>
