@@ -364,21 +364,21 @@ const IceBreakersForm = ({
   const canSubmit = answeredCount >= 5;
   const canGoBack = questionHistory.length > 0;
 
-  // Render view mode (list of answered questions)
+  // Render view mode (list of answered questions) - Updated to use grid layout
   if (currentIndex === -1) {
     const answeredQuestions = currentQuestions.filter(q => q.answer.trim() !== "");
 
     return (
       <div>
         {answeredQuestions.length > 0 ? (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {answeredQuestions.map((item, index) => (
               <div key={item.name || index} className="bg-gray-50 p-4 rounded-md relative">
                 <div className="flex justify-between mb-2">
-                  <p className="font-medium text-gray-700">{item.question}</p>
+                  <p className="font-medium text-gray-700 pr-8">{item.question}</p>
 
                   {inlineEditing === index ? (
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-2 absolute top-2 right-2">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -551,18 +551,22 @@ const IceBreakersForm = ({
 const IceBreakersSkeleton = () => (
   <div className="bg-white p-6 rounded-lg shadow-sm">
     <Skeleton className="h-7 w-32 mb-4" />
-    <div className="space-y-4">
-      <div>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="bg-gray-50 p-4 rounded-md">
         <Skeleton className="h-5 w-full mb-2" />
         <Skeleton className="h-4 w-3/4" />
       </div>
-      <div>
+      <div className="bg-gray-50 p-4 rounded-md">
         <Skeleton className="h-5 w-full mb-2" />
         <Skeleton className="h-4 w-5/6" />
       </div>
-      <div>
+      <div className="bg-gray-50 p-4 rounded-md">
         <Skeleton className="h-5 w-full mb-2" />
         <Skeleton className="h-4 w-2/3" />
+      </div>
+      <div className="bg-gray-50 p-4 rounded-md">
+        <Skeleton className="h-5 w-full mb-2" />
+        <Skeleton className="h-4 w-4/5" />
       </div>
     </div>
   </div>
