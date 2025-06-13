@@ -30,7 +30,7 @@ interface FeedbackData {
 }
 
 const FeedbackSection = () => {
-  const { feedbacks, loading } = useFeedbackData();
+  const { feedbacks, loading, refetchFeedbacks } = useFeedbackData();
   const [isInitiateDialogOpen, setIsInitiateDialogOpen] = useState(false);
   const [showReceivedWarning, setShowReceivedWarning] = useState(true);
   const [showGivenWarning, setShowGivenWarning] = useState(true);
@@ -41,6 +41,16 @@ const FeedbackSection = () => {
   const [givenDisplayCount, setGivenDisplayCount] = useState(5);
   const [initiatedDisplayCount, setInitiatedDisplayCount] = useState(5);
   const [pendingDisplayCount, setPendingDisplayCount] = useState(5);
+
+  const handleFeedbackInitiated = async () => {
+    // Close the dialog
+    setIsInitiateDialogOpen(false);
+    
+    // Refetch feedback data to get the latest data
+    if (refetchFeedbacks) {
+      await refetchFeedbacks();
+    }
+  };
 
   if (loading) {
     return <FeedbackSkeleton />;
@@ -111,7 +121,10 @@ const FeedbackSection = () => {
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-[95vw] sm:max-w-2xl w-full mx-4" showOverlay={false}>
-            <FeedbackInitiation onClose={() => setIsInitiateDialogOpen(false)} />
+            <FeedbackInitiation 
+              onClose={() => setIsInitiateDialogOpen(false)}
+              onSuccess={handleFeedbackInitiated}
+            />
           </DialogContent>
         </Dialog>
       </div>

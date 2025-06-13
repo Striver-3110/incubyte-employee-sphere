@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import TeamMembersModal from "./TeamMembersModal";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
@@ -64,10 +64,8 @@ const ProfileHeader = () => {
   const handleSaveSocial = async (platformId: string) => {
     const trimmedUrl = newUrl.trim();
     if (!trimmedUrl) {
-      toast({
-        title: "Error",
-        description: "URL cannot be empty",
-        variant: "destructive",
+      toast.error("URL cannot be empty", {
+        position: "top-right",
       });
       return;
     }
@@ -75,10 +73,8 @@ const ProfileHeader = () => {
     // URL validation
     const urlRegex = /^(https?:\/\/)?([\w\-]+\.)+[\w\-]+(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$/;
     if (!urlRegex.test(trimmedUrl)) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid URL",
-        variant: "destructive",
+      toast.error("Please enter a valid URL", {
+        position: "top-right",
       });
       return;
     }
@@ -110,19 +106,16 @@ const ProfileHeader = () => {
         employee.custom_platforms[platformIndex].url = trimmedUrl;
       }
 
-      toast({
-        title: "Success",
-        description: "Platform link updated successfully",
+      toast.success("Platform link updated successfully", {
+        position: "top-right",
       });
 
       setEditingSocial(null);
       setNewUrl("");
     } catch (error) {
       console.error("Error updating platform:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update platform link",
-        variant: "destructive",
+      toast.error("Failed to update platform link", {
+        position: "top-right",
       });
     } finally {
       setProcessingPlatform(null);
@@ -140,20 +133,16 @@ const ProfileHeader = () => {
     const trimmedUrl = platformUrl.trim();
 
     if (!selectedPlatform || !trimmedUrl) {
-      toast({
-        title: "Error",
-        description: "Please select a platform and enter a URL",
-        variant: "destructive",
+      toast.error("Please select a platform and enter a URL", {
+        position: "top-right",
       });
       return;
     }
 
     const urlRegex = /^(https?:\/\/)?([\w\-]+\.)+[\w\-]+(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$/;
     if (!urlRegex.test(trimmedUrl)) {
-      toast({
-        title: "Error",
-        description: "Please enter a valid URL",
-        variant: "destructive",
+      toast.error("Please enter a valid URL", {
+        position: "top-right",
       });
       return;
     }
@@ -187,9 +176,8 @@ const ProfileHeader = () => {
 
       employee.custom_platforms.push(newPlatform);
 
-      toast({
-        title: "Success",
-        description: "Platform added successfully",
+      toast.success("Platform added successfully", {
+        position: "top-right",
       });
 
       setIsAddingPlatform(false);
@@ -197,10 +185,8 @@ const ProfileHeader = () => {
       setPlatformUrl("");
     } catch (error) {
       console.error("Error adding platform:", error);
-      toast({
-        title: "Error",
-        description: "Failed to add platform",
-        variant: "destructive",
+      toast.error("Failed to add platform", {
+        position: "top-right",
       });
     } finally {
       setIsAddingPlatformLoading(false);
@@ -239,16 +225,13 @@ const ProfileHeader = () => {
         custom_platforms: updatedPlatforms,
       }));
 
-      toast({
-        title: "Success",
-        description: "Platform deleted successfully",
+      toast.success("Platform deleted successfully", {
+        position: "top-right",
       });
     } catch (error) {
       console.error("Error deleting platform:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete platform",
-        variant: "destructive",
+      toast.error("Failed to delete platform", {
+        position: "top-right",
       });
     } finally {
       setProcessingPlatform(null);
@@ -541,10 +524,10 @@ const ProfileHeaderSkeleton = () => (
         <div className="lg:col-span-1">
           <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
             <Skeleton className="h-6 w-32 mb-4" />
-            <div className="grid grid-cols-1 gap-2">
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-16 w-full" />
+            <div className="grid grid-cols-1 gap-3">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
             </div>
           </div>
         </div>

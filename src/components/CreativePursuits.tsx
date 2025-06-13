@@ -18,7 +18,7 @@ import { toast } from "sonner";
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const CreativePursuits = () => {
-  const { employee, loading, setEmployee } = useEmployeeDetails();
+  const { employee, loading, setEmployee, refetchEmployee } = useEmployeeDetails();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newPursuit, setNewPursuit] = useState("");
   const [pursuits, setPursuits] = useState<PassionateAbout[]>([]);
@@ -50,22 +50,22 @@ const CreativePursuits = () => {
       const data = await response.json();
 
       if (data.message?.status === "success") {
-        toast.success("Pursuits updated successfully.");
+        toast.success("Creative pursuits updated successfully", {
+          position: "top-right",
+        });
         
-        // Update the global state immediately with the API response
-        setEmployee((prev) => ({
-          ...prev,
-          custom_passionate_about: data.message.data.custom_passionate_about,
-        }));
-        
-        // Update local state as well
-        setPursuits(data.message.data.custom_passionate_about);
+        // Refetch employee details to get the latest data
+        if (refetchEmployee) {
+          await refetchEmployee();
+        }
       } else {
         throw new Error(data.message?.message || "Failed to update pursuits.");
       }
     } catch (error) {
       console.error("Error updating pursuits:", error);
-      toast.error("Failed to update creative pursuits.");
+      toast.error("Failed to update creative pursuits", {
+        position: "top-right",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -75,7 +75,9 @@ const CreativePursuits = () => {
     const trimmedPursuit = newPursuit.trim();
 
     if (!trimmedPursuit) {
-      toast.error("Creative pursuit cannot be empty.");
+      toast.error("Creative pursuit cannot be empty", {
+        position: "top-right",
+      });
       return;
     }
 
@@ -85,7 +87,9 @@ const CreativePursuits = () => {
     );
 
     if (isDuplicate) {
-      toast.error(`"${trimmedPursuit}" already exists as a creative pursuit.`);
+      toast.error(`"${trimmedPursuit}" already exists as a creative pursuit`, {
+        position: "top-right",
+      });
       return;
     }
 

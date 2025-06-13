@@ -10,7 +10,7 @@ import { toast } from "sonner";
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const AboutSection = () => {
-  const { employee, loading, error, setEmployee } = useEmployeeDetails();
+  const { employee, loading, error, setEmployee, refetchEmployee } = useEmployeeDetails();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -18,7 +18,9 @@ const AboutSection = () => {
     // Validate input - don't allow empty or whitespace-only content
     const trimmedAbout = employee?.custom_about?.trim();
     if (!trimmedAbout) {
-      toast.error("About section cannot be empty.");
+      toast.error("About section cannot be empty.", {
+        position: "top-right",
+      });
       return;
     }
 
@@ -38,18 +40,24 @@ const AboutSection = () => {
       const aboutData = await response.json();
 
       if (aboutData.message?.status === "success") {
-        toast.success(aboutData.message.message || "About section updated successfully");
-        setEmployee((prevEmployee) => ({
-          ...prevEmployee,
-          custom_about: aboutData.message.data.custom_about,
-        }));
+        toast.success(aboutData.message.message || "About section updated successfully", {
+          position: "top-right",
+        });
+        
+        // Refetch employee details to get the latest data
+        if (refetchEmployee) {
+          await refetchEmployee();
+        }
+        
         setIsEditing(false);
       } else {
         throw new Error(aboutData.message?.message || "Failed to update About section");
       }
     } catch (error) {
       console.error("Error updating About section:", error);
-      toast.error("Failed to update About section");
+      toast.error("Failed to update About section", {
+        position: "top-right",
+      });
     } finally {
       setIsSaving(false);
     }
