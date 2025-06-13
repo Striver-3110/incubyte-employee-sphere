@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -26,9 +25,10 @@ interface FeedbackTemplate {
 
 interface FeedbackInitiationProps {
   onClose: () => void;
+  onSuccess?: () => Promise<void>;
 }
 
-export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose }) => {
+export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose, onSuccess }) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [feedbackTemplates, setFeedbackTemplates] = useState<FeedbackTemplate[]>([]);
   const [selectedEmployees, setSelectedEmployees] = useState<Employee[]>([]);
@@ -118,11 +118,31 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose 
     try {
       const selectedEmployeeIds = selectedEmployees.map(emp => emp.name).filter(Boolean);
       await sendFeedbackForm(selectedEmployee, selectedEmployeeIds, selectedTemplate);
-      toast.success("Feedback form sent successfully!");
+      toast.success("Feedback form sent successfully!", {
+        position: "top-right",
+        style: {
+          background: "#F0F9FF",
+          border: "1px solid #BAE6FD",
+          color: "#1E40AF",
+        },
+      });
+      
+      // Call onSuccess if provided to refresh feedback data
+      if (onSuccess) {
+        await onSuccess();
+      }
+      
       onClose();
     } catch (error) {
       console.error("Error sending feedback form:", error);
-      toast.error("Failed to send feedback form");
+      toast.error("Failed to send feedback form", {
+        position: "top-right",
+        style: {
+          background: "#F0F9FF",
+          border: "1px solid #BAE6FD",
+          color: "#1E40AF",
+        },
+      });
     } finally {
       setIsSubmitting(false);
     }
