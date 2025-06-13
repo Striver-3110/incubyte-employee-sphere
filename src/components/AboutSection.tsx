@@ -10,7 +10,7 @@ import { toast } from "sonner";
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const AboutSection = () => {
-  const { employee, loading, error, setEmployee, refetchEmployee } = useEmployeeDetails();
+  const { employee, loading, error, setEmployee } = useEmployeeDetails();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -20,6 +20,11 @@ const AboutSection = () => {
     if (!trimmedAbout) {
       toast.error("About section cannot be empty.", {
         position: "top-right",
+        style: {
+          background: "#FEF2F2",
+          border: "1px solid #FECACA",
+          color: "#991B1B",
+        },
       });
       return;
     }
@@ -42,12 +47,12 @@ const AboutSection = () => {
       if (aboutData.message?.status === "success") {
         toast.success(aboutData.message.message || "About section updated successfully", {
           position: "top-right",
+          style: {
+            background: "#F0F9FF",
+            border: "1px solid #BAE6FD",
+            color: "#1E40AF",
+          },
         });
-        
-        // Refetch employee details to get the latest data
-        if (refetchEmployee) {
-          await refetchEmployee();
-        }
         
         setIsEditing(false);
       } else {
@@ -57,6 +62,11 @@ const AboutSection = () => {
       console.error("Error updating About section:", error);
       toast.error("Failed to update About section", {
         position: "top-right",
+        style: {
+          background: "#FEF2F2",
+          border: "1px solid #FECACA",
+          color: "#991B1B",
+        },
       });
     } finally {
       setIsSaving(false);

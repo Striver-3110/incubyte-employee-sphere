@@ -18,7 +18,7 @@ import { toast } from "sonner";
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const CreativePursuits = () => {
-  const { employee, loading, setEmployee, refetchEmployee } = useEmployeeDetails();
+  const { employee, loading, setEmployee } = useEmployeeDetails();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newPursuit, setNewPursuit] = useState("");
   const [pursuits, setPursuits] = useState<PassionateAbout[]>([]);
@@ -52,12 +52,12 @@ const CreativePursuits = () => {
       if (data.message?.status === "success") {
         toast.success("Creative pursuits updated successfully", {
           position: "top-right",
+          style: {
+            background: "#F0F9FF",
+            border: "1px solid #BAE6FD",
+            color: "#1E40AF",
+          },
         });
-        
-        // Refetch employee details to get the latest data
-        if (refetchEmployee) {
-          await refetchEmployee();
-        }
       } else {
         throw new Error(data.message?.message || "Failed to update pursuits.");
       }
@@ -65,6 +65,11 @@ const CreativePursuits = () => {
       console.error("Error updating pursuits:", error);
       toast.error("Failed to update creative pursuits", {
         position: "top-right",
+        style: {
+          background: "#FEF2F2",
+          border: "1px solid #FECACA",
+          color: "#991B1B",
+        },
       });
     } finally {
       setIsSaving(false);
@@ -77,6 +82,11 @@ const CreativePursuits = () => {
     if (!trimmedPursuit) {
       toast.error("Creative pursuit cannot be empty", {
         position: "top-right",
+        style: {
+          background: "#FEF2F2",
+          border: "1px solid #FECACA",
+          color: "#991B1B",
+        },
       });
       return;
     }
@@ -89,6 +99,11 @@ const CreativePursuits = () => {
     if (isDuplicate) {
       toast.error(`"${trimmedPursuit}" already exists as a creative pursuit`, {
         position: "top-right",
+        style: {
+          background: "#FEF2F2",
+          border: "1px solid #FECACA",
+          color: "#991B1B",
+        },
       });
       return;
     }

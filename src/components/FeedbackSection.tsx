@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useFeedbackData } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,7 +29,7 @@ interface FeedbackData {
 }
 
 const FeedbackSection = () => {
-  const { feedbacks, loading, refetchFeedbacks } = useFeedbackData();
+  const { feedbacks, loading } = useFeedbackData();
   const [isInitiateDialogOpen, setIsInitiateDialogOpen] = useState(false);
   const [showReceivedWarning, setShowReceivedWarning] = useState(true);
   const [showGivenWarning, setShowGivenWarning] = useState(true);
@@ -46,10 +45,8 @@ const FeedbackSection = () => {
     // Close the dialog
     setIsInitiateDialogOpen(false);
     
-    // Refetch feedback data to get the latest data
-    if (refetchFeedbacks) {
-      await refetchFeedbacks();
-    }
+    // Refresh the page to get updated data
+    window.location.reload();
   };
 
   if (loading) {
@@ -123,7 +120,6 @@ const FeedbackSection = () => {
           <DialogContent className="max-w-[95vw] sm:max-w-2xl w-full mx-4" showOverlay={false}>
             <FeedbackInitiation 
               onClose={() => setIsInitiateDialogOpen(false)}
-              onSuccess={handleFeedbackInitiated}
             />
           </DialogContent>
         </Dialog>
