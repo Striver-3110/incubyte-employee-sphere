@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useEmployeeDetails } from "@/api/employeeService";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ const SkillsMatrix = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [deletingSkill, setDeletingSkill] = useState<string | null>(null);
   const [isComponentLoading, setIsComponentLoading] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
 
   // Fetch available skills from the API
   useEffect(() => {
@@ -209,12 +211,30 @@ const SkillsMatrix = () => {
 
   const handleSkillSelect = (skill: string) => {
     setSearchTerm(skill);
+    setShowDropdown(false); // Close dropdown after selection
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setShowDropdown(e.target.value.trim().length > 0); // Show dropdown when typing
+  };
+
+  const handleInputFocus = () => {
+    if (searchTerm.trim().length > 0) {
+      setShowDropdown(true);
+    }
+  };
+
+  const handleInputBlur = () => {
+    // Delay hiding dropdown to allow click events to register
+    setTimeout(() => setShowDropdown(false), 150);
   };
 
   const closeDialog = () => {
     setIsAddDialogOpen(false);
     setSearchTerm("");
     setSelectedProficiency("");
+    setShowDropdown(false);
   };
 
   const filteredSkills = getFilteredSkills();
@@ -288,21 +308,23 @@ const SkillsMatrix = () => {
             <DialogTitle>Add Skill</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
+            <div className="relative">
               <label className="text-sm font-medium mb-1 block">Skill Name</label>
               <Input
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleInputChange}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
                 placeholder="Enter a new skill or search"
                 disabled={isSaving}
               />
-              {filteredSkills.length > 0 && (
-                <div className="max-h-32 overflow-y-auto border rounded-md mt-2 bg-white z-50">
+              {showDropdown && filteredSkills.length > 0 && (
+                <div className="absolute top-full left-0 right-0 max-h-32 overflow-y-auto border rounded-md mt-1 bg-white shadow-lg z-50">
                   {filteredSkills.map((skill, index) => (
                     <div
                       key={index}
-                      className="p-2 cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSkillSelect(skill)}
+                      className="p-2 cursor-pointer hover:bg-gray-100 border-b last:border-b-0"
+                      onMouseDown={() => handleSkillSelect(skill)} // Use onMouseDown to prevent blur from hiding dropdown first
                     >
                       {skill}
                     </div>
