@@ -1,3 +1,4 @@
+
 import { useEmployeeDetails, useTeamEmployees } from "@/api/employeeService";
 import { calculateTenure, formatDate } from "@/utils/dateUtils";
 import { Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, Plus, Save, Trash2, Users, Loader2 } from "lucide-react";
@@ -256,7 +257,7 @@ const ProfileHeader = () => {
   const hasTeamMembers = teamMembers && teamMembers.length > 0;
 
   return (
-    <div className="w-full bg-white rounded-lg shadow-md overflow-hidden">
+    <div className="w-full bg-white rounded-lg shadow-md overflow-hidden relative">
       {/* Spinner overlay for platform operations */}
       {isAnyOperationInProgress && (
         <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10 rounded-lg">
