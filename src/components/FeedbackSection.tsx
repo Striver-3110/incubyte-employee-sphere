@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useFeedbackData } from "@/api/employeeService";
+import { useFeedbackData, fetchEmployeeFeedback } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Plus, X, AlertCircle, ChevronDown, ChevronUp, Eye } from "lucide-react";
@@ -29,7 +29,7 @@ interface FeedbackData {
 }
 
 const FeedbackSection = () => {
-  const { feedbacks, loading } = useFeedbackData();
+  const { feedbacks, loading, setFeedbacks } = useFeedbackData();
   const [isInitiateDialogOpen, setIsInitiateDialogOpen] = useState(false);
   const [showReceivedWarning, setShowReceivedWarning] = useState(true);
   const [showGivenWarning, setShowGivenWarning] = useState(true);
@@ -45,8 +45,15 @@ const FeedbackSection = () => {
     // Close the dialog
     setIsInitiateDialogOpen(false);
     
-    // Refresh the page to get updated data
-    window.location.reload();
+    // Refresh feedback data after successful initiation
+    try {
+      const updatedFeedbackData = await fetchEmployeeFeedback();
+      setFeedbacks(updatedFeedbackData);
+    } catch (error) {
+      console.error("Error fetching updated feedback data:", error);
+      // Fallback to page reload if API call fails
+      window.location.reload();
+    }
   };
 
   if (loading) {
@@ -120,6 +127,7 @@ const FeedbackSection = () => {
           <DialogContent className="max-w-[95vw] sm:max-w-2xl w-full mx-4" showOverlay={false}>
             <FeedbackInitiation 
               onClose={() => setIsInitiateDialogOpen(false)}
+              onSuccess={handleFeedbackInitiated}
             />
           </DialogContent>
         </Dialog>

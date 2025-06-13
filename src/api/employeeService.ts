@@ -223,11 +223,7 @@ let cachedFeedbackData: any = null;
 let cachedTeamEmployees: any = null;
 
 // Fetch employee details from the API
-const fetchEmployeeDetails = async () => {
-  if (cachedEmployeeData) {
-    return cachedEmployeeData;
-  }
-
+export const fetchEmployeeDetails = async () => {
   try {
 
     const response = await fetch(`${BASE_URL}user.get_employee_details`, {
@@ -249,7 +245,7 @@ const fetchEmployeeDetails = async () => {
       throw new Error('Invalid employee data received');
     }
 
-    // Cache the response
+    // Update cache with fresh data
     cachedEmployeeData = data.message;
     return data.message;
   } catch (error) {
@@ -282,11 +278,7 @@ const fetchEmployeeDetails = async () => {
 };
 
 // Fetch employee feedback from the API
-const fetchEmployeeFeedback = async () => {
-  if (cachedFeedbackData) {
-    return cachedFeedbackData;
-  }
-
+export const fetchEmployeeFeedback = async () => {
   try {
     const response = await fetch(`${BASE_URL}user.get_employee_feedback`, {
       method: 'GET',
@@ -305,6 +297,7 @@ const fetchEmployeeFeedback = async () => {
       throw new Error('Invalid feedback data received');
     }
 
+    // Update cache with fresh data
     cachedFeedbackData = data.data || data.message.data;
     return data.data || data.message.data;
   } catch (error) {
@@ -546,7 +539,7 @@ export const useFeedbackData = () => {
     fetchData();
   }, []);
 
-  return { feedbacks, loading, error };
+  return { feedbacks, loading, error, setFeedbacks };
 };
 
 // Use this hook to get employees in the same team

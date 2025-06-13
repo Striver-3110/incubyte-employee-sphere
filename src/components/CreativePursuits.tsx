@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect } from "react";
-import { useEmployeeDetails } from "@/api/employeeService";
+import { useEmployeeDetails, fetchEmployeeDetails } from "@/api/employeeService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash } from "lucide-react";
@@ -58,6 +57,14 @@ const CreativePursuits = () => {
             color: "#1E40AF",
           },
         });
+
+        // Refresh employee data after successful update
+        try {
+          const updatedEmployeeData = await fetchEmployeeDetails();
+          setEmployee(updatedEmployeeData);
+        } catch (fetchError) {
+          console.error("Error fetching updated employee data:", fetchError);
+        }
       } else {
         throw new Error(data.message?.message || "Failed to update pursuits.");
       }
@@ -66,9 +73,9 @@ const CreativePursuits = () => {
       toast.error("Failed to update creative pursuits", {
         position: "top-right",
         style: {
-          background: "#FEF2F2",
-          border: "1px solid #FECACA",
-          color: "#991B1B",
+          background: "#F0F9FF",
+          border: "1px solid #BAE6FD",
+          color: "#1E40AF",
         },
       });
     } finally {
@@ -83,9 +90,9 @@ const CreativePursuits = () => {
       toast.error("Creative pursuit cannot be empty", {
         position: "top-right",
         style: {
-          background: "#FEF2F2",
-          border: "1px solid #FECACA",
-          color: "#991B1B",
+          background: "#F0F9FF",
+          border: "1px solid #BAE6FD",
+          color: "#1E40AF",
         },
       });
       return;
@@ -100,9 +107,9 @@ const CreativePursuits = () => {
       toast.error(`"${trimmedPursuit}" already exists as a creative pursuit`, {
         position: "top-right",
         style: {
-          background: "#FEF2F2",
-          border: "1px solid #FECACA",
-          color: "#991B1B",
+          background: "#F0F9FF",
+          border: "1px solid #BAE6FD",
+          color: "#1E40AF",
         },
       });
       return;

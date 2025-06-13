@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { useEmployeeDetails } from "@/api/employeeService";
+import { useEmployeeDetails, fetchEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Edit, Check, X, Loader2 } from "lucide-react";
@@ -21,9 +20,9 @@ const AboutSection = () => {
       toast.error("About section cannot be empty.", {
         position: "top-right",
         style: {
-          background: "#FEF2F2",
-          border: "1px solid #FECACA",
-          color: "#991B1B",
+          background: "#F0F9FF",
+          border: "1px solid #BAE6FD",
+          color: "#1E40AF",
         },
       });
       return;
@@ -54,6 +53,14 @@ const AboutSection = () => {
           },
         });
         
+        // Refresh employee data after successful update
+        try {
+          const updatedEmployeeData = await fetchEmployeeDetails();
+          setEmployee(updatedEmployeeData);
+        } catch (fetchError) {
+          console.error("Error fetching updated employee data:", fetchError);
+        }
+        
         setIsEditing(false);
       } else {
         throw new Error(aboutData.message?.message || "Failed to update About section");
@@ -63,9 +70,9 @@ const AboutSection = () => {
       toast.error("Failed to update About section", {
         position: "top-right",
         style: {
-          background: "#FEF2F2",
-          border: "1px solid #FECACA",
-          color: "#991B1B",
+          background: "#F0F9FF",
+          border: "1px solid #BAE6FD",
+          color: "#1E40AF",
         },
       });
     } finally {
