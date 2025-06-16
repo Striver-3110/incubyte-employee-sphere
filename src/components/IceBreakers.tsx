@@ -3,8 +3,14 @@ import { useEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Edit, RefreshCcw, Save, X, ChevronLeft, Loader2 } from "lucide-react";
+import { Edit, RefreshCcw, Save, X, ChevronLeft, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL
 
@@ -364,63 +370,123 @@ const IceBreakersForm = ({
   const canSubmit = answeredCount >= 5;
   const canGoBack = questionHistory.length > 0;
 
-  // Render view mode (list of answered questions) - Updated to use grid layout
+  // Render view mode (list of answered questions) - Updated to use accordion layout
   if (currentIndex === -1) {
     const answeredQuestions = currentQuestions.filter(q => q.answer.trim() !== "");
 
     return (
       <div>
         {answeredQuestions.length > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {answeredQuestions.map((item, index) => (
-              <div key={item.name || index} className="bg-gray-50 p-4 rounded-md relative">
-                <div className="flex justify-between mb-2">
-                  <p className="font-medium text-gray-700 pr-8">{item.question}</p>
-
-                  {inlineEditing === index ? (
-                    <div className="flex space-x-2 absolute top-2 right-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleCancelInlineEdit()}
-                        disabled={isSubmitting}
-                      >
-                        <X size={16} />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleSaveInlineEdit(index)}
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save size={16} />}
-                      </Button>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center mb-4">
+              <p className="text-sm text-gray-600">
+                {answeredQuestions.length} ice breaker{answeredQuestions.length !== 1 ? 's' : ''} completed
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRestart}
+                className="flex items-center gap-2"
+                disabled={isComponentLoading}
+              >
+                <RefreshCcw className="h-4 w-4" />
+                Restart
+              </Button>
+            </div>
+            
+            <Accordion type="single" collapsible className="w-full">
+              {answeredQuestions.map((item, index) => (
+                <AccordionItem key={item.name || index} value={`item-${index}`}>
+                  <AccordionTrigger className="text-left">
+                    <div className="flex justify-between items-center w-full pr-4">
+                      <span className="text-sm font-medium text-gray-700">
+                        {item.question}
+                      </span>
+                      {inlineEditing !== index && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleInlineEdit(index);
+                          }}
+                          disabled={isSubmitting}
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Edit size={16} />
+                        </Button>
+                      )}
                     </div>
-                  ) : (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-2 right-2"
-                      onClick={() => handleInlineEdit(index)}
-                      disabled={isSubmitting}
-                    >
-                      <Edit size={16} />
-                    </Button>
-                  )}
-                </div>
-
-                {inlineEditing === index ? (
-                  <Textarea
-                    value={editedAnswer}
-                    onChange={(e) => setEditedAnswer(e.target.value)}
-                    className="w-full min-h-[100px]"
-                    disabled={isSubmitting}
-                  />
-                ) : (
-                  <p className="text-gray-600">{item.answer}</p>
-                )}
-              </div>
-            ))}
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="pt-2">
+                      {inlineEditing === index ? (
+                        <div className="space-y-3">
+                          <Textarea
+                            value={editedAnswer}
+                            onChange={(e) => setEditedAnswer(e.target.value)}
+                            className="w-full min-h-[100px]"
+                            disabled={isSubmitting}
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleCancelInlineEdit()}
+                              disabled={isSubmitting}
+                            >
+                              <X size={16} className="mr-1" />
+                              Cancel
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleSaveInlineEdit(index)}
+                              disabled={isSubmitting}
+                            >
+                              {isSubmitting ? (
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                              ) : (
+                                <Save size={16} className="mr-1" />
+                              )}
+                              Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="group">
+                          <p className="text-gray-600 whitespace-pre-wrap">{item.answer}</p>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleInlineEdit(index)}
+                            disabled={isSubmitting}
+                            className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Edit size={16} className="mr-1" />
+                            Edit
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+            
+            <div className="text-center pt-4">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  generateRandomQuestions();
+                  setCurrentIndex(0);
+                  setAnswer("");
+                  setQuestionHistory([]);
+                }}
+                disabled={isComponentLoading}
+              >
+                Add More Ice Breakers
+              </Button>
+            </div>
           </div>
         ) : (
           <div className="text-center my-8">

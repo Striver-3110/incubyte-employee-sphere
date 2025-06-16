@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import ProfileHeader from "@/components/ProfileHeader";
 import AboutSection from "@/components/AboutSection";
@@ -55,11 +54,11 @@ const Index = () => {
               <AboutSection />
               <MyPeople />
               <SkillsMatrix />
-              <IceBreakers />
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">My Career at Incubyte</h2>
                 <CareerProgression />
               </div>
+              <IceBreakers />
             </TabsContent>
             
             {/* Career Tab */}

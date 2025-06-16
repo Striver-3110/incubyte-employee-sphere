@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { fetchAllEmployees, fetchFeedbackTemplates, sendFeedbackForm } from "@/api/employeeService";
+import { fetchAllEmployees, fetchFeedbackTemplates, useEmployeeDetails } from "@/api/employeeService";
 import { toast } from "sonner";
 import { X } from "lucide-react";
 import {
@@ -14,13 +15,11 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { EmployeeDropdown } from "./EmployeeDropdown";
 
+const BASE_URL = import.meta.env.VITE_BASE_URL;
+
 interface Employee {
   name: string;
   employee_name: string;
-}
-
-interface FeedbackTemplate {
-  name: string;
 }
 
 interface FeedbackInitiationProps {
@@ -28,12 +27,35 @@ interface FeedbackInitiationProps {
   onSuccess?: () => Promise<void>;
 }
 
+// Function to seek feedback
+const seekFeedbackForm = async (employee: string, reviewers: string[]) => {
+  try {
+    const response = await fetch(`${BASE_URL}user.seek_feedback_form`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        employee,
+        reviewers
+      }),
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to seek feedback');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error seeking feedback:', error);
+    throw error;
+  }
+};
+
 export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose, onSuccess }) => {
+  const { employee: currentEmployee } = useEmployeeDetails();
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [feedbackTemplates, setFeedbackTemplates] = useState<FeedbackTemplate[]>([]);
   const [selectedEmployees, setSelectedEmployees] = useState<Employee[]>([]);
-  const [selectedEmployee, setSelectedEmployee] = useState<string>("");
-  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [open, setOpen] = useState(false);
@@ -42,23 +64,17 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose,
     const loadData = async () => {
       setIsLoading(true);
       try {
-        const [employeesData, templatesData] = await Promise.all([
-          fetchAllEmployees(),
-          fetchFeedbackTemplates()
-        ]);
+        const employeesData = await fetchAllEmployees();
         
         console.log('Loaded employees:', employeesData);
-        console.log('Loaded templates:', templatesData);
         
         // Ensure we always have arrays, even if API returns null/undefined
         setEmployees(Array.isArray(employeesData) ? employeesData : []);
-        setFeedbackTemplates(Array.isArray(templatesData) ? templatesData : []);
       } catch (error) {
         console.error("Error loading data:", error);
         toast.error("Failed to load data");
         // Set empty arrays as fallback
         setEmployees([]);
-        setFeedbackTemplates([]);
       } finally {
         setIsLoading(false);
       }
@@ -89,12 +105,15 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose,
         selected && selected.name === employee.name
       );
       
-      return !isSelected;
+      // Skip if it's the current employee (can't seek feedback from yourself)
+      const isCurrentEmployee = currentEmployee && employee.name === currentEmployee.name;
+      
+      return !isSelected && !isCurrentEmployee;
     });
     
     console.log('Available employees after filtering:', filtered);
     return filtered;
-  }, [employees, selectedEmployees]);
+  }, [employees, selectedEmployees, currentEmployee]);
 
   const handleRemoveEmployee = (employeeId: string) => {
     setSelectedEmployees(prev => prev.filter(emp => emp?.name !== employeeId));
@@ -109,16 +128,16 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose,
   };
 
   const handleSubmit = async () => {
-    if (!selectedEmployee || selectedEmployees.length === 0 || !selectedTemplate) {
-      toast.error("Please fill all required fields");
+    if (selectedEmployees.length === 0 || !currentEmployee) {
+      toast.error("Please select at least one employee to seek feedback from");
       return;
     }
 
     setIsSubmitting(true);
     try {
       const selectedEmployeeIds = selectedEmployees.map(emp => emp.name).filter(Boolean);
-      await sendFeedbackForm(selectedEmployee, selectedEmployeeIds, selectedTemplate);
-      toast.success("Feedback form sent successfully!", {
+      await seekFeedbackForm(currentEmployee.name, selectedEmployeeIds);
+      toast.success("Feedback request sent successfully!", {
         position: "top-right",
         style: {
           background: "#F0F9FF",
@@ -134,8 +153,8 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose,
       
       onClose();
     } catch (error) {
-      console.error("Error sending feedback form:", error);
-      toast.error("Failed to send feedback form", {
+      console.error("Error seeking feedback:", error);
+      toast.error("Failed to send feedback request", {
         position: "top-right",
         style: {
           background: "#F0F9FF",
@@ -152,7 +171,7 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose,
     return (
       <div className="space-y-4">
         <DialogHeader>
-          <DialogTitle>Initiate Feedback</DialogTitle>
+          <DialogTitle>Seek Feedback</DialogTitle>
         </DialogHeader>
         <div className="text-center py-8">
           <p>Loading...</p>
@@ -164,35 +183,14 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose,
   return (
     <div className="space-y-6">
       <DialogHeader>
-        <DialogTitle>Initiate Feedback</DialogTitle>
+        <DialogTitle>Seek Feedback</DialogTitle>
       </DialogHeader>
 
       <div className="space-y-4">
-        {/* Select employee to give feedback for */}
+        {/* Select employees to seek feedback from - Multi-select with chips */}
         <div>
           <label className="text-sm font-medium mb-2 block">
-            For which employee? <span className="text-red-500">*</span>
-          </label>
-          <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select employee" />
-            </SelectTrigger>
-            <SelectContent>
-              {employees.map((employee) => (
-                employee?.name && (
-                  <SelectItem key={employee.name} value={employee.name}>
-                    {employee.employee_name || employee.name} ({employee.name})
-                  </SelectItem>
-                )
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Select employees to give feedback - Multi-select with chips */}
-        <div>
-          <label className="text-sm font-medium mb-2 block">
-            Select employees to provide feedback <span className="text-red-500">*</span>
+            Select employee from whom you want to seek feedback <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <Popover open={open} onOpenChange={setOpen}>
@@ -242,27 +240,6 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose,
             </p>
           </div>
         </div>
-
-        {/* Select feedback template */}
-        <div>
-          <label className="text-sm font-medium mb-2 block">
-            Feedback Template <span className="text-red-500">*</span>
-          </label>
-          <Select value={selectedTemplate} onValueChange={setSelectedTemplate}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select feedback template" />
-            </SelectTrigger>
-            <SelectContent>
-              {feedbackTemplates.map((template) => (
-                template?.name && (
-                  <SelectItem key={template.name} value={template.name}>
-                    {template.name}
-                  </SelectItem>
-                )
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
 
       <DialogFooter>
@@ -271,9 +248,9 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose,
         </Button>
         <Button 
           onClick={handleSubmit} 
-          disabled={isSubmitting || !selectedEmployee || selectedEmployees.length === 0 || !selectedTemplate}
+          disabled={isSubmitting || selectedEmployees.length === 0}
         >
-          {isSubmitting ? "Sending..." : "Send Feedback Form"}
+          {isSubmitting ? "Sending..." : "Send Feedback Request"}
         </Button>
       </DialogFooter>
     </div>

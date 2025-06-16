@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useEmployeeDetails } from "@/api/employeeService";
 import { Button } from "@/components/ui/button";
@@ -34,6 +33,13 @@ const SkillsMatrix = () => {
   const [deletingSkill, setDeletingSkill] = useState<string | null>(null);
   const [isComponentLoading, setIsComponentLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+
+  // Determine if user has a technical role
+  const isTechnicalRole = employee?.designation ? 
+    ['Software Craftsperson', 'Senior Software Craftsperson', 'Lead Software Craftsperson', 'Principal Software Craftsperson'].includes(employee.designation) : 
+    false;
+  
+  const sectionTitle = isTechnicalRole ? "Tech Stack" : "Skills Matrix";
 
   // Fetch available skills from the API
   useEffect(() => {
@@ -244,7 +250,7 @@ const SkillsMatrix = () => {
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md relative">
+    <div className="bg-white p-6 rounded-lg shadow-sm relative">
       {isComponentLoading && (
         <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-lg z-10">
           <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
@@ -252,7 +258,7 @@ const SkillsMatrix = () => {
       )}
       
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-2xl font-semibold text-gray-800">Skills Matrix</h2>
+        <h2 className="text-xl font-semibold text-gray-800">{sectionTitle}</h2>
         <Button
           variant="outline"
           size="sm"
@@ -267,7 +273,7 @@ const SkillsMatrix = () => {
       <div className="grid grid-cols-2 gap-6">
         {proficiencyLevels.map((level) => (
           <div key={level}>
-            <h3 className="text-lg font-medium text-gray-700 mb-3">{level}</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-3">{level}</h3>
             {groupedSkills[level]?.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {groupedSkills[level].map((skill) => (

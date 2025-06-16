@@ -1,4 +1,3 @@
-
 import { useEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { shouldShowTechAdvisor, isTechnicalRole } from "@/utils/roleUtils";
@@ -12,7 +11,7 @@ interface PeopleItemProps {
 
 const PeopleItem = ({ label, value }: PeopleItemProps) => (
   <div className="flex items-center gap-2">
-    <span className="text-sm font-medium text-gray-500">{label}:</span>
+    <span className="text-sm font-semibold text-gray-800">{label}:</span>
     <span className="text-sm text-gray-800">{value || "—"}</span>
   </div>
 );
@@ -39,7 +38,7 @@ const MyPeople = () => {
 
       <div className="flex flex-wrap gap-x-8 gap-y-2">
         <PeopleItem label="Team" value={employee.custom_team || ""} />
-        <PeopleItem label="Pod" value={employee.custom_pod || ""} />
+        <PeopleItem label="POD" value={employee.custom_pod || ""} />
 
         {/* Show additional fields only if not a co-founder */}
         {!isCoFounder && (

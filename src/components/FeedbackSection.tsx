@@ -121,7 +121,7 @@ const FeedbackSection = () => {
         <Dialog open={isInitiateDialogOpen} onOpenChange={setIsInitiateDialogOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm" className="h-8 w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-1" /> Initiate Feedback
+              <Plus className="h-4 w-4 mr-1" /> Seek Feedback
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-[95vw] sm:max-w-2xl w-full mx-4" showOverlay={false}>
