@@ -1,3 +1,4 @@
+
 import { useCalibrationData, useCalibrationDataForAllEmployees, useEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
@@ -153,18 +154,29 @@ const CalibrationSection = ({
     year: "numeric",
   });
 
-  // Extract overall level and other skills
+  // Extract overall level and other skills - improved logic for finding overall level
   const skillCategories = calibrationData.calibration_skill_categories || [];
-  const overallLevel = skillCategories.find(skill => 
-    skill.skill.toLowerCase().includes('overall') || 
-    skill.skill.toLowerCase().includes('total') ||
-    skill.skill === 'Overall Level'
-  );
-  const otherSkills = skillCategories.filter(skill => 
-    !skill.skill.toLowerCase().includes('overall') && 
-    !skill.skill.toLowerCase().includes('total') &&
-    skill.skill !== 'Overall Level'
-  );
+  console.log("All skill categories:", skillCategories);
+  
+  const overallLevel = skillCategories.find(skill => {
+    const skillName = skill.skill?.toLowerCase() || '';
+    return skillName.includes('overall') || 
+           skillName.includes('total') ||
+           skillName === 'overall level' ||
+           skillName.includes('aggregate') ||
+           skillName.includes('combined');
+  });
+  
+  console.log("Found overall level:", overallLevel);
+  
+  const otherSkills = skillCategories.filter(skill => {
+    const skillName = skill.skill?.toLowerCase() || '';
+    return !skillName.includes('overall') && 
+           !skillName.includes('total') &&
+           skillName !== 'overall level' &&
+           !skillName.includes('aggregate') &&
+           !skillName.includes('combined');
+  });
 
   // Prepare data for charts
   const chartData = otherSkills.map(skill => ({
@@ -238,17 +250,17 @@ const CalibrationSection = ({
     }
   };
 
-  // Get compact styling for admin view
-  const containerPadding = isAdminView ? "p-2" : "p-6";
-  const headerMargin = isAdminView ? "mb-2" : "mb-4";
-  const gridGap = isAdminView ? "gap-2" : "gap-8";
-  const matrixSize = isAdminView ? "h-8" : "h-24";
+  // Get compact styling for admin view - made less compressed
+  const containerPadding = isAdminView ? "p-4" : "p-6";
+  const headerMargin = isAdminView ? "mb-3" : "mb-4";
+  const gridGap = isAdminView ? "gap-4" : "gap-8";
+  const matrixSize = isAdminView ? "h-12" : "h-24";
   const chartHeight = isAdminView ? "h-[400px]" : "h-[400px]";
 
   return (
     <div className={`bg-white ${containerPadding} rounded-lg shadow-sm`}>
       <div className={`flex flex-col sm:flex-row justify-between items-start ${headerMargin}`}>
-        <h2 className={`${isAdminView ? 'text-sm' : 'text-xl'} font-semibold text-gray-800`}>Calibration</h2>
+        <h2 className={`${isAdminView ? 'text-lg' : 'text-xl'} font-semibold text-gray-800`}>Calibration</h2>
         {!isAdminView && (
           <p className="text-sm text-gray-500">Last updated on: {lastUpdatedOn}</p>
         )}
@@ -291,13 +303,13 @@ const CalibrationSection = ({
 
       {/* Overall Level Section */}
       {overallLevel && (
-        <div className={`${isAdminView ? "mb-2 p-2" : "mb-4 p-3"} border border-gray-200 rounded-lg bg-gray-50`}>
+        <div className={`${isAdminView ? "mb-3 p-3" : "mb-4 p-3"} border border-gray-200 rounded-lg bg-gray-50`}>
           <div className="flex items-center justify-between">
-            <h3 className={`font-medium text-gray-700 ${isAdminView ? "text-xs" : "text-sm"}`}>Overall Level</h3>
+            <h3 className={`font-medium text-gray-700 ${isAdminView ? "text-sm" : "text-sm"}`}>Overall Level</h3>
             <div className="flex items-center gap-2">
               <Progress
                 value={getProgressValue(overallLevel.level)}
-                className={`${isAdminView ? "h-1 w-12" : "h-2 w-24"}`}
+                className={`${isAdminView ? "h-2 w-20" : "h-2 w-24"}`}
               />
               <span className={`px-2 py-1 text-xs font-medium rounded border ${getLevelBadgeColor(overallLevel.level)}`}>
                 {overallLevel.level}
@@ -311,9 +323,9 @@ const CalibrationSection = ({
         {/* Performance & Potential Matrix */}
         {showPerformanceMatrix && (
           <div>
-            <h3 className={`font-medium text-gray-700 ${isAdminView ? "mb-1 text-xs" : "mb-4"}`}>Performance & Potential Matrix</h3>
+            <h3 className={`font-medium text-gray-700 ${isAdminView ? "mb-2 text-sm" : "mb-4"}`}>Performance & Potential Matrix</h3>
 
-            <div className={`relative ${isAdminView ? "pl-6 pb-4" : "pl-16 pb-12"}`}>
+            <div className={`relative ${isAdminView ? "pl-8 pb-6" : "pl-16 pb-12"}`}>
               <div className="grid grid-cols-3 gap-0.5 border border-gray-200">
                 {Array(9)
                   .fill(0)
@@ -325,7 +337,7 @@ const CalibrationSection = ({
                     return (
                       <div
                         key={idx}
-                        className={`w-full ${matrixSize} ${isAdminView ? "p-1" : "p-2"} flex items-center justify-center text-center transition-colors
+                        className={`w-full ${matrixSize} ${isAdminView ? "p-2" : "p-2"} flex items-center justify-center text-center transition-colors
                         ${isHighlighted ? "bg-indigo-500 text-white" : cellColors[row][col]}
                         border border-gray-200`}
                       >
@@ -338,21 +350,21 @@ const CalibrationSection = ({
               </div>
 
               {/* Y-axis label */}
-              <div className={`absolute ${isAdminView ? "-left-4" : "-left-10"} top-1/2 -translate-y-6 -rotate-90 ${isAdminView ? "text-xs" : "text-sm"} font-medium text-gray-600 whitespace-nowrap`}>
-                {isAdminView ? "Pot" : "Potential"}
+              <div className={`absolute ${isAdminView ? "-left-6" : "-left-10"} top-1/2 -translate-y-6 -rotate-90 ${isAdminView ? "text-xs" : "text-sm"} font-medium text-gray-600 whitespace-nowrap`}>
+                {isAdminView ? "Potential" : "Potential"}
               </div>
 
               {/* X-axis label */}
-              <div className={`absolute ${isAdminView ? "-bottom-1" : "-bottom-2"} left-1/2 -translate-x-5 ${isAdminView ? "text-xs" : "text-sm"} font-medium text-gray-600`}>
-                {isAdminView ? "Perf" : "Performance"}
+              <div className={`absolute ${isAdminView ? "-bottom-2" : "-bottom-2"} left-1/2 -translate-x-8 ${isAdminView ? "text-xs" : "text-sm"} font-medium text-gray-600`}>
+                {isAdminView ? "Performance" : "Performance"}
               </div>
 
               {/* Row labels */}
               {matrixRowLabels.map((label, idx) => (
                 <div
                   key={`row-${idx}`}
-                  className={`absolute -left-0 ${isAdminView ? "text-xs" : "text-sm"} font-medium text-gray-600`}
-                  style={{ top: `${idx * 33.33 + (isAdminView ? 2 : 10)}%` }}
+                  className={`absolute -left-1 ${isAdminView ? "text-xs" : "text-sm"} font-medium text-gray-600`}
+                  style={{ top: `${idx * 33.33 + (isAdminView ? 8 : 10)}%` }}
                 >
                   {isAdminView ? label.substring(0, 1) : label}
                 </div>
@@ -362,8 +374,8 @@ const CalibrationSection = ({
               {matrixColLabels.map((label, idx) => (
                 <div
                   key={`col-${idx}`}
-                  className={`absolute ${isAdminView ? "bottom-1" : "bottom-4"} ${isAdminView ? "text-xs" : "text-sm"} font-medium text-gray-600`}
-                  style={{ left: `${idx * 33.33 + (isAdminView ? 6 : 16.5)}%` }}
+                  className={`absolute ${isAdminView ? "bottom-2" : "bottom-4"} ${isAdminView ? "text-xs" : "text-sm"} font-medium text-gray-600`}
+                  style={{ left: `${idx * 33.33 + (isAdminView ? 8 : 16.5)}%` }}
                 >
                   {isAdminView ? label.substring(0, 1) : label}
                 </div>
@@ -374,8 +386,8 @@ const CalibrationSection = ({
 
         {/* Skill Calibration Levels */}
         <div>
-          <div className={`flex items-center justify-between ${isAdminView ? "mb-1" : "mb-4"}`}>
-            <h3 className={`font-medium text-gray-700 ${isAdminView ? "text-xs" : ""}`}>Skill Levels</h3>
+          <div className={`flex items-center justify-between ${isAdminView ? "mb-2" : "mb-4"}`}>
+            <h3 className={`font-medium text-gray-700 ${isAdminView ? "text-sm" : ""}`}>Skill Levels</h3>
             {!isAdminView && (
               <div className="flex gap-2">
                 <Button
@@ -415,17 +427,17 @@ const CalibrationSection = ({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {otherSkills.slice(0, isAdminView ? 3 : otherSkills.length).map((skill, index) => (
+                {otherSkills.map((skill, index) => (
                   <TableRow key={index} className="hover:bg-gray-50">
                     <TableCell className="font-medium text-xs">{index + 1}</TableCell>
-                    <TableCell className={`${isAdminView ? "text-xs" : ""} truncate max-w-[120px]`} title={skill.skill}>
-                      {isAdminView && skill.skill.length > 15 ? `${skill.skill.substring(0, 15)}...` : skill.skill}
+                    <TableCell className={`${isAdminView ? "text-xs" : ""} ${isAdminView ? "max-w-[150px]" : ""}`} title={skill.skill}>
+                      {isAdminView && skill.skill.length > 20 ? `${skill.skill.substring(0, 20)}...` : skill.skill}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
                         <Progress
                           value={getProgressValue(skill.level)}
-                          className={`${isAdminView ? "h-1 w-8" : "h-2"} flex-1`}
+                          className={`${isAdminView ? "h-1 w-12" : "h-2"} flex-1`}
                         />
                         <span className={`px-1 py-0.5 text-xs font-medium rounded border ${getLevelBadgeColor(skill.level)}`}>
                           {skill.level}
