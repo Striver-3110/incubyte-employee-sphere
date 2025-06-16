@@ -118,12 +118,14 @@ const IceBreakers = () => {
             questions={[]} 
             predefinedQuestions={predefinedQuestions} 
             setIsComponentLoading={setIsComponentLoading}
+            isComponentLoading={isComponentLoading}
           />
         ) : (
           <IceBreakersForm
             questions={employee.custom_employee_icebreaker_question}
             predefinedQuestions={predefinedQuestions}
             setIsComponentLoading={setIsComponentLoading}
+            isComponentLoading={isComponentLoading}
           />
         )
       ) : (
@@ -136,11 +138,13 @@ const IceBreakers = () => {
 const IceBreakersForm = ({
   questions,
   predefinedQuestions,
-  setIsComponentLoading
+  setIsComponentLoading,
+  isComponentLoading
 }: {
   questions: IceBreakerQuestion[];
   predefinedQuestions: string[];
   setIsComponentLoading: (loading: boolean) => void;
+  isComponentLoading: boolean;
 }) => {
   const [currentQuestions, setCurrentQuestions] = useState<IceBreakerQuestion[]>(questions);
   const [currentIndex, setCurrentIndex] = useState(questions.length === 0 ? 0 : -1);
