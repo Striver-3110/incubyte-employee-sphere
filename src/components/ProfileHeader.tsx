@@ -1,6 +1,6 @@
 import { useEmployeeDetails, useTeamEmployees } from "@/api/employeeService";
 import { calculateTenure, formatDate } from "@/utils/dateUtils";
-import { Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, Plus, Save, Trash2, Users, Loader2 } from "lucide-react";
+import { Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, Plus, Save, Trash2, Users, Loader2, Upload } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,6 +58,10 @@ const ProfileHeader = () => {
     custom_state: "",
   });
 
+  // Image upload states
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
   // Check if any operation is in progress
   const isAnyOperationInProgress = !!processingPlatform || isAddingPlatformLoading || isUpdatingProfile;
 
@@ -90,17 +94,69 @@ const ProfileHeader = () => {
       custom_city: employee.custom_city || "",
       custom_state: employee.custom_state || "",
     });
+    setSelectedImage(null);
+    setImagePreview(null);
     setIsEditModalOpen(true);
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${BASE_URL}user.upload_image`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to upload image');
+    }
+
+    const result = await response.json();
+    return result.message?.file_url || result.file_url;
   };
 
   const handleSaveProfile = async () => {
     try {
       setIsUpdatingProfile(true);
 
+      let imageUrl = employee.image;
+
+      // Upload image if a new one is selected
+      if (selectedImage) {
+        try {
+          imageUrl = await uploadImage(selectedImage);
+        } catch (error) {
+          console.error("Error uploading image:", error);
+          toast.error("Failed to upload image", {
+            position: "top-right",
+          });
+          return;
+        }
+      }
+
+      const profileData = {
+        ...editFormData,
+        ...(imageUrl && { image: imageUrl })
+      };
+
       const response = await fetch(`${BASE_URL}user.set_employee_profile_data`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editFormData),
+        body: JSON.stringify(profileData),
         credentials: "include",
       });
 
@@ -111,7 +167,7 @@ const ProfileHeader = () => {
       // Update the employee data in state
       setEmployee((prevEmployee) => ({
         ...prevEmployee,
-        ...editFormData,
+        ...profileData,
       }));
 
       toast.success("Profile updated successfully", {
@@ -119,6 +175,8 @@ const ProfileHeader = () => {
       });
 
       setIsEditModalOpen(false);
+      setSelectedImage(null);
+      setImagePreview(null);
     } catch (error) {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile", {
@@ -585,6 +643,33 @@ const ProfileHeader = () => {
           </DialogHeader>
           
           <div className="space-y-4 py-4">
+            {/* Profile Image Upload */}
+            <div className="space-y-2">
+              <Label htmlFor="profile_image">Profile Image</Label>
+              <div className="flex items-center gap-4">
+                <div className="w-20 h-20 rounded-md overflow-hidden border-2 border-gray-200">
+                  <img
+                    src={imagePreview || employee.image || ''}
+                    alt="Profile preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Input
+                    id="profile_image"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    disabled={isUpdatingProfile}
+                    className="cursor-pointer"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Supported formats: JPG, PNG, GIF. Max size: 5MB
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="employee_name">Employee Name</Label>
