@@ -1,4 +1,3 @@
-
 import { useEmployeeDetails, useTeamEmployees } from "@/api/employeeService";
 import { calculateTenure, formatDate } from "@/utils/dateUtils";
 import { Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, Plus, Save, Trash2, Users, Loader2 } from "lucide-react";
@@ -15,6 +14,13 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import TeamMembersModal from "./TeamMembersModal";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -37,8 +43,23 @@ const ProfileHeader = () => {
   const [selectedPlatform, setSelectedPlatform] = useState("");
   const [platformUrl, setPlatformUrl] = useState("");
 
+  // Edit modal states
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    employee_name: "",
+    designation: "",
+    date_of_joining: "",
+    company_email: "",
+    current_address: "",
+    custom_pin: "",
+    cell_number: "",
+    custom_city: "",
+    custom_state: "",
+  });
+
   // Check if any operation is in progress
-  const isAnyOperationInProgress = !!processingPlatform || isAddingPlatformLoading;
+  const isAnyOperationInProgress = !!processingPlatform || isAddingPlatformLoading || isUpdatingProfile;
 
   if (loading || !employee) {
     return <ProfileHeaderSkeleton />;
@@ -54,6 +75,57 @@ const ProfileHeader = () => {
         return <Twitter className="h-5 w-5" />;
       default:
         return null;
+    }
+  };
+
+  const handleEditProfile = () => {
+    setEditFormData({
+      employee_name: employee.employee_name || "",
+      designation: employee.designation || "",
+      date_of_joining: employee.date_of_joining || "",
+      company_email: employee.company_email || "",
+      current_address: employee.current_address || "",
+      custom_pin: employee.custom_pin || "",
+      cell_number: employee.cell_number || "",
+      custom_city: employee.custom_city || "",
+      custom_state: employee.custom_state || "",
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      setIsUpdatingProfile(true);
+
+      const response = await fetch(`${BASE_URL}user.set_employee_profile_data`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editFormData),
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+
+      // Update the employee data in state
+      setEmployee((prevEmployee) => ({
+        ...prevEmployee,
+        ...editFormData,
+      }));
+
+      toast.success("Profile updated successfully", {
+        position: "top-right",
+      });
+
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      toast.error("Failed to update profile", {
+        position: "top-right",
+      });
+    } finally {
+      setIsUpdatingProfile(false);
     }
   };
 
@@ -266,6 +338,20 @@ const ProfileHeader = () => {
       )}
       
       <div className="relative p-4 sm:p-6 lg:p-8">
+        {/* Edit Profile Button */}
+        <div className="absolute top-4 right-4">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleEditProfile}
+            className="flex items-center gap-2"
+            disabled={isAnyOperationInProgress}
+          >
+            <Edit className="h-4 w-4" />
+            Edit Profile
+          </Button>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Section - Profile Info */}
           <div className="lg:col-span-2">
@@ -490,6 +576,128 @@ const ProfileHeader = () => {
           )}
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" showOverlay={false}>
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="employee_name">Employee Name</Label>
+                <Input
+                  id="employee_name"
+                  value={editFormData.employee_name}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, employee_name: e.target.value }))}
+                  disabled={isUpdatingProfile}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="designation">Designation</Label>
+                <Input
+                  id="designation"
+                  value={editFormData.designation}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, designation: e.target.value }))}
+                  disabled={isUpdatingProfile}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="date_of_joining">Date of Joining</Label>
+                <Input
+                  id="date_of_joining"
+                  type="date"
+                  value={editFormData.date_of_joining}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, date_of_joining: e.target.value }))}
+                  disabled={isUpdatingProfile}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="company_email">Company Email</Label>
+                <Input
+                  id="company_email"
+                  type="email"
+                  value={editFormData.company_email}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, company_email: e.target.value }))}
+                  disabled={isUpdatingProfile}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="cell_number">Cell Number</Label>
+                <Input
+                  id="cell_number"
+                  value={editFormData.cell_number}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, cell_number: e.target.value }))}
+                  disabled={isUpdatingProfile}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="custom_pin">PIN Code</Label>
+                <Input
+                  id="custom_pin"
+                  value={editFormData.custom_pin}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, custom_pin: e.target.value }))}
+                  disabled={isUpdatingProfile}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="custom_city">City</Label>
+                <Input
+                  id="custom_city"
+                  value={editFormData.custom_city}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, custom_city: e.target.value }))}
+                  disabled={isUpdatingProfile}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="custom_state">State</Label>
+                <Input
+                  id="custom_state"
+                  value={editFormData.custom_state}
+                  onChange={(e) => setEditFormData(prev => ({ ...prev, custom_state: e.target.value }))}
+                  disabled={isUpdatingProfile}
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="current_address">Current Address</Label>
+              <Input
+                id="current_address"
+                value={editFormData.current_address}
+                onChange={(e) => setEditFormData(prev => ({ ...prev, current_address: e.target.value }))}
+                disabled={isUpdatingProfile}
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-2 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setIsEditModalOpen(false)}
+              disabled={isUpdatingProfile}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveProfile}
+              disabled={isUpdatingProfile}
+            >
+              {isUpdatingProfile && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Save Changes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <TeamMembersModal 
         isOpen={isTeamModalOpen} 
