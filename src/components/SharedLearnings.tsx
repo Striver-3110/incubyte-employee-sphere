@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit, Trash, Calendar as CalendarIcon, ExternalLink } from "lucide-react";
+import { Plus, Edit, Trash, Calendar as CalendarIcon, ExternalLink, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -31,6 +31,7 @@ interface SharedLearning {
 
 interface SharedLearningFormData {
   event_type: string;
+  custom_event_type?: string;
   event_date: Date;
   event_description: string;
   event_link?: string;
@@ -43,7 +44,8 @@ const eventTypes = [
   "Workshop",
   "Conference",
   "Tech Talk",
-  "Knowledge Sharing Session"
+  "Knowledge Sharing Session",
+  "Other"
 ];
 
 const SharedLearnings = () => {
@@ -54,8 +56,20 @@ const SharedLearnings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLearning, setEditingLearning] = useState<SharedLearning | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCustomEventType, setShowCustomEventType] = useState(false);
 
   const form = useForm<SharedLearningFormData>();
+  const watchEventType = form.watch("event_type");
+
+  useEffect(() => {
+    if (watchEventType === "Other") {
+      setShowCustomEventType(true);
+    } else {
+      setShowCustomEventType(false);
+      form.setValue("custom_event_type", "");
+    }
+  }, [watchEventType, form]);
 
   const fetchMyLearnings = async () => {
     if (!employee?.name) return;
@@ -72,6 +86,9 @@ const SharedLearnings = () => {
       const data = await response.json();
       if (data.message?.status === "success") {
         setMyLearnings(data.message.achievements || []);
+        toast.success("Your shared learnings loaded successfully");
+      } else {
+        throw new Error(data.message?.message || "Failed to fetch learnings");
       }
     } catch (error) {
       console.error("Error fetching my learnings:", error);
@@ -93,6 +110,9 @@ const SharedLearnings = () => {
       const data = await response.json();
       if (data.message?.status === "success") {
         setAllLearnings(data.message.achievements || []);
+        toast.success("All shared learnings loaded successfully");
+      } else {
+        throw new Error(data.message?.message || "Failed to fetch learnings");
       }
     } catch (error) {
       console.error("Error fetching all learnings:", error);
@@ -113,11 +133,13 @@ const SharedLearnings = () => {
   const onSubmit = async (data: SharedLearningFormData) => {
     if (!employee?.name) return;
 
-    setIsLoading(true);
+    setIsSubmitting(true);
     try {
+      const eventType = data.event_type === "Other" ? data.custom_event_type : data.event_type;
+      
       const payload = {
         employee: employee.name,
-        event_type: data.event_type,
+        event_type: eventType,
         event_date: format(data.event_date, "yyyy-MM-dd"),
         event_description: data.event_description,
         event_link: data.event_link || "",
@@ -146,6 +168,7 @@ const SharedLearnings = () => {
         setIsDialogOpen(false);
         setEditingLearning(null);
         form.reset();
+        setShowCustomEventType(false);
         fetchMyLearnings();
         if (activeTab === "all") fetchAllLearnings();
       } else {
@@ -155,7 +178,7 @@ const SharedLearnings = () => {
       console.error("Error saving learning:", error);
       toast.error("Failed to save shared learning");
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -187,8 +210,11 @@ const SharedLearnings = () => {
 
   const handleEdit = (learning: SharedLearning) => {
     setEditingLearning(learning);
+    const isCustomType = !eventTypes.includes(learning.event_type) || learning.event_type === "Other";
+    
     form.reset({
-      event_type: learning.event_type,
+      event_type: isCustomType ? "Other" : learning.event_type,
+      custom_event_type: isCustomType ? learning.event_type : "",
       event_date: new Date(learning.event_date),
       event_description: learning.event_description,
       event_link: learning.event_link || "",
@@ -200,10 +226,12 @@ const SharedLearnings = () => {
     setEditingLearning(null);
     form.reset({
       event_type: "",
+      custom_event_type: "",
       event_date: new Date(),
       event_description: "",
       event_link: "",
     });
+    setShowCustomEventType(false);
     setIsDialogOpen(true);
   };
 
@@ -230,7 +258,7 @@ const SharedLearnings = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleEdit(learning)}
-                disabled={isLoading}
+                disabled={isLoading || isSubmitting}
               >
                 <Edit className="h-4 w-4" />
               </Button>
@@ -238,7 +266,7 @@ const SharedLearnings = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleDelete(learning.name)}
-                disabled={isLoading}
+                disabled={isLoading || isSubmitting}
               >
                 <Trash className="h-4 w-4" />
               </Button>
@@ -276,12 +304,12 @@ const SharedLearnings = () => {
         <h2 className="text-xl font-semibold text-gray-800">Shared Learnings</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={handleAddNew} size="sm">
+            <Button onClick={handleAddNew} size="sm" disabled={isLoading || isSubmitting}>
               <Plus className="h-4 w-4 mr-1" />
               Add
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md" showOverlay={false}>
             <DialogHeader>
               <DialogTitle>
                 {editingLearning ? "Edit Shared Learning" : "Add Shared Learning"}
@@ -314,6 +342,26 @@ const SharedLearnings = () => {
                     </FormItem>
                   )}
                 />
+
+                {showCustomEventType && (
+                  <FormField
+                    control={form.control}
+                    name="custom_event_type"
+                    rules={{ required: showCustomEventType ? "Custom event type is required" : false }}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Custom Event Type</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter custom event type..."
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
 
                 <FormField
                   control={form.control}
@@ -398,12 +446,19 @@ const SharedLearnings = () => {
                     type="button"
                     variant="outline"
                     onClick={() => setIsDialogOpen(false)}
-                    disabled={isLoading}
+                    disabled={isSubmitting}
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading ? "Saving..." : editingLearning ? "Update" : "Add"}
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {editingLearning ? "Updating..." : "Adding..."}
+                      </>
+                    ) : (
+                      editingLearning ? "Update" : "Add"
+                    )}
                   </Button>
                 </div>
               </form>
@@ -420,7 +475,10 @@ const SharedLearnings = () => {
 
         <TabsContent value="mine" className="mt-6">
           {isLoading ? (
-            <div className="text-center py-8">Loading...</div>
+            <div className="text-center py-8 flex items-center justify-center">
+              <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+              Loading...
+            </div>
           ) : myLearnings.length === 0 ? (
             <EmptyState message="You haven't shared any learnings yet. Click the + Add button to get started." />
           ) : (
@@ -432,7 +490,10 @@ const SharedLearnings = () => {
 
         <TabsContent value="all" className="mt-6">
           {isLoading ? (
-            <div className="text-center py-8">Loading...</div>
+            <div className="text-center py-8 flex items-center justify-center">
+              <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+              Loading...
+            </div>
           ) : allLearnings.length === 0 ? (
             <EmptyState message="No shared learnings have been posted yet." />
           ) : (
