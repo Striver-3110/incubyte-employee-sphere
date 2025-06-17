@@ -1,8 +1,10 @@
+
 import { useState } from "react";
 import ProfileHeader from "@/components/ProfileHeader";
 import AboutSection from "@/components/AboutSection";
 import CreativePursuits from "@/components/CreativePursuits";
 import IceBreakers from "@/components/IceBreakers";
+import SharedLearnings from "@/components/SharedLearnings";
 import MyPeople from "@/components/MyPeople";
 import SkillsMatrix from "@/components/SkillsMatrix";
 import CareerProgression from "@/components/CareerProgression";
@@ -59,6 +61,7 @@ const Index = () => {
                 <CareerProgression />
               </div>
               <IceBreakers />
+              <SharedLearnings />
             </TabsContent>
             
             {/* Career Tab */}
