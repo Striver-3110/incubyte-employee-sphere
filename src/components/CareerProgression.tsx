@@ -3,6 +3,30 @@ import { useEmployeeDetails } from "@/api/employeeService";
 import { formatDate } from "@/utils/dateUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 
+// Define types for our entries
+type JoiningEntry = {
+  title: string;
+  role: string;
+  pod: string;
+  expected_start_date: string;
+  expected_end_date: null;
+  status: string;
+  isJoining: true;
+};
+
+type ProjectEntry = {
+  name: string;
+  title?: string;
+  role: string;
+  pod: string;
+  expected_start_date: string;
+  expected_end_date: string | null;
+  status: string;
+  isJoining?: false;
+};
+
+type CareerEntry = JoiningEntry | ProjectEntry;
+
 const CareerProgression = () => {
   const { employee, loading } = useEmployeeDetails();
 
@@ -11,12 +35,12 @@ const CareerProgression = () => {
   }
 
   // Sort projects by start date (newest first)
-  const sortedProjects = [...(employee.custom_project || [])].sort((a, b) => {
+  const sortedProjects: ProjectEntry[] = [...(employee.custom_project || [])].sort((a, b) => {
     return new Date(b.expected_start_date).getTime() - new Date(a.expected_start_date).getTime();
   });
 
   // Create joining entry
-  const joiningEntry = {
+  const joiningEntry: JoiningEntry = {
     title: "Joined Incubyte",
     role: employee.designation || "Employee",
     pod: "—",
@@ -27,7 +51,12 @@ const CareerProgression = () => {
   };
 
   // Combine joining entry with projects (joining first, then sorted projects)
-  const allEntries = employee.date_of_joining ? [joiningEntry, ...sortedProjects] : sortedProjects;
+  const allEntries: CareerEntry[] = employee.date_of_joining ? [joiningEntry, ...sortedProjects] : sortedProjects;
+
+  // Type guard to check if entry is joining entry
+  const isJoiningEntry = (entry: CareerEntry): entry is JoiningEntry => {
+    return 'isJoining' in entry && entry.isJoining === true;
+  };
 
   return (
     <div>
@@ -39,11 +68,11 @@ const CareerProgression = () => {
           <div className="absolute left-4 top-1 bottom-0 w-0.5 bg-gray-200"></div>
 
           {allEntries.map((entry, index) => (
-            <div key={entry.isJoining ? 'joining' : (entry.name || index)} className="relative pl-12">
+            <div key={isJoiningEntry(entry) ? 'joining' : (entry.name || index)} className="relative pl-12">
               {/* Timeline dot */}
               <div
                 className={`absolute left-2 top-1.5 w-5 h-5 rounded-full border-2 ${
-                  entry.isJoining
+                  isJoiningEntry(entry)
                     ? "bg-blue-500 border-blue-600"
                     : entry.status === "Active"
                     ? "bg-green-500 border-green-600"
@@ -54,14 +83,16 @@ const CareerProgression = () => {
               {/* Entry card */}
               <div
                 className={`p-4 rounded-lg border ${
-                  entry.isJoining
+                  isJoiningEntry(entry)
                     ? "bg-blue-50 border-blue-200"
                     : entry.status === "Active"
                     ? "bg-green-50 border-green-200"
                     : "bg-yellow-50 border-yellow-200"
                 }`}
               >
-                <h3 className="font-medium text-gray-800 mb-1">{entry.title || entry.name}</h3>
+                <h3 className="font-medium text-gray-800 mb-1">
+                  {isJoiningEntry(entry) ? entry.title : (entry.title || entry.name)}
+                </h3>
                 <div className="text-sm text-gray-600 mb-2">
                   <span className="font-semibold">Role:</span> {entry.role} <br />
                   <span className="font-semibold">Pod:</span> {entry.pod}
