@@ -34,11 +34,6 @@ const CareerProgression = () => {
     return <CareerProgressionSkeleton />;
   }
 
-  // Sort projects by start date (newest first)
-  const sortedProjects: ProjectEntry[] = [...(employee.custom_project || [])].sort((a, b) => {
-    return new Date(b.expected_start_date).getTime() - new Date(a.expected_start_date).getTime();
-  });
-
   // Create joining entry
   const joiningEntry: JoiningEntry = {
     title: "Joined Incubyte",
@@ -50,8 +45,16 @@ const CareerProgression = () => {
     isJoining: true
   };
 
-  // Combine joining entry with projects (joining first, then sorted projects)
-  const allEntries: CareerEntry[] = employee.date_of_joining ? [joiningEntry, ...sortedProjects] : sortedProjects;
+  // Get projects
+  const projects: ProjectEntry[] = [...(employee.custom_project || [])];
+
+  // Combine all entries and sort chronologically (oldest first)
+  const allEntries: CareerEntry[] = employee.date_of_joining ? [...projects, joiningEntry] : projects;
+  
+  // Sort by start date (oldest first for chronological order)
+  const sortedEntries = allEntries.sort((a, b) => {
+    return new Date(a.expected_start_date).getTime() - new Date(b.expected_start_date).getTime();
+  });
 
   // Type guard to check if entry is joining entry
   const isJoiningEntry = (entry: CareerEntry): entry is JoiningEntry => {
@@ -60,14 +63,14 @@ const CareerProgression = () => {
 
   return (
     <div>
-      {allEntries.length === 0 ? (
+      {sortedEntries.length === 0 ? (
         <p className="text-gray-500 italic">No career progression data available.</p>
       ) : (
         <div className="relative space-y-4">
           {/* Timeline bar */}
           <div className="absolute left-4 top-1 bottom-0 w-0.5 bg-gray-200"></div>
 
-          {allEntries.map((entry, index) => (
+          {sortedEntries.map((entry, index) => (
             <div key={isJoiningEntry(entry) ? 'joining' : (entry.name || index)} className="relative pl-12">
               {/* Timeline dot */}
               <div
