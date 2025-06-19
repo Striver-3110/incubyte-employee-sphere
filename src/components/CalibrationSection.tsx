@@ -1,4 +1,3 @@
-
 import { useCalibrationData, useCalibrationDataForAllEmployees, useEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
@@ -6,11 +5,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, FileText, BarChart3, Radar } from "lucide-react";
+import { Upload, FileText, BarChart3, Radar, Download, Trash2 } from "lucide-react";
 import { getRoleCategory } from "@/utils/roleUtils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar as RechartsRadar, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
+import { useToast } from "@/hooks/use-toast";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL
 
@@ -32,6 +32,9 @@ const CalibrationSection = ({
   const { employee } = useEmployeeDetails();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [chartView, setChartView] = useState<'table' | 'radar' | 'bar'>('table');
+  const [selfEvaluationData, setSelfEvaluationData] = useState<any>(null);
+  const [loadingSelfEvaluation, setLoadingSelfEvaluation] = useState(false);
+  const { toast } = useToast();
 
   // Check if current user is business role
   const userRoleCategory = getRoleCategory(employee?.designation);
@@ -40,6 +43,40 @@ const CalibrationSection = ({
   // Use the passed employeeCalibration if available, otherwise use the current user's calibration
   const calibrationData = employeeCalibration || calibration;
   const isLoading = !employeeCalibration && loading;
+
+  // Load self-evaluation sheet data on component mount
+  useEffect(() => {
+    if (showSelfEvaluationUpload && employee?.employee) {
+      loadSelfEvaluationData();
+    }
+  }, [showSelfEvaluationUpload, employee?.employee]);
+
+  const loadSelfEvaluationData = async () => {
+    try {
+      setLoadingSelfEvaluation(true);
+      const response = await fetch(`${BASE_URL}calibration.self_evaluation_sheet.get_self_evaluation_sheet`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          employee_id: employee?.employee
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch self-evaluation data');
+      }
+
+      const data = await response.json();
+      setSelfEvaluationData(data.message);
+    } catch (error) {
+      console.error('Error loading self-evaluation data:', error);
+    } finally {
+      setLoadingSelfEvaluation(false);
+    }
+  };
 
   // Handle loading state
   if (isLoading) {
@@ -201,52 +238,102 @@ const CalibrationSection = ({
     }
   };
 
-  // Handle file upload
+  // Handle file upload using new API
   const handleFileUpload = async () => {
-    if (!selectedFile) {
-      alert("No file selected for upload.");
+    if (!selectedFile || !employee?.employee) {
+      toast({
+        title: "Error",
+        description: "No file selected for upload.",
+        variant: "destructive",
+      });
       return;
     }
 
     try {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const base64FileData = reader.result?.toString().split(",")[1];
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('employee_id', employee.employee);
 
-        if (!base64FileData) {
-          alert("Failed to process the selected file.");
-          return;
-        }
+      const response = await fetch(`${BASE_URL}calibration.self_evaluation_sheet.upload_self_evaluation_sheet`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
 
-        const response = await fetch(`${BASE_URL}user.upload_self_evaluation_sheet`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            filedata: base64FileData,
-            filename: selectedFile.name,
-          }),
+      if (!response.ok) {
+        throw new Error('Failed to upload self-evaluation sheet');
+      }
+
+      const responseData = await response.json();
+      
+      if (responseData.message.success) {
+        toast({
+          title: "Success",
+          description: "Self-evaluation sheet uploaded successfully!",
         });
-
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error("Error uploading file:", errorData);
-          alert("Failed to upload the self-evaluation sheet.");
-          return;
-        }
-
-        const responseData = await response.json();
-
-        alert("Self-evaluation sheet uploaded successfully!");
         setSelectedFile(null);
-      };
-
-      reader.readAsDataURL(selectedFile);
+        // Reload self-evaluation data
+        loadSelfEvaluationData();
+      } else {
+        throw new Error('Upload failed');
+      }
     } catch (error) {
-      console.error("Error during file upload:", error);
-      alert("An error occurred while uploading the file. Please try again.");
+      console.error('Error during file upload:', error);
+      toast({
+        title: "Error",
+        description: "An error occurred while uploading the file. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle file download
+  const handleFileDownload = () => {
+    if (selfEvaluationData?.file_url) {
+      const downloadUrl = `${BASE_URL.replace('/api/method/', '')}${selfEvaluationData.file_url}`;
+      window.open(downloadUrl, '_blank');
+    }
+  };
+
+  // Handle file delete
+  const handleFileDelete = async () => {
+    if (!employee?.employee) return;
+
+    try {
+      const response = await fetch(`${BASE_URL}calibration.self_evaluation_sheet.delete_self_evaluation_sheet`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          employee_id: employee.employee
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete self-evaluation sheet');
+      }
+
+      const responseData = await response.json();
+      
+      if (responseData.message.success) {
+        toast({
+          title: "Success",
+          description: "Self-evaluation sheet deleted successfully!",
+        });
+        // Reload self-evaluation data
+        loadSelfEvaluationData();
+      } else {
+        throw new Error('Delete failed');
+      }
+    } catch (error) {
+      console.error('Error during file delete:', error);
+      toast({
+        title: "Error",
+        description: "An error occurred while deleting the file. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -261,8 +348,12 @@ const CalibrationSection = ({
     <div className={`bg-white ${containerPadding} rounded-lg shadow-sm`}>
       <div className={`flex flex-col sm:flex-row justify-between items-start ${headerMargin}`}>
         <h2 className={`${isAdminView ? 'text-lg' : 'text-xl'} font-semibold text-gray-800`}>Calibration</h2>
-        {!isAdminView && (
-          <p className="text-sm text-gray-500">Last updated on: {lastUpdatedOn}</p>
+        {!isAdminView && calibrationData && (
+          <p className="text-sm text-gray-500">Last updated on: {new Date(calibrationData.modified).toLocaleDateString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          })}</p>
         )}
       </div>
 
@@ -270,34 +361,71 @@ const CalibrationSection = ({
       {showSelfEvaluationUpload && !isAdminView && (
         <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
           <h3 className="font-medium text-gray-700 mb-3">Self-Evaluation Sheet</h3>
-          <div className="space-y-3">
-            <div>
-              <Label htmlFor="self-evaluation" className="text-sm font-medium text-gray-600">
-                Upload your self-evaluation document
-              </Label>
-              <Input
-                id="self-evaluation"
-                type="file"
-                accept=".pdf,.doc,.docx,.txt"
-                onChange={handleFileChange}
-                className="mt-1"
-              />
+          
+          {loadingSelfEvaluation ? (
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-10 w-full" />
             </div>
-            {selectedFile && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <FileText className="h-4 w-4" />
-                <span>{selectedFile.name}</span>
-                <Button
-                  onClick={handleFileUpload}
-                  size="sm"
-                  className="ml-2"
-                >
-                  <Upload className="h-4 w-4 mr-1" />
-                  Upload
-                </Button>
+          ) : selfEvaluationData?.has_file ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 p-3 bg-white rounded border">
+                <FileText className="h-5 w-5 text-green-600" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-700">Self-evaluation sheet uploaded</p>
+                  <p className="text-xs text-gray-500">Calibration ID: {selfEvaluationData.calibration_id}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleFileDownload}
+                    size="sm"
+                    variant="outline"
+                  >
+                    <Download className="h-4 w-4 mr-1" />
+                    Download
+                  </Button>
+                  <Button
+                    onClick={handleFileDelete}
+                    size="sm"
+                    variant="outline"
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
+                  </Button>
+                </div>
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div>
+                <Label htmlFor="self-evaluation" className="text-sm font-medium text-gray-600">
+                  Upload your self-evaluation document
+                </Label>
+                <Input
+                  id="self-evaluation"
+                  type="file"
+                  accept=".pdf,.doc,.docx,.txt,.xls,.xlsx"
+                  onChange={handleFileChange}
+                  className="mt-1"
+                />
+              </div>
+              {selectedFile && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <FileText className="h-4 w-4" />
+                  <span>{selectedFile.name}</span>
+                  <Button
+                    onClick={handleFileUpload}
+                    size="sm"
+                    className="ml-2"
+                  >
+                    <Upload className="h-4 w-4 mr-1" />
+                    Upload
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
