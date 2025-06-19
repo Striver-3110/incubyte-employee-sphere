@@ -34,6 +34,14 @@ export const roleCategories = {
     "Operations Manager",
     "Accountant"
   ],
+  "Calibration Dashboard Access": [
+    "Co-Founder",
+    "Operation Head",
+    "Operations Manager",
+    "Accountant",
+    "Talent Acquisition Specialist",
+    "People Success Specialist" 
+  ]
   "Internship": [
     "Intern"
   ]
