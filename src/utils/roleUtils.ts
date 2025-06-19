@@ -41,7 +41,7 @@ export const roleCategories = {
     "Accountant",
     "Talent Acquisition Specialist",
     "People Success Specialist" 
-  ]
+  ],
   "Internship": [
     "Intern"
   ]
