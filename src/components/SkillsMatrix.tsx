@@ -53,7 +53,14 @@ const SkillsMatrix = () => {
         setAvailableSkills(data.message.map((item: { skill_name: string }) => item.skill_name));
       } catch (error) {
         console.error("Error fetching available skills:", error);
-        toast.error("Failed to fetch available skills.");
+        toast.error("Failed to fetch available skills.", {
+          position: "top-right",
+          style: {
+            background: "#F8D7DA",
+            border: "1px solid #F5C6CB",
+            color: "#721C24",
+          },
+        });
       }
     };
 
@@ -107,7 +114,14 @@ const SkillsMatrix = () => {
     const trimmedSkill = searchTerm.trim();
     
     if (!trimmedSkill || !selectedProficiency) {
-      toast.error("Please fill out all fields.");
+      toast.error("Please fill out all fields.", {
+        position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
+      });
       return;
     }
 
@@ -117,7 +131,14 @@ const SkillsMatrix = () => {
     );
     
     if (existingSkill) {
-      toast.error("This skill has already been added.");
+      toast.error("This skill has already been added.", {
+        position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
+      });
       return;
     }
 
@@ -130,6 +151,8 @@ const SkillsMatrix = () => {
 
     try {
       setIsSaving(true);
+      setIsAddDialogOpen(false);
+      // Call API to save the new skill
       setIsComponentLoading(true);
       console.log("Adding skill:", newSkill);
       
@@ -146,22 +169,41 @@ const SkillsMatrix = () => {
       const data = await response.json();
 
       if (data.message?.status === "success") {
-        toast.success(data.message.message || "Skill added successfully.");
+        toast.success(data.message.message || "Skill added successfully.", {
+          position: "top-right",
+          style: {
+            background: "#D1F7C4",
+            border: "1px solid #9AE86B",
+            color: "#2B7724",
+          },
+        });
         
         // Update the global state immediately with the API response
         setEmployee((prev) => ({
           ...prev,
           custom_tech_stack: data.message.data.custom_tech_stack,
         }));
+        setSearchTerm("");
+        setSelectedProficiency("");
+        // Auto-close modal and reset form
         
         // Close dialog and reset form
         closeDialog();
+        // window.location.reload();
+
       } else {
         throw new Error(data.message?.message || "Failed to add skill.");
       }
     } catch (error) {
       console.error("Error adding skill:", error);
-      toast.error("Failed to add skill.");
+      toast.error("Failed to add skill.", {
+        position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
+      });
     } finally {
       setIsSaving(false);
       setIsComponentLoading(false);
@@ -196,19 +238,35 @@ const SkillsMatrix = () => {
       const data = await response.json();
 
       if (data.message?.status === "success") {
-        toast.success(data.message.message || "Skill deleted successfully.");
+        toast.success(data.message.message || "Skill deleted successfully.", {
+          position: "top-right",
+          style: {
+            background: "#D1F7C4",
+            border: "1px solid #9AE86B",
+            color: "#2B7724",
+          },
+        });
         
         // Update the global state immediately with the API response
         setEmployee((prev) => ({
           ...prev,
           custom_tech_stack: data.message.data.custom_tech_stack,
         }));
+        // window.location.reload();
+
       } else {
         throw new Error(data.message?.message || "Failed to delete skill.");
       }
     } catch (error) {
       console.error("Error deleting skill:", error);
-      toast.error("Failed to delete skill.");
+      toast.error("Failed to delete skill.", {
+        position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
+      });
     } finally {
       setDeletingSkill(null);
       setIsComponentLoading(false);
@@ -273,7 +331,7 @@ const SkillsMatrix = () => {
       <div className="grid grid-cols-2 gap-6">
         {proficiencyLevels.map((level) => (
           <div key={level}>
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">{level}</h3>
+            <h3 className="text-md font-semibold text-gray-800 mb-3">{level}</h3>
             {groupedSkills[level]?.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {groupedSkills[level].map((skill) => (

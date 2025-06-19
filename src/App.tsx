@@ -16,15 +16,9 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Provide default values for environment variables to prevent null context issues
-  const socketPort = import.meta.env.VITE_SOCKET_PORT || '9000';
-  const siteName = import.meta.env.VITE_SITE_NAME || 'localhost:8000';
 
   return (
-    <FrappeProvider
-      socketPort={socketPort}
-      siteName={siteName}
-    >
+    <FrappeProvider>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />

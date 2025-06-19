@@ -1,8 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fetchAllEmployees, fetchFeedbackTemplates, useEmployeeDetails } from "@/api/employeeService";
 import { toast } from "sonner";
 import { X } from "lucide-react";
@@ -72,7 +70,14 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose,
         setEmployees(Array.isArray(employeesData) ? employeesData : []);
       } catch (error) {
         console.error("Error loading data:", error);
-        toast.error("Failed to load data");
+        toast.error("Failed to load data", {
+          position: "top-right",
+          style: {
+            background: "#F8D7DA",
+            border: "1px solid #F5C6CB",
+            color: "#721C24",
+          },
+        });
         // Set empty arrays as fallback
         setEmployees([]);
       } finally {
@@ -113,6 +118,7 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose,
     
     console.log('Available employees after filtering:', filtered);
     return filtered;
+
   }, [employees, selectedEmployees, currentEmployee]);
 
   const handleRemoveEmployee = (employeeId: string) => {
@@ -129,26 +135,46 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose,
 
   const handleSubmit = async () => {
     if (selectedEmployees.length === 0 || !currentEmployee) {
-      toast.error("Please select at least one employee to seek feedback from");
+      toast.error("Please select at least one employee to seek feedback from", {
+        position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
+      });
       return;
     }
 
     setIsSubmitting(true);
     try {
       const selectedEmployeeIds = selectedEmployees.map(emp => emp.name).filter(Boolean);
+
       await seekFeedbackForm(currentEmployee.name, selectedEmployeeIds);
       toast.success("Feedback request sent successfully!", {
         position: "top-right",
         style: {
-          background: "#F0F9FF",
-          border: "1px solid #BAE6FD",
-          color: "#1E40AF",
+          background: "#D1F7C4",
+          border: "1px solid #9AE86B",
+          color: "#2B7724",
         },
       });
       
       // Call onSuccess if provided to refresh feedback data
       if (onSuccess) {
-        await onSuccess();
+        try {
+          await onSuccess();
+        } catch (refreshError) {
+          console.error("Error refreshing feedback data:", refreshError);
+          toast.error("Failed to refresh feedback data", {
+            position: "top-right",
+            style: {
+              background: "#F8D7DA",
+              border: "1px solid #F5C6CB",
+              color: "#721C24",
+            },
+          });
+        }
       }
       
       onClose();
@@ -157,9 +183,9 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose,
       toast.error("Failed to send feedback request", {
         position: "top-right",
         style: {
-          background: "#F0F9FF",
-          border: "1px solid #BAE6FD",
-          color: "#1E40AF",
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
         },
       });
     } finally {
@@ -195,24 +221,24 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose,
           <div className="relative">
             <Popover open={open} onOpenChange={setOpen}>
               <PopoverTrigger asChild>
-                <div 
+                <div
                   className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[80px] cursor-text focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
                   onClick={() => setOpen(true)}
                 >
                   {selectedEmployees.length > 0 && selectedEmployees.map(employee => (
                     employee?.name && (
-                      <Badge 
-                        key={employee.name} 
-                        variant="secondary" 
+                      <Badge
+                        key={employee.name}
+                        variant="secondary"
                         className="px-2 py-1 flex items-center gap-1"
                       >
                         {employee.employee_name || employee.name}
-                        <X 
-                          className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                        <X
+                          className="h-3 w-3 cursor-pointer hover:text-destructive"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleRemoveEmployee(employee.name);
-                          }} 
+                          }}
                         />
                       </Badge>
                     )

@@ -31,9 +31,9 @@ const TeamMembersModal = ({ isOpen, onClose }: TeamMembersModalProps) => {
         <DialogHeader>
           <div className="flex justify-between items-center">
             <DialogTitle>Team Members</DialogTitle>
-            <Button variant="ghost" size="icon" onClick={onClose}>
+            {/* <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-4 w-4" />
-            </Button>
+            </Button> */}
           </div>
         </DialogHeader>
         

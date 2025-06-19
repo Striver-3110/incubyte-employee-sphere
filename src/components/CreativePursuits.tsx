@@ -35,7 +35,7 @@ const CreativePursuits = () => {
     setIsSaving(true);
     try {
       console.log("Updating pursuits:", updatedPursuits);
-      
+
       const response = await fetch(`${BASE_URL}user.set_employee_details`, {
         method: "POST",
         headers: {
@@ -47,14 +47,14 @@ const CreativePursuits = () => {
         credentials: "include",
       });
       const data = await response.json();
-
       if (data.message?.status === "success") {
+
         toast.success("Creative pursuits updated successfully", {
           position: "top-right",
           style: {
-            background: "#F0F9FF",
-            border: "1px solid #BAE6FD",
-            color: "#1E40AF",
+            background: "#D1F7C4",
+            border: "1px solid #9AE86B",
+            color: "#2B7724",
           },
         });
 
@@ -73,9 +73,9 @@ const CreativePursuits = () => {
       toast.error("Failed to update creative pursuits", {
         position: "top-right",
         style: {
-          background: "#F0F9FF",
-          border: "1px solid #BAE6FD",
-          color: "#1E40AF",
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
         },
       });
     } finally {
@@ -90,9 +90,9 @@ const CreativePursuits = () => {
       toast.error("Creative pursuit cannot be empty", {
         position: "top-right",
         style: {
-          background: "#F0F9FF",
-          border: "1px solid #BAE6FD",
-          color: "#1E40AF",
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
         },
       });
       return;
@@ -107,9 +107,9 @@ const CreativePursuits = () => {
       toast.error(`"${trimmedPursuit}" already exists as a creative pursuit`, {
         position: "top-right",
         style: {
-          background: "#F0F9FF",
-          border: "1px solid #BAE6FD",
-          color: "#1E40AF",
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
         },
       });
       return;
@@ -123,6 +123,8 @@ const CreativePursuits = () => {
     setNewPursuit("");
     setIsAddDialogOpen(false);
     await updatePursuitsInAPI(updatedPursuits);
+    window.location.reload();
+
   };
 
   const handleDeletePursuit = async (name: string) => {

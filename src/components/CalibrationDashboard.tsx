@@ -165,6 +165,11 @@ const CalibrationDashboard = () => {
         return category === selectedCategory;
     });
 
+    // Function to handle pending calibration redirect
+    const handlePendingCalibrationClick = () => {
+        window.open('/app/employee?custom_calibration=0');
+    };
+
     return (
         <div className="space-y-6">
             {!selectedCategory ? (
@@ -244,42 +249,22 @@ const CalibrationDashboard = () => {
                             </DialogContent>
                         </Dialog>
 
-                        <Dialog open={showNotCalibratedModal} onOpenChange={setShowNotCalibratedModal}>
-                            <DialogTrigger asChild>
-                                <Card className="border-red-200 bg-red-50 cursor-pointer hover:shadow-md transition-shadow">
-                                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                        <CardTitle className="text-sm font-medium text-red-700">Pending Calibration</CardTitle>
-                                        <Users className="h-4 w-4 text-red-600" />
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="text-2xl font-bold text-red-800">{notCalibrated.length}</div>
-                                        <p className="text-xs text-red-600 mt-1">
-                                            Click to view details
-                                        </p>
-                                    </CardContent>
-                                </Card>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl max-h-[500px]" showOverlay={false}>
-                                <DialogHeader>
-                                    <DialogTitle>Employees Pending Calibration</DialogTitle>
-                                </DialogHeader>
-                                <ScrollArea className="h-[400px] pr-4">
-                                    <div className="space-y-3">
-                                        {notCalibrated.map((record) => (
-                                            <div
-                                                key={record.employee_name}
-                                                className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
-                                            >
-                                                <div>
-                                                    <h3 className="font-medium text-gray-800">{record.employee_name}</h3>
-                                                    <p className="text-sm text-gray-600">Calibration pending</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </ScrollArea>
-                            </DialogContent>
-                        </Dialog>
+                        {/* Updated Pending Calibration Card with redirect functionality */}
+                        <Card 
+                            className="border-red-200 bg-red-50 cursor-pointer hover:shadow-md transition-shadow"
+                            onClick={handlePendingCalibrationClick}
+                        >
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-medium text-red-700">Pending Calibration</CardTitle>
+                                <Users className="h-4 w-4 text-red-600" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-2xl font-bold text-red-800">{notCalibrated.length}</div>
+                                <p className="text-xs text-red-600 mt-1">
+                                    Click to start calibration
+                                </p>
+                            </CardContent>
+                        </Card>
                     </div>
 
                     {/* Chart Section */}

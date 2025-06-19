@@ -16,7 +16,7 @@ interface Feedback {
   employee_name: string;
   reviewer_name: string;
   reviewer: string;
-  custom_feedback_status?: string | null;
+  feedback_status?: string | null;
   additional_comments?: string | null;
   added_on?: string;
 }
@@ -69,7 +69,7 @@ const FeedbackSection = () => {
 
   // Filter given feedbacks to show only completed ones
   const completedGivenFeedbacks = givenFeedbacks.filter(feedback => 
-    feedback.custom_feedback_status === 'Completed'
+    feedback.feedback_status === 'Completed'
   );
 
   const hasRecentlyReceivedFeedback = checkRecentFeedback(receivedFeedbacks, 2);
@@ -110,7 +110,7 @@ const FeedbackSection = () => {
   };
 
   const handlePendingFeedbackClick = (feedbackName: string) => {
-    const url = `http://127.0.0.1:8004/app/employee-feedback-rag/${feedbackName}`;
+    const url = `/app/employee-feedback-rag/${feedbackName}`;
     window.open(url, '_blank');
   };
 
@@ -196,13 +196,13 @@ const FeedbackSection = () => {
                   <div>
                     <p className="text-sm text-gray-500">Status</p>
                     <span className={`px-2 py-1 text-xs rounded-full inline-block mt-1 ${
-                      viewFeedbackDialog.custom_feedback_status === 'Pending' 
+                      viewFeedbackDialog.feedback_status === 'Pending' 
                         ? 'bg-yellow-100 text-yellow-800'
-                        : viewFeedbackDialog.custom_feedback_status === 'Completed'
+                        : viewFeedbackDialog.feedback_status === 'Completed'
                         ? 'bg-green-100 text-green-800'
                         : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {viewFeedbackDialog.custom_feedback_status || "Status Unknown"}
+                      {viewFeedbackDialog.feedback_status || "Status Unknown"}
                     </span>
                   </div>
                   {viewFeedbackDialog.added_on && (
@@ -274,13 +274,13 @@ const FeedbackSection = () => {
                       {feedback.name || "Feedback Request"}
                     </h3>
                     <span className={`px-2 py-1 text-xs rounded-full self-start sm:self-auto flex-shrink-0 ${
-                      feedback.custom_feedback_status === 'Pending' 
+                      feedback.feedback_status === 'Pending' 
                         ? 'bg-yellow-100 text-yellow-800'
-                        : feedback.custom_feedback_status === 'Completed'
+                        : feedback.feedback_status === 'Completed'
                         ? 'bg-green-100 text-green-800'
                         : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {feedback.custom_feedback_status || "Status Unknown"}
+                      {feedback.feedback_status || "Status Unknown"}
                     </span>
                   </div>
                   <div className="text-sm text-gray-600 space-y-1">
@@ -323,7 +323,9 @@ const FeedbackSection = () => {
           {completedGivenFeedbacks.length > 0 ? (
             <div className="space-y-4">
               {completedGivenFeedbacks.slice(0, givenDisplayCount).map((feedback, index) => (
-                <div key={index} className="bg-gray-50 p-3 sm:p-4 rounded-md border">
+                <div key={index} 
+                onClick={() => handlePendingFeedbackClick(feedback.name)}
+                className="bg-gray-50 p-3 sm:p-4 rounded-md border cursor-pointer">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
                     <h3 className="font-medium text-gray-800 text-sm sm:text-base break-words">
                       {feedback.name || "Feedback Given"}
@@ -338,13 +340,13 @@ const FeedbackSection = () => {
                         <Eye className="h-4 w-4" />
                       </Button>
                       <span className={`px-2 py-1 text-xs rounded-full flex-shrink-0 ${
-                        feedback.custom_feedback_status === 'Pending' 
+                        feedback.feedback_status === 'Pending' 
                           ? 'bg-yellow-100 text-yellow-800'
-                          : feedback.custom_feedback_status === 'Completed'
+                          : feedback.feedback_status === 'Completed'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {feedback.custom_feedback_status || "Status Unknown"}
+                        {feedback.feedback_status || "Status Unknown"}
                       </span>
                     </div>
                   </div>
@@ -388,28 +390,31 @@ const FeedbackSection = () => {
           {initiatedFeedbacks.length > 0 ? (
             <div className="space-y-4">
               {initiatedFeedbacks.slice(0, initiatedDisplayCount).map((feedback, index) => (
-                <div key={index} className="bg-gray-50 p-3 sm:p-4 rounded-md border">
+                <div key={index}
+                 className="bg-gray-50 p-3 sm:p-4 rounded-md border cursor-pointer"
+                 onClick={() => handlePendingFeedbackClick(feedback.name)}
+                 >
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
                     <h3 className="font-medium text-gray-800 text-sm sm:text-base break-words">
                       {feedback.name || "Feedback Initiated"}
                     </h3>
                     <div className="flex gap-2 self-start sm:self-auto">
-                      <Button
+                      {/* <Button
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 rounded-full flex-shrink-0"
                         onClick={() => setViewFeedbackDialog(feedback)}
                       >
                         <Eye className="h-4 w-4" />
-                      </Button>
+                      </Button> */}
                       <span className={`px-2 py-1 text-xs rounded-full flex-shrink-0 ${
-                        feedback.custom_feedback_status === 'Pending' 
+                        feedback.feedback_status === 'Pending' 
                           ? 'bg-yellow-100 text-yellow-800'
-                          : feedback.custom_feedback_status === 'Completed'
+                          : feedback.feedback_status === 'Completed'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {feedback.custom_feedback_status || "Status Unknown"}
+                        {feedback.feedback_status || "Status Unknown"}
                       </span>
                     </div>
                   </div>
@@ -463,7 +468,7 @@ const FeedbackSection = () => {
                       {feedback.name || "Pending Feedback"}
                     </h3>
                     <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 self-start sm:self-auto flex-shrink-0">
-                      {feedback.custom_feedback_status}
+                      {feedback.feedback_status}
                     </span>
                   </div>
                   <div className="text-sm text-gray-600 space-y-1">

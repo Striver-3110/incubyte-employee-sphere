@@ -77,6 +77,8 @@ const saveIceBreakers = async (questions: IceBreakerQuestion[]) => {
     }
 
     const data = await response.json();
+    // window.location.reload();
+
     return data;
   } catch (error) {
     console.error('Error saving ice breakers:', error);
@@ -154,6 +156,7 @@ const IceBreakersForm = ({
   const [inlineEditing, setInlineEditing] = useState<number | null>(null);
   const [editedAnswer, setEditedAnswer] = useState("");
   const [questionHistory, setQuestionHistory] = useState<QuestionHistory[]>([]);
+  const [openAccordionItem, setOpenAccordionItem] = useState<string>("");
 
   // Initialize questions with randomly selected ones if needed
   useEffect(() => {
@@ -191,7 +194,14 @@ const IceBreakersForm = ({
     setEditingIndex(null);
     setInlineEditing(null);
     setQuestionHistory([]);
-    toast.success("Ice breakers restarted with new questions");
+    toast.success("Ice breakers restarted with new questions", {
+      position: "top-right",
+      style: {
+        background: "#D1F7C4",
+        border: "1px solid #9AE86B",
+        color: "#2B7724",
+      },
+    });
   };
 
   // Handle back button
@@ -209,10 +219,10 @@ const IceBreakersForm = ({
 
       // Get the previous question from history
       const previousQuestion = questionHistory[questionHistory.length - 1];
-      
+
       // Remove the last item from history
       setQuestionHistory(prev => prev.slice(0, -1));
-      
+
       // Set the previous question as current
       setCurrentIndex(previousQuestion.index);
       setAnswer(previousQuestion.answer);
@@ -242,9 +252,24 @@ const IceBreakersForm = ({
         // Filter out questions that have answers
         const answeredQuestions = updatedQuestions.filter(q => q.answer.trim() !== "");
         await saveIceBreakers(answeredQuestions);
-        toast.success("Answer updated successfully!");
+        // window.location.reload();
+        toast.success("Answer updated successfully!", {
+          position: "top-right",
+          style: {
+            background: "#D1F7C4",
+            border: "1px solid #9AE86B",
+            color: "#2B7724",
+          },
+        });
       } catch (error) {
-        toast.error("Failed to update answer");
+        toast.error("Failed to update answer", {
+          position: "top-right",
+          style: {
+            background: "#F8D7DA",
+            border: "1px solid #F5C6CB",
+            color: "#721C24",
+          },
+        });
         console.error("Error saving edited answer:", error);
       } finally {
         setIsSubmitting(false);
@@ -285,9 +310,23 @@ const IceBreakersForm = ({
         // Filter out questions that have answers
         const answeredQuestions = updatedQuestions.filter(q => q.answer.trim() !== "");
         await saveIceBreakers(answeredQuestions);
-        toast.success("Answer updated successfully!");
+        toast.success("Answer updated successfully!", {
+          position: "top-right",
+          style: {
+            background: "#D1F7C4",
+            border: "1px solid #9AE86B",
+            color: "#2B7724",
+          },
+        });
       } catch (error) {
-        toast.error("Failed to update answer");
+        toast.error("Failed to update answer", {
+          position: "top-right",
+          style: {
+            background: "#F8D7DA",
+            border: "1px solid #F5C6CB",
+            color: "#721C24",
+          },
+        });
         console.error("Error saving edited answer:", error);
       } finally {
         setIsSubmitting(false);
@@ -318,7 +357,7 @@ const IceBreakersForm = ({
       // Move to the next question
       const nextIndex = (currentIndex + 1) % currentQuestions.length;
       setCurrentIndex(nextIndex);
-      
+
       // Load the answer for the next question if it exists
       setAnswer(updatedQuestions[nextIndex]?.answer || "");
     }
@@ -340,11 +379,25 @@ const IceBreakersForm = ({
       setIsComponentLoading(true);
       try {
         await saveIceBreakers(answeredQuestions);
-        toast.success("Ice breakers submitted successfully!");
+        toast.success("Ice breakers submitted successfully!", {
+          position: "top-right",
+          style: {
+            background: "#D1F7C4",
+            border: "1px solid #9AE86B",
+            color: "#2B7724",
+          },
+        });
         setCurrentIndex(-1);
         setQuestionHistory([]);
       } catch (error) {
-        toast.error("Failed to submit ice breakers");
+        toast.error("Failed to submit ice breakers", {
+          position: "top-right",
+          style: {
+            background: "#F8D7DA",
+            border: "1px solid #F5C6CB",
+            color: "#721C24",
+          },
+        });
       } finally {
         setIsSubmitting(false);
         setIsComponentLoading(false);
@@ -363,7 +416,7 @@ const IceBreakersForm = ({
 
       const nextIndex = (currentIndex + 1) % currentQuestions.length;
       setCurrentIndex(nextIndex);
-      
+
       // Load the answer for the next question if it exists
       setAnswer(currentQuestions[nextIndex]?.answer || "");
     }
@@ -382,31 +435,21 @@ const IceBreakersForm = ({
       <div>
         {answeredQuestions.length > 0 ? (
           <div className="space-y-4">
-            <div className="flex justify-between items-center mb-4">
-              <p className="text-sm text-gray-600">
-                {answeredQuestions.length} ice breaker{answeredQuestions.length !== 1 ? 's' : ''} completed
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRestart}
-                className="flex items-center gap-2"
-                disabled={isComponentLoading}
-              >
-                <RefreshCcw className="h-4 w-4" />
-                Restart
-              </Button>
-            </div>
-            
-            <Accordion type="single" collapsible className="w-full">
+            <Accordion 
+              type="single" 
+              collapsible 
+              className="w-full"
+              value={openAccordionItem}
+              onValueChange={setOpenAccordionItem}
+            >
               {answeredQuestions.map((item, index) => (
                 <AccordionItem key={item.name || index} value={`item-${index}`}>
                   <AccordionTrigger className="text-left">
-                    <div className="flex justify-between items-center w-full pr-4">
-                      <span className="text-sm font-medium text-gray-700">
+                    <div className="flex justify-between items-center w-full">
+                      <span className=" font-normal text-gray-700 pr-4 py-0">
                         {item.question}
                       </span>
-                      {inlineEditing !== index && (
+                      {openAccordionItem === `item-${index}` && inlineEditing !== index && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -415,15 +458,15 @@ const IceBreakersForm = ({
                             handleInlineEdit(index);
                           }}
                           disabled={isSubmitting}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="flex-shrink-0 ml-2 mr-2"
                         >
                           <Edit size={16} />
                         </Button>
                       )}
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="pt-2">
+                  <AccordionContent className="pb-2 pt-2">
+                    <div>
                       {inlineEditing === index ? (
                         <div className="space-y-3">
                           <Textarea
@@ -458,17 +501,7 @@ const IceBreakersForm = ({
                         </div>
                       ) : (
                         <div className="group">
-                          <p className="text-gray-600 whitespace-pre-wrap">{item.answer}</p>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleInlineEdit(index)}
-                            disabled={isSubmitting}
-                            className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Edit size={16} className="mr-1" />
-                            Edit
-                          </Button>
+                          <p className="text-gray-600 whitespace-pre-wrap mb-0">{item.answer}</p>
                         </div>
                       )}
                     </div>
@@ -476,21 +509,6 @@ const IceBreakersForm = ({
                 </AccordionItem>
               ))}
             </Accordion>
-            
-            <div className="text-center pt-4">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  generateRandomQuestions();
-                  setCurrentIndex(0);
-                  setAnswer("");
-                  setQuestionHistory([]);
-                }}
-                disabled={isComponentLoading}
-              >
-                Add More Ice Breakers
-              </Button>
-            </div>
           </div>
         ) : (
           <div className="text-center my-8">

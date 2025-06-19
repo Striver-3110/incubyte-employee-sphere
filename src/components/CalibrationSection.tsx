@@ -10,7 +10,7 @@ import { getRoleCategory } from "@/utils/roleUtils";
 import { useState, useEffect } from "react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar as RechartsRadar, BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL
 
@@ -34,7 +34,6 @@ const CalibrationSection = ({
   const [chartView, setChartView] = useState<'table' | 'radar' | 'bar'>('table');
   const [selfEvaluationData, setSelfEvaluationData] = useState<any>(null);
   const [loadingSelfEvaluation, setLoadingSelfEvaluation] = useState(false);
-  const { toast } = useToast();
 
   // Check if current user is business role
   const userRoleCategory = getRoleCategory(employee?.designation);
@@ -194,25 +193,25 @@ const CalibrationSection = ({
   // Extract overall level and other skills - improved logic for finding overall level
   const skillCategories = calibrationData.calibration_skill_categories || [];
   console.log("All skill categories:", skillCategories);
-  
+
   const overallLevel = skillCategories.find(skill => {
     const skillName = skill.skill?.toLowerCase() || '';
-    return skillName.includes('overall') || 
-           skillName.includes('total') ||
-           skillName === 'overall level' ||
-           skillName.includes('aggregate') ||
-           skillName.includes('combined');
+    return skillName.includes('overall') ||
+      skillName.includes('total') ||
+      skillName === 'overall level' ||
+      skillName.includes('aggregate') ||
+      skillName.includes('combined');
   });
-  
+
   console.log("Found overall level:", overallLevel);
-  
+
   const otherSkills = skillCategories.filter(skill => {
     const skillName = skill.skill?.toLowerCase() || '';
-    return !skillName.includes('overall') && 
-           !skillName.includes('total') &&
-           skillName !== 'overall level' &&
-           !skillName.includes('aggregate') &&
-           !skillName.includes('combined');
+    return !skillName.includes('overall') &&
+      !skillName.includes('total') &&
+      skillName !== 'overall level' &&
+      !skillName.includes('aggregate') &&
+      !skillName.includes('combined');
   });
 
   // Prepare data for charts
@@ -241,10 +240,13 @@ const CalibrationSection = ({
   // Handle file upload using new API
   const handleFileUpload = async () => {
     if (!selectedFile || !employee?.employee) {
-      toast({
-        title: "Error",
-        description: "No file selected for upload.",
-        variant: "destructive",
+      toast.error("No file selected.", {
+        position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
       });
       return;
     }
@@ -265,11 +267,15 @@ const CalibrationSection = ({
       }
 
       const responseData = await response.json();
-      
+
       if (responseData.message.success) {
-        toast({
-          title: "Success",
-          description: "Self-evaluation sheet uploaded successfully!",
+        toast.success("Self-evaluation sheet uploaded successfully!", {
+          position: "top-right",
+          style: {
+            background: "#D1F7C4",
+            border: "1px solid #9AE86B",
+            color: "#2B7724",
+          },
         });
         setSelectedFile(null);
         // Reload self-evaluation data
@@ -279,10 +285,13 @@ const CalibrationSection = ({
       }
     } catch (error) {
       console.error('Error during file upload:', error);
-      toast({
-        title: "Error",
-        description: "An error occurred while uploading the file. Please try again.",
-        variant: "destructive",
+      toast.error("An error occurred while uploading the file. Please try again.", {
+        position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
       });
     }
   };
@@ -316,11 +325,15 @@ const CalibrationSection = ({
       }
 
       const responseData = await response.json();
-      
+
       if (responseData.message.success) {
-        toast({
-          title: "Success",
-          description: "Self-evaluation sheet deleted successfully!",
+        toast.success("Self-evaluation sheet deleted successfully!", {
+          position: "top-right",
+          style: {
+            background: "#D1F7C4",
+            border: "1px solid #9AE86B",
+            color: "#2B7724",
+          },
         });
         // Reload self-evaluation data
         loadSelfEvaluationData();
@@ -329,10 +342,13 @@ const CalibrationSection = ({
       }
     } catch (error) {
       console.error('Error during file delete:', error);
-      toast({
-        title: "Error",
-        description: "An error occurred while deleting the file. Please try again.",
-        variant: "destructive",
+      toast.error("An error occurred while deleting the file. Please try again.", {
+        position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
       });
     }
   };
@@ -361,7 +377,7 @@ const CalibrationSection = ({
       {showSelfEvaluationUpload && !isAdminView && (
         <div className="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
           <h3 className="font-medium text-gray-700 mb-3">Self-Evaluation Sheet</h3>
-          
+
           {loadingSelfEvaluation ? (
             <div className="space-y-2">
               <Skeleton className="h-4 w-48" />
@@ -565,9 +581,9 @@ const CalibrationSection = ({
                       <div className="flex items-center gap-1">
                         <Progress
                           value={getProgressValue(skill.level)}
-                          className={`${isAdminView ? "h-1 w-12" : "h-2"} flex-1`}
+                          className={`${isAdminView ? "h-1 w-24" : "h-2 w-24"} flex-1`}
                         />
-                        <span className={`px-1 py-0.5 text-xs font-medium rounded border ${getLevelBadgeColor(skill.level)}`}>
+                        <span className={`px-2 py-1 text-xs font-medium rounded border ${getLevelBadgeColor(skill.level)}`}>
                           {skill.level}
                         </span>
                       </div>
@@ -581,9 +597,9 @@ const CalibrationSection = ({
           {chartView === 'radar' && !isAdminView && (
             <ChartContainer config={chartConfig} className="h-[400px]">
               <RadarChart data={chartData}>
-                <ChartTooltip 
+                <ChartTooltip
                   content={
-                    <ChartTooltipContent 
+                    <ChartTooltipContent
                       formatter={(value, name, props) => [
                         `${props.payload.levelText} (${value}%)`,
                         "Level"
@@ -593,9 +609,9 @@ const CalibrationSection = ({
                 />
                 <PolarGrid />
                 <PolarAngleAxis dataKey="skill" className="text-xs" />
-                <PolarRadiusAxis 
-                  angle={90} 
-                  domain={[0, 100]} 
+                <PolarRadiusAxis
+                  angle={90}
+                  domain={[0, 100]}
                   className="text-xs"
                 />
                 <RechartsRadar
@@ -613,17 +629,17 @@ const CalibrationSection = ({
             <ChartContainer config={chartConfig} className="h-[400px]">
               <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="skill" 
+                <XAxis
+                  dataKey="skill"
                   angle={-45}
                   textAnchor="end"
                   height={100}
                   className="text-xs"
                 />
                 <YAxis domain={[0, 100]} className="text-xs" />
-                <ChartTooltip 
+                <ChartTooltip
                   content={
-                    <ChartTooltipContent 
+                    <ChartTooltipContent
                       formatter={(value, name, props) => [
                         `${props.payload.levelText} (${value}%)`,
                         "Level"
@@ -631,8 +647,8 @@ const CalibrationSection = ({
                     />
                   }
                 />
-                <Bar 
-                  dataKey="level" 
+                <Bar
+                  dataKey="level"
                   fill="hsl(var(--chart-1))"
                   radius={[4, 4, 0, 0]}
                 />

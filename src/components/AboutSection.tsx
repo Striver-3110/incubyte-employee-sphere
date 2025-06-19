@@ -2,27 +2,33 @@ import React, { useState } from "react";
 import { useEmployeeDetails, fetchEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Edit, Check, X, Loader2 } from "lucide-react";
+import { Edit, Check, X, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
+// Define the character limit before showing "See More"
+const CHARACTER_LIMIT = 150;
+
 const AboutSection = () => {
   const { employee, loading, error, setEmployee } = useEmployeeDetails();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   const handleSave = async () => {
     // Validate input - don't allow empty or whitespace-only content
     const trimmedAbout = employee?.custom_about?.trim();
+    
+    console.log(trimmedAbout, "\nEmployee\n", employee)
     if (!trimmedAbout) {
       toast.error("About section cannot be empty.", {
         position: "top-right",
         style: {
-          background: "#F0F9FF",
-          border: "1px solid #BAE6FD",
-          color: "#1E40AF",
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
         },
       });
       return;
@@ -47,13 +53,12 @@ const AboutSection = () => {
         toast.success(aboutData.message.message || "About section updated successfully", {
           position: "top-right",
           style: {
-            background: "#F0F9FF",
-            border: "1px solid #BAE6FD",
-            color: "#1E40AF",
+            background: "#D1F7C4",
+            border: "1px solid #9AE86B",
+            color: "#2B7724",
           },
         });
         
-        // Refresh employee data after successful update
         try {
           const updatedEmployeeData = await fetchEmployeeDetails();
           setEmployee(updatedEmployeeData);
@@ -70,9 +75,9 @@ const AboutSection = () => {
       toast.error("Failed to update About section", {
         position: "top-right",
         style: {
-          background: "#F0F9FF",
-          border: "1px solid #BAE6FD",
-          color: "#1E40AF",
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
         },
       });
     } finally {
@@ -80,7 +85,6 @@ const AboutSection = () => {
     }
   };
 
-  // Check if save should be disabled
   const isSaveDisabled = !employee?.custom_about?.trim() || isSaving;
 
   if (loading || !employee) {
@@ -90,6 +94,12 @@ const AboutSection = () => {
   if (error) {
     return <p className="text-red-500">Error loading employee details: {error}</p>;
   }
+
+  const aboutText = employee.custom_about || "No information provided.";
+  const shouldShowSeeMore = aboutText.length > CHARACTER_LIMIT;
+  const displayText = !isExpanded && shouldShowSeeMore 
+    ? `${aboutText.slice(0, CHARACTER_LIMIT)}...` 
+    : aboutText;
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-sm relative">
@@ -152,9 +162,27 @@ const AboutSection = () => {
           </div>
         </div>
       ) : (
-        <p className="text-gray-600 whitespace-pre-line">
-          {employee.custom_about || "No information provided."}
-        </p>
+        <div>
+          <p className="text-gray-600 whitespace-pre-line">
+            {displayText}
+          </p>
+          {shouldShowSeeMore && (
+            <span
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="mt-2 text-blue-600 hover:text-blue-700 flex items-center gap-1 cursor-pointer"
+            >
+              {isExpanded ? (
+                <>
+                  See Less
+                </>
+              ) : (
+                <>
+                  See More
+                </>
+              )}
+            </span>
+          )}
+        </div>
       )}
     </div>
   );

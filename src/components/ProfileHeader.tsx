@@ -1,6 +1,11 @@
 import { useEmployeeDetails, useTeamEmployees } from "@/api/employeeService";
 import { calculateTenure, formatDate } from "@/utils/dateUtils";
-import { Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, Plus, Save, Trash2, Users, Loader2, Upload } from "lucide-react";
+import { 
+  Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, 
+  Plus, Save, Trash2, Users, Loader2, Globe, Twitch, Youtube, 
+  MessageSquare, FileCode, BookOpen, Coffee, Server, Code, Database 
+} from "lucide-react";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +33,16 @@ const socialPlatforms = [
   { id: "linkedin", name: "LinkedIn", icon: Linkedin },
   { id: "github", name: "GitHub", icon: Github },
   { id: "twitter", name: "Twitter", icon: Twitter },
+  { id: "website", name: "Personal Website", icon: Globe },
+  { id: "stackoverflow", name: "Stack Overflow", icon: FileCode },
+  { id: "medium", name: "Medium", icon: BookOpen },
+  { id: "dev", name: "DEV Community", icon: Code },
+  { id: "hashnode", name: "Hashnode", icon: Database },
+  { id: "youtube", name: "YouTube", icon: Youtube },
+  { id: "twitch", name: "Twitch", icon: Twitch },
+  { id: "discord", name: "Discord", icon: MessageSquare },
+  { id: "kaggle", name: "Kaggle", icon: Server },
+  { id: "buymeacoffee", name: "Buy Me a Coffee", icon: Coffee },
 ];
 
 const ProfileHeader = () => {
@@ -132,6 +147,7 @@ const ProfileHeader = () => {
   const handleSaveProfile = async () => {
     try {
       setIsUpdatingProfile(true);
+      setIsEditModalOpen(false);
 
       let imageUrl = employee.image;
 
@@ -143,6 +159,11 @@ const ProfileHeader = () => {
           console.error("Error uploading image:", error);
           toast.error("Failed to upload image", {
             position: "top-right",
+            style: {
+              background: "#F8D7DA",
+              border: "1px solid #F5C6CB",
+              color: "#721C24",
+            },
           });
           return;
         }
@@ -172,7 +193,13 @@ const ProfileHeader = () => {
 
       toast.success("Profile updated successfully", {
         position: "top-right",
+        style: {
+          background: "#D1F7C4",
+          border: "1px solid #9AE86B",
+          color: "#2B7724",
+        },
       });
+
 
       setIsEditModalOpen(false);
       setSelectedImage(null);
@@ -181,6 +208,11 @@ const ProfileHeader = () => {
       console.error("Error updating profile:", error);
       toast.error("Failed to update profile", {
         position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
       });
     } finally {
       setIsUpdatingProfile(false);
@@ -197,6 +229,11 @@ const ProfileHeader = () => {
     if (!trimmedUrl) {
       toast.error("URL cannot be empty", {
         position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
       });
       return;
     }
@@ -206,13 +243,18 @@ const ProfileHeader = () => {
     if (!urlRegex.test(trimmedUrl)) {
       toast.error("Please enter a valid URL", {
         position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
       });
       return;
     }
 
     try {
       setProcessingPlatform(platformId);
-      
+
       const updatedPlatforms = employee.custom_platforms.map((platform) =>
         platform.name === platformId ? { ...platform, url: trimmedUrl } : platform
       );
@@ -239,6 +281,11 @@ const ProfileHeader = () => {
 
       toast.success("Platform link updated successfully", {
         position: "top-right",
+        style: {
+          background: "#D1F7C4",
+          border: "1px solid #9AE86B",
+          color: "#2B7724",
+        },
       });
 
       setEditingSocial(null);
@@ -247,6 +294,11 @@ const ProfileHeader = () => {
       console.error("Error updating platform:", error);
       toast.error("Failed to update platform link", {
         position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
       });
     } finally {
       setProcessingPlatform(null);
@@ -266,6 +318,11 @@ const ProfileHeader = () => {
     if (!selectedPlatform || !trimmedUrl) {
       toast.error("Please select a platform and enter a URL", {
         position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
       });
       return;
     }
@@ -274,6 +331,11 @@ const ProfileHeader = () => {
     if (!urlRegex.test(trimmedUrl)) {
       toast.error("Please enter a valid URL", {
         position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
       });
       return;
     }
@@ -309,6 +371,11 @@ const ProfileHeader = () => {
 
       toast.success("Platform added successfully", {
         position: "top-right",
+        style: {
+          background: "#D1F7C4",
+          border: "1px solid #9AE86B",
+          color: "#2B7724",
+        },
       });
 
       setIsAddingPlatform(false);
@@ -318,6 +385,11 @@ const ProfileHeader = () => {
       console.error("Error adding platform:", error);
       toast.error("Failed to add platform", {
         position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
       });
     } finally {
       setIsAddingPlatformLoading(false);
@@ -326,8 +398,9 @@ const ProfileHeader = () => {
 
   const handleDeletePlatform = async (platformName: string) => {
     try {
+
       const platformToDelete = employee.custom_platforms.find(
-        (platform) => platform.platform_name === platformName
+        (platform) => platform.name === platformName
       );
       
       if (!platformToDelete) return;
@@ -335,8 +408,9 @@ const ProfileHeader = () => {
       setProcessingPlatform(platformToDelete.name);
 
       const updatedPlatforms = employee.custom_platforms.filter(
-        (platform) => platform.platform_name !== platformName
+        (platform) => platform.name !== platformName
       );
+      console.log("updated platforms are: ",updatedPlatforms)
 
       const response = await fetch(`${BASE_URL}user.set_employee_details`, {
         method: "POST",
@@ -358,11 +432,21 @@ const ProfileHeader = () => {
 
       toast.success("Platform deleted successfully", {
         position: "top-right",
+        style: {
+          background: "#D1F7C4",
+          border: "1px solid #9AE86B",
+          color: "#2B7724",
+        },
       });
     } catch (error) {
       console.error("Error deleting platform:", error);
       toast.error("Failed to delete platform", {
         position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
       });
     } finally {
       setProcessingPlatform(null);
@@ -492,7 +576,7 @@ const ProfileHeader = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleDeletePlatform(platform.platform_name)}
+                            onClick={() => handleDeletePlatform(platform.name)}
                             className="h-6 w-6 ml-1 text-red-500"
                             disabled={isAnyOperationInProgress}
                           >
@@ -612,6 +696,7 @@ const ProfileHeader = () => {
                 
                 <div className="grid grid-cols-1 gap-3">
                   {teamMembers.slice(0, 3).map((member, index) => (
+
                     <div key={member.name || index} className="text-sm border-b border-gray-200 pb-2 last:border-b-0 last:pb-0">
                       <div className="font-medium text-gray-800 truncate">{member.employee_name}</div>
                       <div className="text-gray-500 text-xs truncate">{member.designation}</div>
@@ -681,7 +766,7 @@ const ProfileHeader = () => {
                 />
               </div>
               
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label htmlFor="designation">Designation</Label>
                 <Input
                   id="designation"
@@ -689,18 +774,7 @@ const ProfileHeader = () => {
                   onChange={(e) => setEditFormData(prev => ({ ...prev, designation: e.target.value }))}
                   disabled={isUpdatingProfile}
                 />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="date_of_joining">Date of Joining</Label>
-                <Input
-                  id="date_of_joining"
-                  type="date"
-                  value={editFormData.date_of_joining}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, date_of_joining: e.target.value }))}
-                  disabled={isUpdatingProfile}
-                />
-              </div>
+              </div> */}
               
               <div className="space-y-2">
                 <Label htmlFor="company_email">Company Email</Label>

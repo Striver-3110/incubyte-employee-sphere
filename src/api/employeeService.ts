@@ -240,7 +240,7 @@ export const fetchEmployeeDetails = async () => {
 
     const data = await response.json();
 
-    // console.log('Response:', data);
+    console.log('Response:', data);
     if (!data.message) {
       throw new Error('Invalid employee data received');
     }
@@ -728,7 +728,7 @@ export const fetchAllEmployees = async (): Promise<Employee[]> => {
 
 export const fetchFeedbackTemplates = async (): Promise<FeedbackTemplate[]> => {
   try {
-    const response = await fetch(`${BASE_URL}user.get_feedback_templat_list`, {
+    const response = await fetch(`${BASE_URL}user.get_feedback_template_list`, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -739,6 +739,7 @@ export const fetchFeedbackTemplates = async (): Promise<FeedbackTemplate[]> => {
     }
 
     const data = await response.json();
+    console.log("Feedback Templates are:",data)
     return data.message || [];
   } catch (error) {
     console.error('Error fetching feedback templates:', error);
@@ -752,13 +753,18 @@ export const fetchFeedbackTemplates = async (): Promise<FeedbackTemplate[]> => {
   }
 };
 
+
 export const sendFeedbackForm = async (initiator: string, recipients: string[], template: string) => {
   try {
-    const response = await fetch(`${BASE_URL}user.send_feedback_form`, {
+    const response = await fetch(`${"/api/method/incubyte_customizations.overrides."}employee.send_feedback_form`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify([initiator, recipients, template]),
+      body: JSON.stringify({
+        employee: initiator,
+        reviewers: recipients,
+        template: template
+      }),
     });
 
     if (!response.ok) {
@@ -766,6 +772,8 @@ export const sendFeedbackForm = async (initiator: string, recipients: string[], 
     }
 
     const data = await response.json();
+
+    // window.location.reload()
     return data.message;
   } catch (error) {
     console.error('Error sending feedback form:', error);

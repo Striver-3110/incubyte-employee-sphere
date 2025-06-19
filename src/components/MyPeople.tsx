@@ -10,9 +10,9 @@ interface PeopleItemProps {
 }
 
 const PeopleItem = ({ label, value }: PeopleItemProps) => (
-  <div className="flex items-center gap-2">
-    <span className="text-sm font-semibold text-gray-800">{label}:</span>
-    <span className="text-sm text-gray-800">{value || "—"}</span>
+  <div className="flex  items-center gap-2">
+    <span className="text-md font-semibold text-gray-800">{label}:</span>
+    <span className="text-md text-gray-800">{value || "—"}</span>
   </div>
 );
 

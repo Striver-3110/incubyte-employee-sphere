@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Edit, Trash, Calendar as CalendarIcon, ExternalLink, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -58,6 +59,8 @@ const SharedLearnings = () => {
   const [editingLearning, setEditingLearning] = useState<SharedLearning | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCustomEventType, setShowCustomEventType] = useState(false);
+  const [myLearningsFetched, setMyLearningsFetched] = useState(false);
+  const [allLearningsFetched, setAllLearningsFetched] = useState(false);
 
   const form = useForm<SharedLearningFormData>();
   const watchEventType = form.watch("event_type");
@@ -76,7 +79,7 @@ const SharedLearnings = () => {
     
     setIsLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}incubyte_ui.api.achievements.get_employee_achievements`, {
+      const response = await fetch(`${BASE_URL}achievements.get_employee_achievements`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -86,13 +89,20 @@ const SharedLearnings = () => {
       const data = await response.json();
       if (data.message?.status === "success") {
         setMyLearnings(data.message.achievements || []);
-        toast.success("Your shared learnings loaded successfully");
+        setMyLearningsFetched(true);
       } else {
         throw new Error(data.message?.message || "Failed to fetch learnings");
       }
     } catch (error) {
       console.error("Error fetching my learnings:", error);
-      toast.error("Failed to fetch your shared learnings");
+      toast.error("Failed to fetch your shared learnings", {
+        position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
+      });
     } finally {
       setIsLoading(false);
     }
@@ -101,7 +111,7 @@ const SharedLearnings = () => {
   const fetchAllLearnings = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}incubyte_ui.api.achievements.get_all_achievements`, {
+      const response = await fetch(`${BASE_URL}achievements.get_all_achievements`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -110,25 +120,32 @@ const SharedLearnings = () => {
       const data = await response.json();
       if (data.message?.status === "success") {
         setAllLearnings(data.message.achievements || []);
-        toast.success("All shared learnings loaded successfully");
+        setAllLearningsFetched(true);
       } else {
         throw new Error(data.message?.message || "Failed to fetch learnings");
       }
     } catch (error) {
       console.error("Error fetching all learnings:", error);
-      toast.error("Failed to fetch all shared learnings");
+      toast.error("Failed to fetch all shared learnings", {
+        position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (activeTab === "mine") {
+    if (activeTab === "mine" && !myLearningsFetched && employee?.name) {
       fetchMyLearnings();
-    } else {
+    } else if (activeTab === "all" && !allLearningsFetched) {
       fetchAllLearnings();
     }
-  }, [activeTab, employee?.name]);
+  }, [activeTab, employee?.name, myLearningsFetched, allLearningsFetched]);
 
   const onSubmit = async (data: SharedLearningFormData) => {
     if (!employee?.name) return;
@@ -147,14 +164,14 @@ const SharedLearnings = () => {
 
       let response;
       if (editingLearning) {
-        response = await fetch(`${BASE_URL}incubyte_ui.api.achievements.edit_achievement`, {
+        response = await fetch(`${BASE_URL}achievements.edit_achievement`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({ name: editingLearning.name, ...payload }),
         });
       } else {
-        response = await fetch(`${BASE_URL}incubyte_ui.api.achievements.push_achievement`, {
+        response = await fetch(`${BASE_URL}achievements.push_achievement`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -164,19 +181,40 @@ const SharedLearnings = () => {
 
       const result = await response.json();
       if (result.message?.status === "success") {
-        toast.success(editingLearning ? "Shared learning updated successfully" : "Shared learning added successfully");
+        toast.success(editingLearning ? "Shared learning updated successfully" : "Shared learning added successfully", {
+          position: "top-right",
+          style: {
+            background: "#D1F7C4",
+            border: "1px solid #9AE86B",
+            color: "#2B7724",
+          },
+        });
         setIsDialogOpen(false);
         setEditingLearning(null);
         form.reset();
         setShowCustomEventType(false);
-        fetchMyLearnings();
-        if (activeTab === "all") fetchAllLearnings();
+        // Reset flags to force data refresh
+        setMyLearningsFetched(false);
+        setAllLearningsFetched(false);
+        // Fetch the current tab's data
+        if (activeTab === "mine") {
+          fetchMyLearnings();
+        } else {
+          fetchAllLearnings();
+        }
       } else {
         throw new Error(result.message?.message || "Operation failed");
       }
     } catch (error) {
       console.error("Error saving learning:", error);
-      toast.error("Failed to save shared learning");
+      toast.error("Failed to save shared learning", {
+        position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -185,7 +223,7 @@ const SharedLearnings = () => {
   const handleDelete = async (name: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}incubyte_ui.api.achievements.delete_achievement`, {
+      const response = await fetch(`${BASE_URL}achievements.delete_achievement`, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -194,15 +232,36 @@ const SharedLearnings = () => {
 
       const result = await response.json();
       if (result.message?.status === "success") {
-        toast.success("Shared learning deleted successfully");
-        fetchMyLearnings();
-        if (activeTab === "all") fetchAllLearnings();
+        toast.success("Shared learning deleted successfully", {
+          position: "top-right",
+          style: {
+            background: "#D1F7C4",
+            border: "1px solid #9AE86B",
+            color: "#2B7724",
+          },
+        });
+        // Reset flags to force data refresh
+        setMyLearningsFetched(false);
+        setAllLearningsFetched(false);
+        // Fetch the current tab's data
+        if (activeTab === "mine") {
+          fetchMyLearnings();
+        } else {
+          fetchAllLearnings();
+        }
       } else {
         throw new Error(result.message?.message || "Delete failed");
       }
     } catch (error) {
       console.error("Error deleting learning:", error);
-      toast.error("Failed to delete shared learning");
+      toast.error("Failed to delete shared learning", {
+        position: "top-right",
+        style: {
+          background: "#F8D7DA",
+          border: "1px solid #F5C6CB",
+          color: "#721C24",
+        },
+      });
     } finally {
       setIsLoading(false);
     }
@@ -289,6 +348,37 @@ const SharedLearnings = () => {
         )}
       </CardContent>
     </Card>
+  );
+
+  const SharedLearningsSkeleton = () => (
+    <div className="grid gap-4">
+      {[...Array(3)].map((_, index) => (
+        <Card key={index} className="shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex justify-between items-start">
+              <div className="space-y-2">
+                <Skeleton className="h-5 w-24" />
+                <Skeleton className="h-4 w-20" />
+                {activeTab === "all" && (
+                  <Skeleton className="h-4 w-16" />
+                )}
+              </div>
+              {activeTab === "mine" && (
+                <div className="flex gap-2">
+                  <Skeleton className="h-8 w-8" />
+                  <Skeleton className="h-8 w-8" />
+                </div>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-4 w-full mb-2" />
+            <Skeleton className="h-4 w-3/4 mb-3" />
+            <Skeleton className="h-4 w-24" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   );
 
   const EmptyState = ({ message }: { message: string }) => (
@@ -475,10 +565,7 @@ const SharedLearnings = () => {
 
         <TabsContent value="mine" className="mt-6">
           {isLoading ? (
-            <div className="text-center py-8 flex items-center justify-center">
-              <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-              Loading...
-            </div>
+            <SharedLearningsSkeleton />
           ) : myLearnings.length === 0 ? (
             <EmptyState message="You haven't shared any learnings yet. Click the + Add button to get started." />
           ) : (
@@ -490,10 +577,7 @@ const SharedLearnings = () => {
 
         <TabsContent value="all" className="mt-6">
           {isLoading ? (
-            <div className="text-center py-8 flex items-center justify-center">
-              <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-              Loading...
-            </div>
+            <SharedLearningsSkeleton />
           ) : allLearnings.length === 0 ? (
             <EmptyState message="No shared learnings have been posted yet." />
           ) : (

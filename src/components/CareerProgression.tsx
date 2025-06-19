@@ -3,7 +3,6 @@ import { useEmployeeDetails } from "@/api/employeeService";
 import { formatDate } from "@/utils/dateUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Define types for our entries
 type JoiningEntry = {
   title: string;
   role: string;
@@ -53,7 +52,7 @@ const CareerProgression = () => {
   
   // Sort by start date (oldest first for chronological order)
   const sortedEntries = allEntries.sort((a, b) => {
-    return new Date(a.expected_start_date).getTime() - new Date(b.expected_start_date).getTime();
+    return new Date(b.expected_start_date).getTime() - new Date(a.expected_start_date).getTime();
   });
 
   // Type guard to check if entry is joining entry

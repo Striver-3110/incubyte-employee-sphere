@@ -36,14 +36,14 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto p-4">
         <ProfileHeader />
         
-        <div className="mt-6">
+        <div className="mt-6 ">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="w-full justify-start overflow-x-auto">
               <TabsTrigger value="about">About</TabsTrigger>
-              <TabsTrigger value="career">Career</TabsTrigger>
+              {/* <TabsTrigger value="career">Career</TabsTrigger> */}
               <TabsTrigger value="feedback">Feedback</TabsTrigger>
               <TabsTrigger value="calibration">Calibration</TabsTrigger>
               {hasBusinessAccess && (
@@ -56,6 +56,7 @@ const Index = () => {
               <AboutSection />
               <MyPeople />
               <SkillsMatrix />
+
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">My Career at Incubyte</h2>
                 <CareerProgression />
