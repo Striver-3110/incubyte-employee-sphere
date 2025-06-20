@@ -60,7 +60,7 @@ const SharedLearnings = () => {
     setIsLoading(true);
     try {
       const response = await fetch(`${BASE_URL}achievements.get_all_achievements`, {
-        method: "GET", 
+        method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
@@ -99,7 +99,7 @@ const SharedLearnings = () => {
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(learning => 
+      filtered = filtered.filter(learning =>
         learning.event_description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         learning.event_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
         learning.employee?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -171,7 +171,7 @@ const SharedLearnings = () => {
     setIsSubmitting(true);
     try {
       const eventType = data.event_type === "Other" ? data.custom_event_type : data.event_type;
-      
+
       const payload = {
         employee: employee.name,
         event_type: eventType,
@@ -305,7 +305,7 @@ const SharedLearnings = () => {
             onDelete={handleDelete}
             isLoading={isLoading}
           />
-          
+
           {hasMoreItems && (
             <div className="flex justify-center mt-6">
               <Button
@@ -323,21 +323,25 @@ const SharedLearnings = () => {
                   'Show More'
                 )}
               </Button>
+
             </div>
           )}
+          <div className="flex justify-end mt-6">
+            <Button
+              onClick={handleAddNew}
+              size="lg"
+              disabled={isLoading || isSubmitting}
+              className="rounded-md hover:shadow-xl transition-all duration-200"
+            >
+              <Plus className="h-4" />
+              Add
+            </Button>
+          </div>
         </>
       )}
 
-      {/* Floating Add Button - Positioned at bottom right */}
-      <Button
-        onClick={handleAddNew}
-        size="lg"
-        disabled={isLoading || isSubmitting}
-        className="fixed bottom-6 right-6 rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all duration-200 z-50 bg-blue-600 hover:bg-blue-700"
-        title="Add New Shared Learning"
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
+      {/* Floating Add Button */}
+
 
       {/* Modals */}
       <LearningViewModal
