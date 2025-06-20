@@ -12,7 +12,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Edit, Trash, Calendar as CalendarIcon, ExternalLink, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -24,6 +23,7 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 interface SharedLearning {
   name: string;
   employee?: string;
+  employee_name?: string;
   event_type: string;
   event_date: string;
   event_description: string;
@@ -305,9 +305,9 @@ const SharedLearnings = () => {
             <div className="text-sm text-gray-500">
               {format(new Date(learning.event_date), "MMM dd, yyyy")}
             </div>
-            {activeTab === "all" && learning.employee && (
+            {activeTab === "all" && (learning.employee_name || learning.employee) && (
               <div className="text-sm font-medium text-blue-600">
-                by {learning.employee}
+                by {learning.employee_name || learning.employee}
               </div>
             )}
           </div>
@@ -350,37 +350,6 @@ const SharedLearnings = () => {
     </Card>
   );
 
-  const SharedLearningsSkeleton = () => (
-    <div className="grid gap-4">
-      {[...Array(3)].map((_, index) => (
-        <Card key={index} className="shadow-sm">
-          <CardHeader className="pb-3">
-            <div className="flex justify-between items-start">
-              <div className="space-y-2">
-                <Skeleton className="h-5 w-24" />
-                <Skeleton className="h-4 w-20" />
-                {activeTab === "all" && (
-                  <Skeleton className="h-4 w-16" />
-                )}
-              </div>
-              {activeTab === "mine" && (
-                <div className="flex gap-2">
-                  <Skeleton className="h-8 w-8" />
-                  <Skeleton className="h-8 w-8" />
-                </div>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-4 w-full mb-2" />
-            <Skeleton className="h-4 w-3/4 mb-3" />
-            <Skeleton className="h-4 w-24" />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-
   const EmptyState = ({ message }: { message: string }) => (
     <div className="text-center py-12 text-gray-500">
       <div className="text-lg font-medium mb-2">No shared learnings yet</div>
@@ -389,7 +358,13 @@ const SharedLearnings = () => {
   );
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
+    <div className="bg-white p-6 rounded-lg shadow-sm relative">
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-lg z-10">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        </div>
+      )}
+      
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold text-gray-800">Shared Learnings</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -564,9 +539,7 @@ const SharedLearnings = () => {
         </TabsList>
 
         <TabsContent value="mine" className="mt-6">
-          {isLoading ? (
-            <SharedLearningsSkeleton />
-          ) : myLearnings.length === 0 ? (
+          {myLearnings.length === 0 ? (
             <EmptyState message="You haven't shared any learnings yet. Click the + Add button to get started." />
           ) : (
             <div className="grid gap-4">
@@ -576,9 +549,7 @@ const SharedLearnings = () => {
         </TabsContent>
 
         <TabsContent value="all" className="mt-6">
-          {isLoading ? (
-            <SharedLearningsSkeleton />
-          ) : allLearnings.length === 0 ? (
+          {allLearnings.length === 0 ? (
             <EmptyState message="No shared learnings have been posted yet." />
           ) : (
             <div className="grid gap-4">
