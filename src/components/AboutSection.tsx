@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { useEmployeeDetails, fetchEmployeeDetails } from "@/api/employeeService";
+import { useEmployee } from "@/contexts/EmployeeContext";
+import { fetchEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Edit, Check, X, Loader2, ChevronDown, ChevronUp } from "lucide-react";
@@ -12,7 +13,7 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 const CHARACTER_LIMIT = 150;
 
 const AboutSection = () => {
-  const { employee, loading, error, setEmployee } = useEmployeeDetails();
+  const { employee, loading, error, setEmployee } = useEmployee();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);

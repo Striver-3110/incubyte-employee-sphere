@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useEmployeeDetails } from "@/api/employeeService";
+import { useEmployee } from "@/contexts/EmployeeContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash, Loader2 } from "lucide-react";
@@ -24,7 +24,7 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 const proficiencyLevels = ["Expert", "Intermediate", "Beginner", "Learning"];
 
 const SkillsMatrix = () => {
-  const { employee, loading, setEmployee } = useEmployeeDetails();
+  const { employee, loading, setEmployee } = useEmployee();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedProficiency, setSelectedProficiency] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -50,7 +50,9 @@ const SkillsMatrix = () => {
           credentials: "include",
         });
         const data = await response.json();
-        setAvailableSkills(data.message.map((item: { skill_name: string }) => item.skill_name));
+        // Add safety check to ensure data.message is an array
+        const skills = Array.isArray(data.message) ? data.message : [];
+        setAvailableSkills(skills.map((item: { skill_name: string }) => item.skill_name));
       } catch (error) {
         console.error("Error fetching available skills:", error);
         toast.error("Failed to fetch available skills.", {
@@ -334,7 +336,7 @@ const SkillsMatrix = () => {
             <h3 className="text-md font-semibold text-gray-800 mb-3">{level}</h3>
             {groupedSkills[level]?.length > 0 ? (
               <div className="flex flex-wrap gap-2">
-                {groupedSkills[level].map((skill) => (
+                {(groupedSkills[level] || []).map((skill) => (
                   <div
                     key={skill.name}
                     className="flex items-center bg-blue-50 p-2 rounded-md border border-blue-200 shadow-sm space-x-2"

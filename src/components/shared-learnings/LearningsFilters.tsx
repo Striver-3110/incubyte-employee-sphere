@@ -20,6 +20,7 @@ interface LearningsFiltersProps {
   hasActiveFilters: boolean;
   resultsCount: number;
   totalCount: number;
+  isDisabled?: boolean;
 }
 
 const LearningsFilters = ({
@@ -37,6 +38,7 @@ const LearningsFilters = ({
   hasActiveFilters,
   resultsCount,
   totalCount,
+  isDisabled = false,
 }: LearningsFiltersProps) => {
   return (
     <div className="bg-gray-50 p-4 rounded-lg space-y-4">
@@ -49,11 +51,12 @@ const LearningsFilters = ({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
+            disabled={isDisabled}
           />
         </div>
 
         {/* Event Type Filter */}
-        <Select value={selectedEventType} onValueChange={setSelectedEventType}>
+        <Select value={selectedEventType} onValueChange={setSelectedEventType} disabled={isDisabled}>
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Event Type" />
           </SelectTrigger>
@@ -68,7 +71,7 @@ const LearningsFilters = ({
         </Select>
 
         {/* Employee Filter */}
-        <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+        <Select value={selectedEmployee} onValueChange={setSelectedEmployee} disabled={isDisabled}>
           <SelectTrigger className="w-full sm:w-48">
             <SelectValue placeholder="Employee" />
           </SelectTrigger>
@@ -91,6 +94,7 @@ const LearningsFilters = ({
               checked={showMyLearningsOnly}
               onChange={(e) => setShowMyLearningsOnly(e.target.checked)}
               className="rounded"
+              disabled={isDisabled}
             />
             My learnings only
           </label>
@@ -102,6 +106,7 @@ const LearningsFilters = ({
             size="sm"
             onClick={onClearFilters}
             className="self-start sm:self-auto"
+            disabled={isDisabled}
           >
             <X className="h-4 w-4 mr-1" />
             Clear Filters

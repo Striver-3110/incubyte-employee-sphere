@@ -30,16 +30,21 @@ interface LearningsTableProps {
   onEdit: (learning: SharedLearning) => void;
   onDelete: (name: string) => void;
   isLoading: boolean;
+  isDisabled?: boolean;
 }
 
 const LearningsTable = ({ 
-  learnings, 
+  learnings = [], 
   currentEmployee, 
   onView, 
   onEdit, 
   onDelete, 
-  isLoading 
+  isLoading,
+  isDisabled = false
 }: LearningsTableProps) => {
+  // Add safety check to ensure learnings is always an array
+  const safeLearnings = Array.isArray(learnings) ? learnings : [];
+  
   const canEditDelete = (learning: SharedLearning) => {
     return currentEmployee === learning.employee;
   };
@@ -56,14 +61,14 @@ const LearningsTable = ({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {learnings.length === 0 ? (
+          {safeLearnings.length === 0 ? (
             <TableRow>
               <TableCell colSpan={4} className="text-center py-8 text-gray-500">
                 No shared learnings found
               </TableCell>
             </TableRow>
           ) : (
-            learnings.map((learning) => (
+            safeLearnings.map((learning) => (
               <TableRow key={learning.name} className="hover:bg-gray-50">
                 <TableCell>
                   <Badge variant="secondary" className="text-xs font-medium">
@@ -84,6 +89,7 @@ const LearningsTable = ({
                       onClick={() => onView(learning)}
                       className="h-8 w-8 p-0"
                       title="View details"
+                      disabled={isDisabled}
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -93,7 +99,7 @@ const LearningsTable = ({
                           variant="ghost"
                           size="sm"
                           onClick={() => onEdit(learning)}
-                          disabled={isLoading}
+                          disabled={isDisabled}
                           className="h-8 w-8 p-0"
                           title="Edit"
                         >
@@ -103,7 +109,7 @@ const LearningsTable = ({
                           variant="ghost"
                           size="sm"
                           onClick={() => onDelete(learning.name)}
-                          disabled={isLoading}
+                          disabled={isDisabled}
                           className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
                           title="Delete"
                         >

@@ -39,8 +39,6 @@ export const roleCategories = {
     "Operation Head",
     "Operations Manager",
     "Accountant",
-    "Talent Acquisition Specialist",
-    "People Success Specialist" 
   ],
   "Internship": [
     "Intern"
@@ -75,4 +73,12 @@ export const shouldShowTechAdvisor = (designation: string | undefined): boolean 
   
   const category = getRoleCategory(designation);
   return category !== "PSM" && category !== "Business" && designation !== "Software Craftsperson - Tech Advisor";
+};
+
+// Check if the role should show calibration tab
+export const shouldShowCalibrationTab = (designation: string | undefined): boolean => {
+  if (!designation) return false;
+  
+  // Hide calibration tab if user has "Calibration Dashboard Access"
+  return !roleCategories["Calibration Dashboard Access"].includes(designation);
 };

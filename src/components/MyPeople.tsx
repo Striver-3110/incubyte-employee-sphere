@@ -1,4 +1,4 @@
-import { useEmployeeDetails } from "@/api/employeeService";
+import { useEmployee } from "@/contexts/EmployeeContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { shouldShowTechAdvisor, isTechnicalRole } from "@/utils/roleUtils";
 
@@ -17,7 +17,7 @@ const PeopleItem = ({ label, value }: PeopleItemProps) => (
 );
 
 const MyPeople = () => {
-  const { employee, loading: employeeLoading } = useEmployeeDetails();
+  const { employee, loading: employeeLoading } = useEmployee();
 
   // Check if the employee is in a technical role based on role utils
   const isTechnical = employee ? isTechnicalRole(employee.designation) : false;

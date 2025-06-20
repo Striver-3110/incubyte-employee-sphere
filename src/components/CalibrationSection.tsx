@@ -1,4 +1,5 @@
-import { useCalibrationData, useCalibrationDataForAllEmployees, useEmployeeDetails } from "@/api/employeeService";
+import { useCalibrationData, useCalibrationDataForAllEmployees } from "@/api/employeeService";
+import { useEmployee } from "@/contexts/EmployeeContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -29,7 +30,7 @@ const CalibrationSection = ({
 }: CalibrationSectionProps) => {
   const { calibration, loading, error } = useCalibrationData();
   const { calibrationDataForAllEmployees } = useCalibrationDataForAllEmployees();
-  const { employee } = useEmployeeDetails();
+  const { employee } = useEmployee();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [chartView, setChartView] = useState<'table' | 'radar' | 'bar'>('table');
   const [selfEvaluationData, setSelfEvaluationData] = useState<any>(null);
@@ -81,7 +82,7 @@ const CalibrationSection = ({
   if (isLoading) {
     return <CalibrationSectionSkeleton />;
   }
-
+  console.log("checking calibration data:", calibrationData);
   // If not a business role and no specific employee calibration is passed, don't show
   if (calibrationData === null) {
     return (
@@ -443,7 +444,7 @@ const CalibrationSection = ({
             </div>
           )}
         </div>
-      )}
+      )} 
 
       {/* Overall Level Section */}
       {overallLevel && (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useEmployeeDetails } from "@/api/employeeService";
+import { useEmployee } from "@/contexts/EmployeeContext";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -8,7 +8,6 @@ import LearningsTable from "./shared-learnings/LearningsTable";
 import LearningsFilters from "./shared-learnings/LearningsFilters";
 import LearningViewModal from "./shared-learnings/LearningViewModal";
 import LearningForm from "./shared-learnings/LearningForm";
-import LearningsTableSkeleton from "./shared-learnings/LearningsTableSkeleton";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -33,7 +32,7 @@ interface SharedLearningFormData {
 const ITEMS_PER_PAGE = 10;
 
 const SharedLearnings = () => {
-  const { employee } = useEmployeeDetails();
+  const { employee } = useEmployee();
   const [allLearnings, setAllLearnings] = useState<SharedLearning[]>([]);
   const [filteredLearnings, setFilteredLearnings] = useState<SharedLearning[]>([]);
   const [displayedLearnings, setDisplayedLearnings] = useState<SharedLearning[]>([]);
@@ -53,14 +52,17 @@ const SharedLearnings = () => {
   const [showMyLearningsOnly, setShowMyLearningsOnly] = useState(false);
 
   // Get unique values for filters
-  const uniqueEventTypes = Array.from(new Set(allLearnings.map(l => l.event_type))).sort();
-  const uniqueEmployees = Array.from(new Set(allLearnings.map(l => l.employee).filter(Boolean))).sort();
+  const uniqueEventTypes = Array.from(new Set((allLearnings || []).map(l => l.event_type))).sort();
+  const uniqueEmployees = Array.from(new Set((allLearnings || []).map(l => l.employee_name).filter(Boolean))).sort();
+
+  // Check if any operation is in progress
+  const isAnyOperationInProgress = isLoading || isSubmitting;
 
   const fetchAllLearnings = async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`${BASE_URL}achievements.get_all_achievements`, {
-        method: "GET", 
+        method: "GET",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
@@ -99,10 +101,10 @@ const SharedLearnings = () => {
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(learning => 
+      filtered = filtered.filter(learning =>
         learning.event_description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         learning.event_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        learning.employee?.toLowerCase().includes(searchTerm.toLowerCase())
+        learning.employee_name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -113,7 +115,7 @@ const SharedLearnings = () => {
 
     // Employee filter
     if (selectedEmployee !== "all") {
-      filtered = filtered.filter(learning => learning.employee === selectedEmployee);
+      filtered = filtered.filter(learning => learning.employee_name === selectedEmployee);
     }
 
     // My learnings only filter
@@ -148,7 +150,7 @@ const SharedLearnings = () => {
     setShowMyLearningsOnly(false);
   };
 
-  const hasActiveFilters = searchTerm || selectedEventType !== "all" || selectedEmployee !== "all" || showMyLearningsOnly;
+  const hasActiveFilters = !!(searchTerm || selectedEventType !== "all" || selectedEmployee !== "all" || showMyLearningsOnly);
 
   const handleView = (learning: SharedLearning) => {
     setViewingLearning(learning);
@@ -171,7 +173,7 @@ const SharedLearnings = () => {
     setIsSubmitting(true);
     try {
       const eventType = data.event_type === "Other" ? data.custom_event_type : data.event_type;
-      
+
       const payload = {
         employee: employee.name,
         event_type: eventType,
@@ -209,8 +211,8 @@ const SharedLearnings = () => {
         });
         setIsDialogOpen(false);
         setEditingLearning(null);
+        // Only trigger one reload by setting dataFetched to false
         setDataFetched(false);
-        fetchAllLearnings();
       } else {
         throw new Error(result.message?.message || "Operation failed");
       }
@@ -249,8 +251,8 @@ const SharedLearnings = () => {
             color: "#2B7724",
           },
         });
+        // Only trigger one reload by setting dataFetched to false
         setDataFetched(false);
-        fetchAllLearnings();
       } else {
         throw new Error(result.message?.message || "Delete failed");
       }
@@ -271,6 +273,20 @@ const SharedLearnings = () => {
 
   return (
     <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm relative pb-20">
+      {/* Loading overlay for general loading */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/70 flex items-center justify-center rounded-lg z-10">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+        </div>
+      )}
+      
+      {/* Loading overlay for API operations (only for submitting, not general loading) */}
+      {isSubmitting && (
+        <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10 rounded-lg">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        </div>
+      )}
+      
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-6">Shared Learnings</h2>
 
@@ -289,55 +305,52 @@ const SharedLearnings = () => {
           hasActiveFilters={hasActiveFilters}
           resultsCount={displayedLearnings.length}
           totalCount={filteredLearnings.length}
+          isDisabled={isAnyOperationInProgress}
         />
       </div>
 
       {/* Results */}
-      {isLoading ? (
-        <LearningsTableSkeleton />
-      ) : (
-        <>
-          <LearningsTable
-            learnings={displayedLearnings}
-            currentEmployee={employee?.name}
-            onView={handleView}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            isLoading={isLoading}
-          />
-          
-          {hasMoreItems && (
-            <div className="flex justify-center mt-6">
-              <Button
-                variant="outline"
-                onClick={handleShowMore}
-                disabled={isLoading}
-                className="px-6"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  'Show More'
-                )}
-              </Button>
-            </div>
-          )}
-        </>
-      )}
+      <LearningsTable
+        learnings={displayedLearnings}
+        currentEmployee={employee?.name}
+        onView={handleView}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        isLoading={isLoading}
+        isDisabled={isAnyOperationInProgress}
+      />
 
-      {/* Floating Add Button - Positioned at bottom right */}
-      <Button
-        onClick={handleAddNew}
-        size="lg"
-        disabled={isLoading || isSubmitting}
-        className="fixed bottom-6 right-6 rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all duration-200 z-50 bg-blue-600 hover:bg-blue-700"
-        title="Add New Shared Learning"
-      >
-        <Plus className="h-6 w-6" />
-      </Button>
+      {hasMoreItems && (
+        <div className="flex justify-center mt-6">
+          <Button
+            variant="outline"
+            onClick={handleShowMore}
+            disabled={isLoading}
+            className="px-6"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              'Show More'
+            )}
+          </Button>
+        </div>
+      )}
+      
+      <div className="flex justify-end mt-6">
+        <Button
+          onClick={handleAddNew}
+          size="lg"
+          disabled={isAnyOperationInProgress}
+          className="rounded-md hover:shadow-xl transition-all duration-200"
+        >
+          <Plus className="h-4" />
+          Add
+        </Button>
+      </div>
 
       {/* Modals */}
       <LearningViewModal

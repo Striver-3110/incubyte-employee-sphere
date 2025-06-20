@@ -1,4 +1,5 @@
-import { useEmployeeDetails, useTeamEmployees } from "@/api/employeeService";
+import { useEmployee } from "@/contexts/EmployeeContext";
+import { useTeamEmployees } from "@/api/employeeService";
 import { calculateTenure, formatDate } from "@/utils/dateUtils";
 import { 
   Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, 
@@ -46,7 +47,7 @@ const socialPlatforms = [
 ];
 
 const ProfileHeader = () => {
-  const { employee, setEmployee, loading } = useEmployeeDetails();
+  const { employee, setEmployee, loading } = useEmployee();
   const { employees: teamMembers } = useTeamEmployees();
   const [editingSocial, setEditingSocial] = useState<string | null>(null);
   const [newUrl, setNewUrl] = useState("");
@@ -92,8 +93,32 @@ const ProfileHeader = () => {
         return <Github className="h-5 w-5" />;
       case "twitter":
         return <Twitter className="h-5 w-5" />;
+      case "personal website":
+      case "website":
+        return <Globe className="h-5 w-5" />;
+      case "stack overflow":
+      case "stackoverflow":
+        return <FileCode className="h-5 w-5" />;
+      case "medium":
+        return <BookOpen className="h-5 w-5" />;
+      case "dev community":
+      case "dev":
+        return <Code className="h-5 w-5" />;
+      case "hashnode":
+        return <Database className="h-5 w-5" />;
+      case "youtube":
+        return <Youtube className="h-5 w-5" />;
+      case "twitch":
+        return <Twitch className="h-5 w-5" />;
+      case "discord":
+        return <MessageSquare className="h-5 w-5" />;
+      case "kaggle":
+        return <Server className="h-5 w-5" />;
+      case "buy me a coffee":
+      case "buymeacoffee":
+        return <Coffee className="h-5 w-5" />;
       default:
-        return null;
+        return <Globe className="h-5 w-5" />; // Default icon for unknown platforms
     }
   };
 
@@ -255,7 +280,7 @@ const ProfileHeader = () => {
     try {
       setProcessingPlatform(platformId);
 
-      const updatedPlatforms = employee.custom_platforms.map((platform) =>
+      const updatedPlatforms = (employee.custom_platforms || []).map((platform) =>
         platform.name === platformId ? { ...platform, url: trimmedUrl } : platform
       );
 
@@ -306,7 +331,7 @@ const ProfileHeader = () => {
   };
 
   const getAvailablePlatforms = () => {
-    const addedPlatforms = employee.custom_platforms.map((p) =>
+    const addedPlatforms = (employee.custom_platforms || []).map((p) =>
       p.platform_name.toLowerCase()
     );
     return socialPlatforms.filter((platform) => !addedPlatforms.includes(platform.name.toLowerCase()));
@@ -524,7 +549,7 @@ const ProfileHeader = () => {
 
                 {/* Social Links */}
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2 mb-4">
-                  {employee.custom_platforms.map((platform) => (
+                  {(employee.custom_platforms || []).map((platform) => (
                     <div key={platform.name} className="flex items-center">
                       {editingSocial === platform.name ? (
                         <div className="flex items-center space-x-2">
@@ -695,7 +720,7 @@ const ProfileHeader = () => {
                 </div>
                 
                 <div className="grid grid-cols-1 gap-3">
-                  {teamMembers.slice(0, 3).map((member, index) => (
+                  {(teamMembers || []).slice(0, 3).map((member, index) => (
 
                     <div key={member.name || index} className="text-sm border-b border-gray-200 pb-2 last:border-b-0 last:pb-0">
                       <div className="font-medium text-gray-800 truncate">{member.employee_name}</div>

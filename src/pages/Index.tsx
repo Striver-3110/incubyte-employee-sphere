@@ -13,18 +13,19 @@ import CalibrationSection from "@/components/CalibrationSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CalibrationDashboard from "@/components/CalibrationDashboard";
 import Contributions from "./Contributions";
-import { useEmployeeDetails } from "@/api/employeeService";
-import { roleCategories } from "@/utils/roleUtils";
+import { useEmployee } from "@/contexts/EmployeeContext";
+import { roleCategories, shouldShowCalibrationTab } from "@/utils/roleUtils";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("about");
-  const { employee, loading } = useEmployeeDetails();
+  const { employee, loading } = useEmployee();
 
   // Check if user has business role access for calibration dashboard
   const userRole = employee?.designation || "";
   const hasBusinessAccess = roleCategories.Business.includes(userRole);
+  const showCalibrationTab = shouldShowCalibrationTab(userRole);
 
   if (loading) {
     return (
@@ -45,7 +46,9 @@ const Index = () => {
               <TabsTrigger value="about">About</TabsTrigger>
               {/* <TabsTrigger value="career">Career</TabsTrigger> */}
               <TabsTrigger value="feedback">Feedback</TabsTrigger>
-              <TabsTrigger value="calibration">Calibration</TabsTrigger>
+              {showCalibrationTab && (
+                <TabsTrigger value="calibration">Calibration</TabsTrigger>
+              )}
               {hasBusinessAccess && (
                 <TabsTrigger value="calibration-dashboard">Calibration Dashboard</TabsTrigger>
               )}
@@ -75,14 +78,16 @@ const Index = () => {
               <FeedbackSection />
             </TabsContent>
             
-            {/* Calibration Tab */}
-            <TabsContent value="calibration" className="mt-6">
-              <CalibrationSection 
-                employeeCalibration={''}
-                showPerformanceMatrix={false}
-                showSelfEvaluationUpload={true}
-              />
-            </TabsContent>
+            {/* Calibration Tab - Only show if user doesn't have dashboard access */}
+            {showCalibrationTab && (
+              <TabsContent value="calibration" className="mt-6">
+                <CalibrationSection 
+                  employeeCalibration={''}
+                  showPerformanceMatrix={false}
+                  showSelfEvaluationUpload={true}
+                />
+              </TabsContent>
+            )}
 
             {/* Calibration Dashboard Tab - Only for Business roles */}
             {hasBusinessAccess && (

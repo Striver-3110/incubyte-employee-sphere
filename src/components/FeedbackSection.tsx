@@ -19,6 +19,8 @@ interface Feedback {
   feedback_status?: string | null;
   additional_comments?: string | null;
   added_on?: string;
+  is_generic_feedback?: number | boolean | null;
+  private_feedback?: string | null;
 }
 
 interface FeedbackData {
@@ -62,10 +64,21 @@ const FeedbackSection = () => {
 
   const typedFeedbacks = feedbacks as FeedbackData;
 
-  const receivedFeedbacks = typedFeedbacks?.given_to_me || [];
+  const rawReceivedFeedbacks = typedFeedbacks?.given_to_me || [];
   const givenFeedbacks = typedFeedbacks?.given_by_me || [];
   const initiatedFeedbacks = typedFeedbacks?.initiated_by_me || [];
-  const pendingFeedbacks = typedFeedbacks?.pending_to_give || [];
+  const rawPendingFeedbacks = typedFeedbacks?.pending_to_give || [];
+
+  // Filter received feedbacks to show only completed ones (not pending)
+  const receivedFeedbacks = rawReceivedFeedbacks.filter(feedback => 
+    feedback.feedback_status === 'Completed'
+  );
+
+  // Filter pending feedbacks to include those with missing/null feedback_status as "Pending"
+  const pendingFeedbacks = rawPendingFeedbacks.map(feedback => ({
+    ...feedback,
+    feedback_status: feedback.feedback_status || "Pending"
+  }));
 
   // Filter given feedbacks to show only completed ones
   const completedGivenFeedbacks = givenFeedbacks.filter(feedback => 
@@ -112,6 +125,35 @@ const FeedbackSection = () => {
   const handlePendingFeedbackClick = (feedbackName: string) => {
     const url = `/app/employee-feedback-rag/${feedbackName}`;
     window.open(url, '_blank');
+  };
+
+  const handleReceivedFeedbackClick = (feedback: Feedback) => {
+    // Make clickable if is_generic_feedback is set and private_feedback is not set
+    const hasGenericFeedback = feedback.is_generic_feedback === 1 || feedback.is_generic_feedback === true;
+    const hasNoPrivateFeedback = !feedback.private_feedback || feedback.private_feedback === '';
+    
+    if (hasGenericFeedback && hasNoPrivateFeedback) {
+      const url = `/app/employee-feedback-rag/${feedback.name}`;
+      window.open(url, '_blank');
+    }
+  };
+
+  const isReceivedFeedbackClickable = (feedback: Feedback) => {
+    // Check if is_generic_feedback is set (1 or true) and private_feedback is not set (null, undefined, or empty)
+    const hasGenericFeedback = feedback.is_generic_feedback === 1 || feedback.is_generic_feedback === true;
+    const hasNoPrivateFeedback = !feedback.private_feedback || feedback.private_feedback === '';
+    const isClickable = hasGenericFeedback && hasNoPrivateFeedback;
+    
+    // Debug logging
+    console.log('Feedback clickability check:', {
+      name: feedback.name,
+      is_generic_feedback: feedback.is_generic_feedback,
+      private_feedback: feedback.private_feedback,
+      hasGenericFeedback,
+      hasNoPrivateFeedback,
+      isClickable
+    });
+    return isClickable;
   };
 
   return (
@@ -196,13 +238,13 @@ const FeedbackSection = () => {
                   <div>
                     <p className="text-sm text-gray-500">Status</p>
                     <span className={`px-2 py-1 text-xs rounded-full inline-block mt-1 ${
-                      viewFeedbackDialog.feedback_status === 'Pending' 
+                      (viewFeedbackDialog.feedback_status || "Pending") === 'Pending' 
                         ? 'bg-yellow-100 text-yellow-800'
-                        : viewFeedbackDialog.feedback_status === 'Completed'
+                        : (viewFeedbackDialog.feedback_status || "Pending") === 'Completed'
                         ? 'bg-green-100 text-green-800'
                         : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {viewFeedbackDialog.feedback_status || "Status Unknown"}
+                      {viewFeedbackDialog.feedback_status || "Pending"}
                     </span>
                   </div>
                   {viewFeedbackDialog.added_on && (
@@ -268,24 +310,42 @@ const FeedbackSection = () => {
           {receivedFeedbacks.length > 0 ? (
             <div className="space-y-4">
               {receivedFeedbacks.slice(0, receivedDisplayCount).map((feedback, index) => (
-                <div key={index} className="bg-gray-50 p-3 sm:p-4 rounded-md border">
+                <div 
+                  key={index} 
+                  className={`bg-gray-50 p-3 sm:p-4 rounded-md border ${
+                    isReceivedFeedbackClickable(feedback) 
+                      ? 'cursor-pointer hover:bg-gray-100 transition-colors' 
+                      : ''
+                  }`}
+                  onClick={() => isReceivedFeedbackClickable(feedback) && handleReceivedFeedbackClick(feedback)}
+                >
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
-                    <h3 className="font-medium text-gray-800 text-sm sm:text-base break-words">
-                      {feedback.name || "Feedback Request"}
-                    </h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-medium text-gray-800 text-sm sm:text-base break-words">
+                        {feedback.name || "Feedback Request"}
+                      </h3>
+                      {(feedback.is_generic_feedback === 1 || feedback.is_generic_feedback === true) && (
+                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                          Generic
+                        </Badge>
+                      )}
+                    </div>
                     <span className={`px-2 py-1 text-xs rounded-full self-start sm:self-auto flex-shrink-0 ${
-                      feedback.feedback_status === 'Pending' 
+                      (feedback.feedback_status || "Pending") === 'Pending' 
                         ? 'bg-yellow-100 text-yellow-800'
-                        : feedback.feedback_status === 'Completed'
+                        : (feedback.feedback_status || "Pending") === 'Completed'
                         ? 'bg-green-100 text-green-800'
                         : 'bg-gray-100 text-gray-800'
                     }`}>
-                      {feedback.feedback_status || "Status Unknown"}
+                      {feedback.feedback_status || "Pending"}
                     </span>
                   </div>
                   <div className="text-sm text-gray-600 space-y-1">
                     <p><strong>From:</strong> <span className="break-words">{feedback.reviewer_name}</span></p>
                     <p><strong>For:</strong> <span className="break-words">{feedback.employee_name}</span></p>
+                    {isReceivedFeedbackClickable(feedback) && (
+                      <p className="text-blue-600 text-xs mt-2">Click to view feedback</p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -327,9 +387,16 @@ const FeedbackSection = () => {
                 onClick={() => handlePendingFeedbackClick(feedback.name)}
                 className="bg-gray-50 p-3 sm:p-4 rounded-md border cursor-pointer">
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
-                    <h3 className="font-medium text-gray-800 text-sm sm:text-base break-words">
-                      {feedback.name || "Feedback Given"}
-                    </h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-medium text-gray-800 text-sm sm:text-base break-words">
+                        {feedback.name || "Feedback Given"}
+                      </h3>
+                      {(feedback.is_generic_feedback === 1 || feedback.is_generic_feedback === true) && (
+                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                          Generic
+                        </Badge>
+                      )}
+                    </div>
                     <div className="flex gap-2 self-start sm:self-auto">
                       <Button
                         variant="ghost"
@@ -340,13 +407,13 @@ const FeedbackSection = () => {
                         <Eye className="h-4 w-4" />
                       </Button>
                       <span className={`px-2 py-1 text-xs rounded-full flex-shrink-0 ${
-                        feedback.feedback_status === 'Pending' 
+                        (feedback.feedback_status || "Pending") === 'Pending' 
                           ? 'bg-yellow-100 text-yellow-800'
-                          : feedback.feedback_status === 'Completed'
+                          : (feedback.feedback_status || "Pending") === 'Completed'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {feedback.feedback_status || "Status Unknown"}
+                        {feedback.feedback_status || "Pending"}
                       </span>
                     </div>
                   </div>
@@ -395,9 +462,16 @@ const FeedbackSection = () => {
                  onClick={() => handlePendingFeedbackClick(feedback.name)}
                  >
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
-                    <h3 className="font-medium text-gray-800 text-sm sm:text-base break-words">
-                      {feedback.name || "Feedback Initiated"}
-                    </h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-medium text-gray-800 text-sm sm:text-base break-words">
+                        {feedback.name || "Feedback Initiated"}
+                      </h3>
+                      {(feedback.is_generic_feedback === 1 || feedback.is_generic_feedback === true) && (
+                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                          Generic
+                        </Badge>
+                      )}
+                    </div>
                     <div className="flex gap-2 self-start sm:self-auto">
                       {/* <Button
                         variant="ghost"
@@ -408,13 +482,13 @@ const FeedbackSection = () => {
                         <Eye className="h-4 w-4" />
                       </Button> */}
                       <span className={`px-2 py-1 text-xs rounded-full flex-shrink-0 ${
-                        feedback.feedback_status === 'Pending' 
+                        (feedback.feedback_status || "Pending") === 'Pending' 
                           ? 'bg-yellow-100 text-yellow-800'
-                          : feedback.feedback_status === 'Completed'
+                          : (feedback.feedback_status || "Pending") === 'Completed'
                           ? 'bg-green-100 text-green-800'
                           : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {feedback.feedback_status || "Status Unknown"}
+                        {feedback.feedback_status || "Pending"}
                       </span>
                     </div>
                   </div>
@@ -464,9 +538,16 @@ const FeedbackSection = () => {
                   onClick={() => handlePendingFeedbackClick(feedback.name)}
                 >
                   <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-2">
-                    <h3 className="font-medium text-gray-800 text-sm sm:text-base break-words">
-                      {feedback.name || "Pending Feedback"}
-                    </h3>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-medium text-gray-800 text-sm sm:text-base break-words">
+                        {feedback.name || "Pending Feedback"}
+                      </h3>
+                      {(feedback.is_generic_feedback === 1 || feedback.is_generic_feedback === true) && (
+                        <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                          Generic
+                        </Badge>
+                      )}
+                    </div>
                     <span className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800 self-start sm:self-auto flex-shrink-0">
                       {feedback.feedback_status}
                     </span>

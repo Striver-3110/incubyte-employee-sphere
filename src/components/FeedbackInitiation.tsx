@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { fetchAllEmployees, fetchFeedbackTemplates, useEmployeeDetails } from "@/api/employeeService";
+import { fetchAllEmployees, fetchFeedbackTemplates } from "@/api/employeeService";
+import { useEmployee } from "@/contexts/EmployeeContext";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -51,7 +52,7 @@ const seekFeedbackForm = async (employee: string, reviewers: string[]) => {
 };
 
 export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose, onSuccess }) => {
-  const { employee: currentEmployee } = useEmployeeDetails();
+  const { employee: currentEmployee } = useEmployee();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployees, setSelectedEmployees] = useState<Employee[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -195,19 +196,29 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose,
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="relative space-y-4">
         <DialogHeader>
           <DialogTitle>Seek Feedback</DialogTitle>
         </DialogHeader>
-        <div className="text-center py-8">
-          <p>Loading...</p>
+        <div className="relative min-h-[200px] flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {/* Loading overlay for submission */}
+      {isSubmitting && (
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50 rounded-lg">
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <p className="text-sm text-gray-600">Sending feedback request...</p>
+          </div>
+        </div>
+      )}
+      
       <DialogHeader>
         <DialogTitle>Seek Feedback</DialogTitle>
       </DialogHeader>
@@ -223,7 +234,7 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose,
               <PopoverTrigger asChild>
                 <div
                   className="flex flex-wrap gap-2 p-2 border rounded-md min-h-[80px] cursor-text focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2"
-                  onClick={() => setOpen(true)}
+                  onClick={() => !isSubmitting && setOpen(true)}
                 >
                   {selectedEmployees.length > 0 && selectedEmployees.map(employee => (
                     employee?.name && (
@@ -237,7 +248,9 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose,
                           className="h-3 w-3 cursor-pointer hover:text-destructive"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleRemoveEmployee(employee.name);
+                            if (!isSubmitting) {
+                              handleRemoveEmployee(employee.name);
+                            }
                           }}
                         />
                       </Badge>
@@ -269,7 +282,7 @@ export const FeedbackInitiation: React.FC<FeedbackInitiationProps> = ({ onClose,
       </div>
 
       <DialogFooter>
-        <Button variant="outline" onClick={onClose}>
+        <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
           Cancel
         </Button>
         <Button 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useEmployeeDetails, fetchEmployeeDetails } from "@/api/employeeService";
+import { useEmployee } from "@/contexts/EmployeeContext";
+import { fetchEmployeeDetails } from "@/api/employeeService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash } from "lucide-react";
@@ -17,7 +18,7 @@ import { toast } from "sonner";
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 const CreativePursuits = () => {
-  const { employee, loading, setEmployee } = useEmployeeDetails();
+  const { employee, loading, setEmployee } = useEmployee();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newPursuit, setNewPursuit] = useState("");
   const [pursuits, setPursuits] = useState<PassionateAbout[]>([]);

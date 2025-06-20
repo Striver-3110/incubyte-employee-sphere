@@ -409,14 +409,14 @@ const Contributions = () => {
                   <Skeleton key={i} className="h-32 w-full" />
                 ))}
               </div>
-            ) : lightningTalks.length === 0 ? (
+            ) : (lightningTalks || []).length === 0 ? (
               <Card>
                 <CardContent className="py-8 text-center">
                   <p className="text-gray-500">No lightning talks found. Add your first one above!</p>
                 </CardContent>
               </Card>
             ) : (
-              lightningTalks.map((talk) => renderContributionCard(talk, "lightning_talk"))
+              (lightningTalks || []).map((talk) => renderContributionCard(talk, "lightning_talk"))
             )}
           </TabsContent>
 
@@ -427,14 +427,14 @@ const Contributions = () => {
                   <Skeleton key={i} className="h-32 w-full" />
                 ))}
               </div>
-            ) : sciTalks.length === 0 ? (
+            ) : (sciTalks || []).length === 0 ? (
               <Card>
                 <CardContent className="py-8 text-center">
                   <p className="text-gray-500">No SCI talks found. Add your first one above!</p>
                 </CardContent>
               </Card>
             ) : (
-              sciTalks.map((talk) => renderContributionCard(talk, "sci_talk"))
+              (sciTalks || []).map((talk) => renderContributionCard(talk, "sci_talk"))
             )}
           </TabsContent>
 
@@ -452,7 +452,7 @@ const Contributions = () => {
                 </CardContent>
               </Card>
             ) : (
-              volunteering.map((activity) => renderContributionCard(activity, "volunteering"))
+              (volunteering || []).map((activity) => renderContributionCard(activity, "volunteering"))
             )}
           </TabsContent>
         </Tabs>

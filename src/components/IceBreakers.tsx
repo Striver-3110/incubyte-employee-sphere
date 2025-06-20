@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useEmployeeDetails } from "@/api/employeeService";
+import { useEmployee } from "@/contexts/EmployeeContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -97,7 +97,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 };
 
 const IceBreakers = () => {
-  const { employee, loading } = useEmployeeDetails();
+  const { employee, loading } = useEmployee();
   const [isComponentLoading, setIsComponentLoading] = useState(false);
 
   if (loading || !employee) {

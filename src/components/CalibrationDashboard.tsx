@@ -7,14 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useEmployeeDetails, useCalibrationDataForAllEmployees } from "@/api/employeeService";
-import { Users, UserCheck, BarChart3, ArrowLeft, Clock, AlertTriangle } from "lucide-react";
+import { useEmployee } from "@/contexts/EmployeeContext";
+import { useCalibrationDataForAllEmployees } from "@/api/employeeService";
+import { Users, UserCheck, BarChart3, ArrowLeft, Clock, AlertTriangle, Loader2 } from "lucide-react";
 import { formatDate } from "@/utils/dateUtils";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 const CalibrationDashboard = () => {
-    const { employee, loading: employeeLoading, error: employeeError } = useEmployeeDetails();
+    const { employee, loading: employeeLoading, error: employeeError } = useEmployee();
     const { calibrationDataForAllEmployees, loading: calibrationLoading, error: calibrationError } =
         useCalibrationDataForAllEmployees();
 
@@ -27,7 +28,7 @@ const CalibrationDashboard = () => {
         return (
             <div className="bg-white p-6 rounded-lg shadow-sm">
                 <div className="flex items-center justify-center h-32">
-                    <p className="text-gray-500 italic">Loading calibration data...</p>
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
                 </div>
             </div>
         );
@@ -58,10 +59,10 @@ const CalibrationDashboard = () => {
         );
     }
 
-    const calibrated = calibrationDataForAllEmployees.filter(
+    const calibrated = (calibrationDataForAllEmployees || []).filter(
         (data) => data.status === "success" && data.data?.performance && data.data?.potential
     );
-    const notCalibrated = calibrationDataForAllEmployees.filter(
+    const notCalibrated = (calibrationDataForAllEmployees || []).filter(
         (data) => data.status === "error" || !data.data?.performance
     );
 
@@ -261,7 +262,7 @@ const CalibrationDashboard = () => {
                             <CardContent>
                                 <div className="text-2xl font-bold text-red-800">{notCalibrated.length}</div>
                                 <p className="text-xs text-red-600 mt-1">
-                                    Click to start calibration
+                                    Click to see list of not calibrated employees
                                 </p>
                             </CardContent>
                         </Card>

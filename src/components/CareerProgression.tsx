@@ -1,5 +1,5 @@
 
-import { useEmployeeDetails } from "@/api/employeeService";
+import { useEmployee } from "@/contexts/EmployeeContext";
 import { formatDate } from "@/utils/dateUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -27,7 +27,7 @@ type ProjectEntry = {
 type CareerEntry = JoiningEntry | ProjectEntry;
 
 const CareerProgression = () => {
-  const { employee, loading } = useEmployeeDetails();
+  const { employee, loading } = useEmployee();
 
   if (loading || !employee) {
     return <CareerProgressionSkeleton />;
