@@ -48,16 +48,20 @@ const eventTypes = [
   "Other"
 ];
 
+const ITEMS_PER_PAGE = 10;
+
 const SharedLearnings = () => {
   const { employee } = useEmployeeDetails();
   const [allLearnings, setAllLearnings] = useState<SharedLearning[]>([]);
   const [filteredLearnings, setFilteredLearnings] = useState<SharedLearning[]>([]);
+  const [displayedLearnings, setDisplayedLearnings] = useState<SharedLearning[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLearning, setEditingLearning] = useState<SharedLearning | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCustomEventType, setShowCustomEventType] = useState(false);
   const [dataFetched, setDataFetched] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState("");
@@ -150,7 +154,21 @@ const SharedLearnings = () => {
     filtered.sort((a, b) => new Date(b.event_date).getTime() - new Date(a.event_date).getTime());
 
     setFilteredLearnings(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   }, [allLearnings, searchTerm, selectedEventType, selectedEmployee, showMyLearningsOnly, employee?.name]);
+
+  // Update displayed learnings based on pagination
+  useEffect(() => {
+    const startIndex = 0;
+    const endIndex = currentPage * ITEMS_PER_PAGE;
+    setDisplayedLearnings(filteredLearnings.slice(startIndex, endIndex));
+  }, [filteredLearnings, currentPage]);
+
+  const handleShowMore = () => {
+    setCurrentPage(prev => prev + 1);
+  };
+
+  const hasMoreItems = displayedLearnings.length < filteredLearnings.length;
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -399,262 +417,290 @@ const SharedLearnings = () => {
   const hasActiveFilters = searchTerm || selectedEventType !== "all" || selectedEmployee !== "all" || showMyLearningsOnly;
 
   return (
-    <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-        <h2 className="text-xl font-semibold text-gray-800">Shared Learnings</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={handleAddNew} size="sm" disabled={isLoading || isSubmitting}>
-              <Plus className="h-4 w-4 mr-1" />
-              Add Learning
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md" showOverlay={false}>
-            <DialogHeader>
-              <DialogTitle>
-                {editingLearning ? "Edit Shared Learning" : "Add Shared Learning"}
-              </DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="event_type"
-                  rules={{ required: "Event type is required" }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Event Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select event type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {eventTypes.map((type) => (
-                            <SelectItem key={type} value={type}>
-                              {type}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+    <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm relative pb-20">
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-gray-800 mb-6">Shared Learnings</h2>
 
-                {showCustomEventType && (
-                  <FormField
-                    control={form.control}
-                    name="custom_event_type"
-                    rules={{ required: showCustomEventType ? "Custom event type is required" : false }}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Custom Event Type</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter custom event type..."
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                )}
+        {/* Filter Section */}
+        <div className="bg-gray-50 p-4 rounded-lg space-y-4">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Search */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Search learnings..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
 
-                <FormField
-                  control={form.control}
-                  name="event_date"
-                  rules={{ required: "Event date is required" }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Event Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => date > new Date()}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+            {/* Event Type Filter */}
+            <Select value={selectedEventType} onValueChange={setSelectedEventType}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Event Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Event Types</SelectItem>
+                {uniqueEventTypes.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-                <FormField
-                  control={form.control}
-                  name="event_description"
-                  rules={{ required: "Event description is required" }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Event Description</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Describe what was shared..."
-                          className="min-h-[80px]"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="event_link"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Event Link (Optional)</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="https://..."
-                          type="url"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="flex justify-end gap-2 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsDialogOpen(false)}
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {editingLearning ? "Updating..." : "Adding..."}
-                      </>
-                    ) : (
-                      editingLearning ? "Update" : "Add"
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      {/* Filter Section */}
-      <div className="bg-gray-50 p-4 rounded-lg mb-6 space-y-4">
-        <div className="flex flex-col sm:flex-row gap-4">
-          {/* Search */}
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search learnings..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+            {/* Employee Filter */}
+            <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
+              <SelectTrigger className="w-full sm:w-48">
+                <SelectValue placeholder="Employee" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Employees</SelectItem>
+                {uniqueEmployees.map((emp) => (
+                  <SelectItem key={emp} value={emp!}>
+                    {emp}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Event Type Filter */}
-          <Select value={selectedEventType} onValueChange={setSelectedEventType}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Event Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Event Types</SelectItem>
-              {uniqueEventTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={showMyLearningsOnly}
+                  onChange={(e) => setShowMyLearningsOnly(e.target.checked)}
+                  className="rounded"
+                />
+                My learnings only
+              </label>
+            </div>
 
-          {/* Employee Filter */}
-          <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-            <SelectTrigger className="w-full sm:w-48">
-              <SelectValue placeholder="Employee" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Employees</SelectItem>
-              {uniqueEmployees.map((emp) => (
-                <SelectItem key={emp} value={emp!}>
-                  {emp}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-          <div className="flex items-center gap-3">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={showMyLearningsOnly}
-                onChange={(e) => setShowMyLearningsOnly(e.target.checked)}
-                className="rounded"
-              />
-              My learnings only
-            </label>
+            {hasActiveFilters && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearFilters}
+                className="self-start sm:self-auto"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Clear Filters
+              </Button>
+            )}
           </div>
 
           {hasActiveFilters && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={clearFilters}
-              className="self-start sm:self-auto"
-            >
-              <X className="h-4 w-4 mr-1" />
-              Clear Filters
-            </Button>
+            <div className="text-sm text-gray-600">
+              Showing {displayedLearnings.length} of {filteredLearnings.length} learnings
+            </div>
           )}
         </div>
-
-        {hasActiveFilters && (
-          <div className="text-sm text-gray-600">
-            Showing {filteredLearnings.length} of {allLearnings.length} learnings
-          </div>
-        )}
       </div>
 
       {/* Results */}
       {isLoading ? (
         <SharedLearningsSkeleton />
-      ) : filteredLearnings.length === 0 ? (
+      ) : displayedLearnings.length === 0 ? (
         <EmptyState />
       ) : (
-        <div className="grid gap-4">
-          {filteredLearnings.map((learning) => renderLearningCard(learning))}
-        </div>
+        <>
+          <div className="grid gap-4 mb-6">
+            {displayedLearnings.map((learning) => renderLearningCard(learning))}
+          </div>
+          
+          {hasMoreItems && (
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                onClick={handleShowMore}
+                disabled={isLoading}
+                className="px-6"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  'Show More'
+                )}
+              </Button>
+            </div>
+          )}
+        </>
       )}
+
+      {/* Floating Add Button */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogTrigger asChild>
+          <Button
+            onClick={handleAddNew}
+            size="lg"
+            disabled={isLoading || isSubmitting}
+            className="fixed bottom-6 right-6 rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all duration-200 z-50"
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-md" showOverlay={false}>
+          <DialogHeader>
+            <DialogTitle>
+              {editingLearning ? "Edit Shared Learning" : "Add Shared Learning"}
+            </DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="event_type"
+                rules={{ required: "Event type is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Event Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select event type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {eventTypes.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {showCustomEventType && (
+                <FormField
+                  control={form.control}
+                  name="custom_event_type"
+                  rules={{ required: showCustomEventType ? "Custom event type is required" : false }}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Custom Event Type</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter custom event type..."
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              <FormField
+                control={form.control}
+                name="event_date"
+                rules={{ required: "Event date is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Event Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={(date) => date > new Date()}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="event_description"
+                rules={{ required: "Event description is required" }}
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Event Description</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="Describe what was shared..."
+                        className="min-h-[80px]"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="event_link"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Event Link (Optional)</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="https://..."
+                        type="url"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {editingLearning ? "Updating..." : "Adding..."}
+                    </>
+                  ) : (
+                    editingLearning ? "Update" : "Add"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
