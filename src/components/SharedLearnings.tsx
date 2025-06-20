@@ -1,21 +1,15 @@
+
 import React, { useState, useEffect } from "react";
 import { useEmployeeDetails } from "@/api/employeeService";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Edit, Trash, Calendar as CalendarIcon, ExternalLink, Loader2, Search, Filter, X } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import LearningsTable from "./shared-learnings/LearningsTable";
+import LearningsFilters from "./shared-learnings/LearningsFilters";
+import LearningViewModal from "./shared-learnings/LearningViewModal";
+import LearningForm from "./shared-learnings/LearningForm";
+import LearningsTableSkeleton from "./shared-learnings/LearningsTableSkeleton";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -37,17 +31,6 @@ interface SharedLearningFormData {
   event_link?: string;
 }
 
-const eventTypes = [
-  "Lightning Talk",
-  "GenAI Hour", 
-  "Webinar",
-  "Workshop",
-  "Conference",
-  "Tech Talk",
-  "Knowledge Sharing Session",
-  "Other"
-];
-
 const ITEMS_PER_PAGE = 10;
 
 const SharedLearnings = () => {
@@ -58,8 +41,9 @@ const SharedLearnings = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingLearning, setEditingLearning] = useState<SharedLearning | null>(null);
+  const [viewingLearning, setViewingLearning] = useState<SharedLearning | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showCustomEventType, setShowCustomEventType] = useState(false);
   const [dataFetched, setDataFetched] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -73,23 +57,11 @@ const SharedLearnings = () => {
   const uniqueEventTypes = Array.from(new Set(allLearnings.map(l => l.event_type))).sort();
   const uniqueEmployees = Array.from(new Set(allLearnings.map(l => l.employee).filter(Boolean))).sort();
 
-  const form = useForm<SharedLearningFormData>();
-  const watchEventType = form.watch("event_type");
-
-  useEffect(() => {
-    if (watchEventType === "Other") {
-      setShowCustomEventType(true);
-    } else {
-      setShowCustomEventType(false);
-      form.setValue("custom_event_type", "");
-    }
-  }, [watchEventType, form]);
-
   const fetchAllLearnings = async () => {
     setIsLoading(true);
     try {
       const response = await fetch(`${BASE_URL}achievements.get_all_achievements`, {
-        method: "GET",
+        method: "GET", 
         headers: { "Content-Type": "application/json" },
         credentials: "include",
       });
@@ -154,7 +126,7 @@ const SharedLearnings = () => {
     filtered.sort((a, b) => new Date(b.event_date).getTime() - new Date(a.event_date).getTime());
 
     setFilteredLearnings(filtered);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   }, [allLearnings, searchTerm, selectedEventType, selectedEmployee, showMyLearningsOnly, employee?.name]);
 
   // Update displayed learnings based on pagination
@@ -175,6 +147,23 @@ const SharedLearnings = () => {
     setSelectedEventType("all");
     setSelectedEmployee("all");
     setShowMyLearningsOnly(false);
+  };
+
+  const hasActiveFilters = searchTerm || selectedEventType !== "all" || selectedEmployee !== "all" || showMyLearningsOnly;
+
+  const handleView = (learning: SharedLearning) => {
+    setViewingLearning(learning);
+    setIsViewModalOpen(true);
+  };
+
+  const handleEdit = (learning: SharedLearning) => {
+    setEditingLearning(learning);
+    setIsDialogOpen(true);
+  };
+
+  const handleAddNew = () => {
+    setEditingLearning(null);
+    setIsDialogOpen(true);
   };
 
   const onSubmit = async (data: SharedLearningFormData) => {
@@ -221,8 +210,6 @@ const SharedLearnings = () => {
         });
         setIsDialogOpen(false);
         setEditingLearning(null);
-        form.reset();
-        setShowCustomEventType(false);
         setDataFetched(false);
         fetchAllLearnings();
       } else {
@@ -283,236 +270,45 @@ const SharedLearnings = () => {
     }
   };
 
-  const handleEdit = (learning: SharedLearning) => {
-    setEditingLearning(learning);
-    const isCustomType = !eventTypes.includes(learning.event_type) || learning.event_type === "Other";
-    
-    form.reset({
-      event_type: isCustomType ? "Other" : learning.event_type,
-      custom_event_type: isCustomType ? learning.event_type : "",
-      event_date: new Date(learning.event_date),
-      event_description: learning.event_description,
-      event_link: learning.event_link || "",
-    });
-    setIsDialogOpen(true);
-  };
-
-  const handleAddNew = () => {
-    setEditingLearning(null);
-    form.reset({
-      event_type: "",
-      custom_event_type: "",
-      event_date: new Date(),
-      event_description: "",
-      event_link: "",
-    });
-    setShowCustomEventType(false);
-    setIsDialogOpen(true);
-  };
-
-  const canEditDelete = (learning: SharedLearning) => {
-    return employee?.name === learning.employee;
-  };
-
-  const renderLearningCard = (learning: SharedLearning) => (
-    <Card key={learning.name} className="shadow-sm hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500">
-      <CardHeader className="pb-3">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-          <div className="space-y-2 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary" className="text-xs font-medium">
-                {learning.event_type}
-              </Badge>
-              <div className="text-sm text-gray-500">
-                {format(new Date(learning.event_date), "MMM dd, yyyy")}
-              </div>
-            </div>
-            {learning.employee && (
-              <div className="text-sm font-medium text-blue-600">
-                by {learning.employee_name || learning.employee}
-              </div>
-            )}
-          </div>
-          {canEditDelete(learning) && (
-            <div className="flex gap-2 shrink-0">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleEdit(learning)}
-                disabled={isLoading || isSubmitting}
-                className="h-8 w-8 p-0"
-              >
-                <Edit className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleDelete(learning.name)}
-                disabled={isLoading || isSubmitting}
-                className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-              >
-                <Trash className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <p className="text-gray-700 mb-3 leading-relaxed">{learning.event_description}</p>
-        {learning.event_link && (
-          <a
-            href={learning.event_link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm transition-colors"
-          >
-            <ExternalLink className="h-3 w-3" />
-            View Resource
-          </a>
-        )}
-      </CardContent>
-    </Card>
-  );
-
-  const SharedLearningsSkeleton = () => (
-    <div className="grid gap-4">
-      {[...Array(3)].map((_, index) => (
-        <Card key={index} className="shadow-sm">
-          <CardHeader className="pb-3">
-            <div className="flex justify-between items-start">
-              <div className="space-y-2 flex-1">
-                <div className="flex gap-2">
-                  <Skeleton className="h-5 w-24" />
-                  <Skeleton className="h-4 w-20" />
-                </div>
-                <Skeleton className="h-4 w-16" />
-              </div>
-              <div className="flex gap-2">
-                <Skeleton className="h-8 w-8" />
-                <Skeleton className="h-8 w-8" />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Skeleton className="h-4 w-full mb-2" />
-            <Skeleton className="h-4 w-3/4 mb-3" />
-            <Skeleton className="h-4 w-24" />
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  );
-
-  const EmptyState = () => (
-    <div className="text-center py-12 text-gray-500">
-      <div className="text-lg font-medium mb-2">No shared learnings found</div>
-      <p>
-        {searchTerm || selectedEventType !== "all" || selectedEmployee !== "all" || showMyLearningsOnly
-          ? "Try adjusting your filters to see more results."
-          : "No shared learnings have been posted yet."}
-      </p>
-    </div>
-  );
-
-  const hasActiveFilters = searchTerm || selectedEventType !== "all" || selectedEmployee !== "all" || showMyLearningsOnly;
-
   return (
     <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm relative pb-20">
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-800 mb-6">Shared Learnings</h2>
 
-        {/* Filter Section */}
-        <div className="bg-gray-50 p-4 rounded-lg space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            {/* Search */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search learnings..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-
-            {/* Event Type Filter */}
-            <Select value={selectedEventType} onValueChange={setSelectedEventType}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Event Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Event Types</SelectItem>
-                {uniqueEventTypes.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Employee Filter */}
-            <Select value={selectedEmployee} onValueChange={setSelectedEmployee}>
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue placeholder="Employee" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Employees</SelectItem>
-                {uniqueEmployees.map((emp) => (
-                  <SelectItem key={emp} value={emp!}>
-                    {emp}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={showMyLearningsOnly}
-                  onChange={(e) => setShowMyLearningsOnly(e.target.checked)}
-                  className="rounded"
-                />
-                My learnings only
-              </label>
-            </div>
-
-            {hasActiveFilters && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={clearFilters}
-                className="self-start sm:self-auto"
-              >
-                <X className="h-4 w-4 mr-1" />
-                Clear Filters
-              </Button>
-            )}
-          </div>
-
-          {hasActiveFilters && (
-            <div className="text-sm text-gray-600">
-              Showing {displayedLearnings.length} of {filteredLearnings.length} learnings
-            </div>
-          )}
-        </div>
+        <LearningsFilters
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          selectedEventType={selectedEventType}
+          setSelectedEventType={setSelectedEventType}
+          selectedEmployee={selectedEmployee}
+          setSelectedEmployee={setSelectedEmployee}
+          showMyLearningsOnly={showMyLearningsOnly}
+          setShowMyLearningsOnly={setShowMyLearningsOnly}
+          uniqueEventTypes={uniqueEventTypes}
+          uniqueEmployees={uniqueEmployees}
+          onClearFilters={clearFilters}
+          hasActiveFilters={hasActiveFilters}
+          resultsCount={displayedLearnings.length}
+          totalCount={filteredLearnings.length}
+        />
       </div>
 
       {/* Results */}
       {isLoading ? (
-        <SharedLearningsSkeleton />
-      ) : displayedLearnings.length === 0 ? (
-        <EmptyState />
+        <LearningsTableSkeleton />
       ) : (
         <>
-          <div className="grid gap-4 mb-6">
-            {displayedLearnings.map((learning) => renderLearningCard(learning))}
-          </div>
+          <LearningsTable
+            learnings={displayedLearnings}
+            currentEmployee={employee?.name}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            isLoading={isLoading}
+          />
           
           {hasMoreItems && (
-            <div className="flex justify-center">
+            <div className="flex justify-center mt-6">
               <Button
                 variant="outline"
                 onClick={handleShowMore}
@@ -534,173 +330,35 @@ const SharedLearnings = () => {
       )}
 
       {/* Floating Add Button */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogTrigger asChild>
-          <Button
-            onClick={handleAddNew}
-            size="lg"
-            disabled={isLoading || isSubmitting}
-            className="fixed bottom-6 right-6 rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all duration-200 z-50"
-          >
-            <Plus className="h-6 w-6" />
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-md" showOverlay={false}>
-          <DialogHeader>
-            <DialogTitle>
-              {editingLearning ? "Edit Shared Learning" : "Add Shared Learning"}
-            </DialogTitle>
-          </DialogHeader>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="event_type"
-                rules={{ required: "Event type is required" }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Event Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select event type" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {eventTypes.map((type) => (
-                          <SelectItem key={type} value={type}>
-                            {type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <Button
+        onClick={handleAddNew}
+        size="lg"
+        disabled={isLoading || isSubmitting}
+        className="fixed bottom-6 right-6 rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all duration-200 z-50"
+      >
+        <Plus className="h-6 w-6" />
+      </Button>
 
-              {showCustomEventType && (
-                <FormField
-                  control={form.control}
-                  name="custom_event_type"
-                  rules={{ required: showCustomEventType ? "Custom event type is required" : false }}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Custom Event Type</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Enter custom event type..."
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+      {/* Modals */}
+      <LearningViewModal
+        learning={viewingLearning}
+        isOpen={isViewModalOpen}
+        onClose={() => {
+          setIsViewModalOpen(false);
+          setViewingLearning(null);
+        }}
+      />
 
-              <FormField
-                control={form.control}
-                name="event_date"
-                rules={{ required: "Event date is required" }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Event Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) => date > new Date()}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="event_description"
-                rules={{ required: "Event description is required" }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Event Description</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder="Describe what was shared..."
-                        className="min-h-[80px]"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="event_link"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Event Link (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="https://..."
-                        type="url"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex justify-end gap-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                  disabled={isSubmitting}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {editingLearning ? "Updating..." : "Adding..."}
-                    </>
-                  ) : (
-                    editingLearning ? "Update" : "Add"
-                  )}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
+      <LearningForm
+        isOpen={isDialogOpen}
+        onClose={() => {
+          setIsDialogOpen(false);
+          setEditingLearning(null);
+        }}
+        onSubmit={onSubmit}
+        editingLearning={editingLearning}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 };
