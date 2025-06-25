@@ -34,15 +34,23 @@ export const IceBreakersStep = () => {
   };
 
   const getAnswerForQuestion = (index: number): string => {
+    if (!state.formData.custom_employee_icebreaker_question || state.formData.custom_employee_icebreaker_question.length === 0) {
+      return '';
+    }
+    
     const iceBreaker = state.formData.custom_employee_icebreaker_question.find(
-      (item) => item.question === defaultQuestions[index]
+      (item) => item && item.question === defaultQuestions[index]
     );
     return iceBreaker?.answer || '';
   };
 
   const getAnsweredCount = (): number => {
+    if (!state.formData.custom_employee_icebreaker_question) {
+      return 0;
+    }
+    
     return state.formData.custom_employee_icebreaker_question.filter(
-      (item) => item.answer && item.answer.trim() !== ''
+      (item) => item && item.answer && item.answer.trim() !== ''
     ).length;
   };
 
