@@ -9,7 +9,8 @@ interface StepIndicatorProps {
 const steps = [
   { number: 1, title: 'Basic Profile', description: 'Personal information and platforms' },
   { number: 2, title: 'Tech Stack', description: 'Skills and expertise' },
-  { number: 3, title: 'Ice Breakers', description: 'Questions and answers' }
+  { number: 3, title: 'Ice Breakers', description: 'Questions and answers' },
+  { number: 4, title: 'Shared Learnings', description: 'Achievements and contributions' }
 ];
 
 export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => {

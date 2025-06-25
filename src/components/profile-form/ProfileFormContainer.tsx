@@ -5,6 +5,7 @@ import { StepIndicator } from './StepIndicator';
 import { BasicProfileStep } from './steps/BasicProfileStep';
 import { TechStackStep } from './steps/TechStackStep';
 import { IceBreakersStep } from './steps/IceBreakersStep';
+import { SharedLearningsStep } from './steps/SharedLearningsStep';
 import { FormNavigation } from './FormNavigation';
 import { useToast } from '@/hooks/use-toast';
 
@@ -45,7 +46,8 @@ export const ProfileFormContainer = () => {
             custom_about: profileData.custom_about || '',
             custom_platforms: profileData.custom_platforms || [],
             custom_tech_stack: profileData.custom_tech_stack || [],
-            custom_employee_icebreaker_question: profileData.custom_employee_icebreaker_question || []
+            custom_employee_icebreaker_question: profileData.custom_employee_icebreaker_question || [],
+            employee_achievements: profileData.employee_achievements || []
           }});
           console.log('Profile data initialized successfully');
         }
@@ -62,7 +64,8 @@ export const ProfileFormContainer = () => {
           custom_about: '',
           custom_platforms: [],
           custom_tech_stack: [],
-          custom_employee_icebreaker_question: []
+          custom_employee_icebreaker_question: [],
+          employee_achievements: []
         }});
       }
     };
@@ -78,6 +81,8 @@ export const ProfileFormContainer = () => {
         return <TechStackStep />;
       case 3:
         return <IceBreakersStep />;
+      case 4:
+        return <SharedLearningsStep />;
       default:
         return <BasicProfileStep />;
     }

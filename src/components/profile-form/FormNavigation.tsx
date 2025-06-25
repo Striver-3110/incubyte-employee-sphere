@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useProfileForm } from '@/contexts/ProfileFormContext';
 import { Button } from '@/components/ui/button';
@@ -49,6 +50,17 @@ export const FormNavigation = () => {
         );
         return answeredQuestions.length >= 5;
       
+      case 4:
+        // Shared Learnings validation
+        return formData.employee_achievements.length > 0 &&
+               formData.employee_achievements.every(achievement => 
+                 achievement.event_type.trim() !== '' &&
+                 achievement.event_date.trim() !== '' &&
+                 achievement.event_description.trim() !== '' &&
+                 achievement.event_link.trim() !== '' &&
+                 achievement.event_link.startsWith('http')
+               );
+      
       default:
         return false;
     }
@@ -74,16 +86,18 @@ export const FormNavigation = () => {
         return "Please add at least one tech stack entry with both skill and proficiency level.";
       case 3:
         return "Please answer at least 5 ice breaker questions.";
+      case 4:
+        return "Please add at least one achievement with all required fields filled and valid URLs.";
       default:
         return "Please complete all required fields.";
     }
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(3)) {
+    if (!validateStep(4)) {
       toast({
         title: "Validation Error",
-        description: getValidationMessage(3),
+        description: getValidationMessage(4),
         variant: "destructive"
       });
       return;
@@ -122,7 +136,8 @@ export const FormNavigation = () => {
         image: finalImageUrl,
         custom_platforms: state.formData.custom_platforms,
         custom_tech_stack: state.formData.custom_tech_stack,
-        custom_employee_icebreaker_question: state.formData.custom_employee_icebreaker_question
+        custom_employee_icebreaker_question: state.formData.custom_employee_icebreaker_question,
+        employee_achievements: state.formData.employee_achievements
       };
 
       const response = await fetch(`${BASE_URL}user.set_complete_profile_data`, {
@@ -155,7 +170,7 @@ export const FormNavigation = () => {
   };
 
   const isCurrentStepValid = validateStep(state.currentStep);
-  const isLastStep = state.currentStep === 3;
+  const isLastStep = state.currentStep === 4;
 
   return (
     <div className="flex justify-between items-center">

@@ -16,6 +16,14 @@ export interface IceBreakerEntry {
   answer: string;
 }
 
+export interface EmployeeAchievement {
+  name?: string; // Only for existing achievements
+  event_type: string;
+  event_date: string;
+  event_description: string;
+  event_link: string;
+}
+
 export interface ProfileFormData {
   // Basic Profile
   image: string;
@@ -32,6 +40,9 @@ export interface ProfileFormData {
   
   // Ice Breakers
   custom_employee_icebreaker_question: IceBreakerEntry[];
+  
+  // Shared Learnings
+  employee_achievements: EmployeeAchievement[];
 }
 
 interface ProfileFormState {
@@ -60,7 +71,8 @@ const initialState: ProfileFormState = {
     custom_about: '',
     custom_platforms: [],
     custom_tech_stack: [],
-    custom_employee_icebreaker_question: []
+    custom_employee_icebreaker_question: [],
+    employee_achievements: []
   },
   isImageChanged: false,
   originalImageUrl: ''
@@ -105,7 +117,7 @@ export const ProfileFormProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [state, dispatch] = useReducer(profileFormReducer, initialState);
 
   const goToNextStep = () => {
-    if (state.currentStep < 3) {
+    if (state.currentStep < 4) {
       dispatch({ type: 'SET_STEP', payload: state.currentStep + 1 });
     }
   };
