@@ -8,6 +8,7 @@ import LearningsTable from "./shared-learnings/LearningsTable";
 import LearningsFilters from "./shared-learnings/LearningsFilters";
 import LearningViewModal from "./shared-learnings/LearningViewModal";
 import LearningForm from "./shared-learnings/LearningForm";
+import LearningsTableSkeleton from "./shared-learnings/LearningsTableSkeleton";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -310,47 +311,55 @@ const SharedLearnings = () => {
       </div>
 
       {/* Results */}
-      <LearningsTable
-        learnings={displayedLearnings}
-        currentEmployee={employee?.name}
-        onView={handleView}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        isLoading={isLoading}
-        isDisabled={isAnyOperationInProgress}
-      />
+      {isLoading ? (
+        <LearningsTableSkeleton />
+      ) : (
+        <>
+          <LearningsTable
+            learnings={displayedLearnings}
+            currentEmployee={employee?.name}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            isLoading={isLoading}
+          />
 
-      {hasMoreItems && (
-        <div className="flex justify-center mt-6">
-          <Button
-            variant="outline"
-            onClick={handleShowMore}
-            disabled={isLoading}
-            className="px-6"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Loading...
-              </>
-            ) : (
-              'Show More'
-            )}
-          </Button>
-        </div>
+          {hasMoreItems && (
+            <div className="flex justify-center mt-6">
+              <Button
+                variant="outline"
+                onClick={handleShowMore}
+                disabled={isLoading}
+                className="px-6"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  'Show More'
+                )}
+              </Button>
+
+            </div>
+          )}
+          <div className="flex justify-end mt-6">
+            <Button
+              onClick={handleAddNew}
+              size="lg"
+              disabled={isLoading || isSubmitting}
+              className="rounded-md hover:shadow-xl transition-all duration-200"
+            >
+              <Plus className="h-4" />
+              Add
+            </Button>
+          </div>
+        </>
       )}
-      
-      <div className="flex justify-end mt-6">
-        <Button
-          onClick={handleAddNew}
-          size="lg"
-          disabled={isAnyOperationInProgress}
-          className="rounded-md hover:shadow-xl transition-all duration-200"
-        >
-          <Plus className="h-4" />
-          Add
-        </Button>
-      </div>
+
+      {/* Floating Add Button */}
+
 
       {/* Modals */}
       <LearningViewModal

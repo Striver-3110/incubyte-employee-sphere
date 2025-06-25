@@ -155,7 +155,7 @@ const ProfileHeader = () => {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${BASE_URL}user.upload_image`, {
+    const response = await fetch(`${BASE_URL}profile.upload_image`, {
       method: 'POST',
       body: formData,
       credentials: 'include',
@@ -166,7 +166,7 @@ const ProfileHeader = () => {
     }
 
     const result = await response.json();
-    return result.message?.file_url || result.file_url;
+    return result.file_url || result.message?.file_url;
   };
 
   const handleSaveProfile = async () => {
@@ -199,7 +199,7 @@ const ProfileHeader = () => {
         ...(imageUrl && { image: imageUrl })
       };
 
-      const response = await fetch(`${BASE_URL}user.set_employee_profile_data`, {
+      const response = await fetch(`${BASE_URL}profile.update_basic_profile`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(profileData),

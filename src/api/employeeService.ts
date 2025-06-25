@@ -225,8 +225,7 @@ let cachedTeamEmployees: any = null;
 // Fetch employee details from the API
 export const fetchEmployeeDetails = async () => {
   try {
-
-    const response = await fetch(`${BASE_URL}user.get_employee_details`, {
+    const response = await fetch(`${BASE_URL}profile.get_employee_details`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -240,14 +239,13 @@ export const fetchEmployeeDetails = async () => {
 
     const data = await response.json();
 
-    console.log('Response:', data);
-    if (!data.message) {
+    if (!data.message || !data.message.data) {
       throw new Error('Invalid employee data received');
     }
 
     // Update cache with fresh data
-    cachedEmployeeData = data.message;
-    return data.message;
+    cachedEmployeeData = data.message.data;
+    return data.message.data;
   } catch (error) {
     console.error('Error fetching employee details:', error);
     // For development, return mock data if API fails

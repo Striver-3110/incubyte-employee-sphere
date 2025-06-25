@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { isTechnicalRole } from "@/utils/roleUtils";
 import {
   Dialog,
   DialogContent,
@@ -35,11 +36,9 @@ const SkillsMatrix = () => {
   const [showDropdown, setShowDropdown] = useState(false);
 
   // Determine if user has a technical role
-  const isTechnicalRole = employee?.designation ? 
-    ['Software Craftsperson', 'Senior Software Craftsperson', 'Lead Software Craftsperson', 'Principal Software Craftsperson'].includes(employee.designation) : 
-    false;
+  const isUserTechnicalRole = isTechnicalRole(employee?.designation);
   
-  const sectionTitle = isTechnicalRole ? "Tech Stack" : "Skills Matrix";
+  const sectionTitle = isUserTechnicalRole ? "Tech Stack" : "Skills Matrix";
 
   // Fetch available skills from the API
   useEffect(() => {

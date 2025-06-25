@@ -3,6 +3,9 @@
 export const roleCategories = {
   "Technical": [
     "Software Craftsperson",
+    "Senior Software Craftsperson", 
+    "Lead Software Craftsperson",
+    "Principal Software Craftsperson",
     "Software Craftsperson - Tech Lead",
     "Software Craftsperson - Tech Advisor",
     "Engineer Manager",
