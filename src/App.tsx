@@ -12,6 +12,7 @@ import { FrappeProvider } from 'frappe-react-sdk'
 import { EmployeeProvider } from '@/contexts/EmployeeContext'
 import Index from "./pages/Index";
 import Contributions from "./pages/Contributions";
+import ProfileData from "./pages/ProfileData";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => {
             <Router>
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/profile-data" element={<ProfileData />} />
                 {/* <Route path="/contributions" element={<Contributions />} /> */}
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
