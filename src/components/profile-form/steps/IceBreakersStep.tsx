@@ -22,7 +22,7 @@ export const IceBreakersStep = () => {
   const { state, updateFormData } = useProfileForm();
 
   const handleAnswerChange = (index: number, answer: string) => {
-    const updatedIceBreakers = [...state.formData.custom_employee_icebreaker_question];
+    const updatedIceBreakers = [...(state.formData.custom_employee_icebreaker_question || [])];
     
     if (updatedIceBreakers[index]) {
       updatedIceBreakers[index] = { ...updatedIceBreakers[index], answer };
@@ -34,23 +34,27 @@ export const IceBreakersStep = () => {
   };
 
   const getAnswerForQuestion = (index: number): string => {
-    if (!state.formData.custom_employee_icebreaker_question || state.formData.custom_employee_icebreaker_question.length === 0) {
+    const iceBreakers = state.formData.custom_employee_icebreaker_question;
+    if (!iceBreakers || iceBreakers.length === 0) {
       return '';
     }
     
-    const iceBreaker = state.formData.custom_employee_icebreaker_question.find(
-      (item) => item && item.question === defaultQuestions[index]
+    const iceBreaker = iceBreakers.find(
+      (item: IceBreakerEntry | null | undefined) => 
+        item && item.question === defaultQuestions[index]
     );
     return iceBreaker?.answer || '';
   };
 
   const getAnsweredCount = (): number => {
-    if (!state.formData.custom_employee_icebreaker_question) {
+    const iceBreakers = state.formData.custom_employee_icebreaker_question;
+    if (!iceBreakers) {
       return 0;
     }
     
-    return state.formData.custom_employee_icebreaker_question.filter(
-      (item) => item && item.answer && item.answer.trim() !== ''
+    return iceBreakers.filter(
+      (item: IceBreakerEntry | null | undefined) => 
+        item && item.answer && item.answer.trim() !== ''
     ).length;
   };
 
