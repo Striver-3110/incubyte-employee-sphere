@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useProfileForm } from '@/contexts/ProfileFormContext';
 import { Button } from '@/components/ui/button';
@@ -40,7 +39,7 @@ export const FormNavigation = () => {
         // Tech Stack validation
         return formData.custom_tech_stack.length > 0 &&
                formData.custom_tech_stack.every(tech => 
-                 tech.skill.trim() !== '' && tech.proficiency_level !== ''
+                 tech.skill.trim() !== '' && tech.proficiency_level !== undefined && tech.proficiency_level !== null
                );
       
       case 3:
