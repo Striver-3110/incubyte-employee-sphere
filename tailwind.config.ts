@@ -19,6 +19,25 @@ export default {
 		},
 		extend: {
 			colors: {
+				brandBlue: '#105c8f',
+				brandBlueLighterDark: "#155A88",
+				brandBlueDark: '#0e3252',
+				brandBlueDarker: '#0a2d4b',
+				brandBlueDarkest: '#002749',
+				brandBlueLight: '#5cc5d5',
+				brandBlueLighter: '#8aced8',
+				brandBlueLightest: '#9cd0d8',
+				brandGreen: '#58BC82',
+				sidebarBg: '#F7F7F8',
+				tagBg: '#E0E7FF',
+				tagText: '#105c8f',
+				cardBg: '#FCFCFD',
+				cardInner: '#EFF8FA',
+				borderSoft: '#E1EEF3',
+				borderMid: '#C8DFEB',
+				borderNeutral: '#EDEDED',
+				highlightBg: '#E9F7F5',
+				textMuted: '#4B6375',
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
@@ -62,6 +81,12 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				}
+			},
+			boxShadow: {
+				subtle: '0 1px 2px rgba(0, 0, 0, 0.05)',
+			},
+			fontFamily: {
+				sans: ['Inter', 'system-ui', 'sans-serif'],
 			},
 			borderRadius: {
 				lg: 'var(--radius)',

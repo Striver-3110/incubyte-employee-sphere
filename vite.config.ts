@@ -13,8 +13,13 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     force: true, // Force optimize deps
     proxy: proxyOptions,
+    historyApiFallback: {
+      rewrites: [
+        { from: /^\/one-view\/.*$/, to: '/one-view/index.html' }
+      ]
+    }
   },
-	base: '/one_view/', 
+	base: '/one-view/', 
   optimizeDeps: {
     force: true, // Force re-optimization
     include: [
@@ -36,7 +41,7 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-		outDir: '../incubyte_customizations/public/one_view',
+		outDir: '../incubyte_ui/public/one_view',
 		rollupOptions: {
 			output: {
 				entryFileNames: '[name].js',
@@ -46,5 +51,6 @@ export default defineConfig(({ mode }) => ({
 		},
 		emptyOutDir: true,
 		target: 'es2015',
+    sourcemap: true
 	},
 }));
