@@ -78,6 +78,16 @@ const Index = () => {
     );
   }
 
+  if (!employee) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-brandBlue/5 to-brandGreen/5 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <p className="text-brandBlueDark font-medium">No employee data available</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-brandBlue/5 via-white to-brandGreen/5">
       {/* Hero Section */}
@@ -109,13 +119,13 @@ const Index = () => {
               
               <div className="text-center lg:text-left space-y-2">
                 <h1 className="text-3xl lg:text-4xl font-bold">
-                  {employee?.employee_name || "Employee Name"}
+                  {employee.employee_name}
                 </h1>
                 <p className="text-xl text-white/90 font-medium">
-                  {employee?.designation || "Position"}
+                  {employee.designation}
                 </p>
                 <p className="text-lg text-white/80">
-                  {employee?.custom_team || "Team"}
+                  {employee.custom_team || "Team"}
                 </p>
               </div>
             </div>
@@ -125,24 +135,24 @@ const Index = () => {
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20">
                 <Building className="w-6 h-6 mx-auto mb-2 text-white/80" />
                 <p className="text-sm text-white/70">Team</p>
-                <p className="font-semibold text-white">{employee?.custom_team || "—"}</p>
+                <p className="font-semibold text-white">{employee.custom_team || "—"}</p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20">
                 <MapPin className="w-6 h-6 mx-auto mb-2 text-white/80" />
                 <p className="text-sm text-white/70">Location</p>
-                <p className="font-semibold text-white">{employee?.custom_city || "—"}</p>
+                <p className="font-semibold text-white">{employee.custom_city || "—"}</p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20">
                 <Calendar className="w-6 h-6 mx-auto mb-2 text-white/80" />
                 <p className="text-sm text-white/70">Joined</p>
                 <p className="font-semibold text-white">
-                  {employee?.date_of_joining ? new Date(employee.date_of_joining).getFullYear() : "—"}
+                  {employee.date_of_joining ? new Date(employee.date_of_joining).getFullYear() : "—"}
                 </p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20">
                 <User className="w-6 h-6 mx-auto mb-2 text-white/80" />
                 <p className="text-sm text-white/70">ID</p>
-                <p className="font-semibold text-white">{employee?.name || "—"}</p>
+                <p className="font-semibold text-white">{employee.name}</p>
               </div>
             </div>
           </div>
@@ -173,9 +183,9 @@ const Index = () => {
                 </div>
                 
                 <TabsContent value="about" className="space-y-8 p-8">
-                  {employee?.custom_about && <AboutSection />}
+                  {employee.custom_about && <AboutSection />}
                   <MyPeople />
-                  {employee?.custom_tech_stack && employee.custom_tech_stack.length > 0 && (
+                  {employee.custom_tech_stack && employee.custom_tech_stack.length > 0 && (
                     <SkillsMatrix />
                   )}
                   <div className="bg-cardBg p-8 rounded-xl border border-borderSoft">
@@ -185,7 +195,7 @@ const Index = () => {
                     </h2>
                     <CareerProgression />
                   </div>
-                  {employee?.custom_employee_icebreaker_question && 
+                  {employee.custom_employee_icebreaker_question && 
                    employee.custom_employee_icebreaker_question.length > 0 && 
                    employee.custom_employee_icebreaker_question.some(q => q.answer && q.answer.trim()) && (
                     <IceBreakers />
@@ -194,7 +204,7 @@ const Index = () => {
                 
                 <TabsContent value="calibration" className="p-8">
                   <CalibrationSection 
-                    employeeId={employee?.name}
+                    employeeId={employee.name}
                     showPerformanceMatrix={true}
                     showSelfEvaluationUpload={false}
                     isAdminView={true}
@@ -203,9 +213,9 @@ const Index = () => {
               </Tabs>
             ) : (
               <div className="space-y-8 p-8">
-                {employee?.custom_about && <AboutSection />}
+                {employee.custom_about && <AboutSection />}
                 <MyPeople />
-                {employee?.custom_tech_stack && employee.custom_tech_stack.length > 0 && (
+                {employee.custom_tech_stack && employee.custom_tech_stack.length > 0 && (
                   <SkillsMatrix />
                 )}
                 <div className="bg-cardBg p-8 rounded-xl border border-borderSoft">
@@ -215,7 +225,7 @@ const Index = () => {
                   </h2>
                   <CareerProgression />
                 </div>
-                {employee?.custom_employee_icebreaker_question && 
+                {employee.custom_employee_icebreaker_question && 
                  employee.custom_employee_icebreaker_question.length > 0 && 
                  employee.custom_employee_icebreaker_question.some(q => q.answer && q.answer.trim()) && (
                   <IceBreakers />
