@@ -115,7 +115,7 @@ const Index = () => {
                   {employee?.designation || "Position"}
                 </p>
                 <p className="text-lg text-white/80">
-                  {employee?.department || "Department"}
+                  {employee?.designation || "Department"}
                 </p>
               </div>
             </div>
@@ -130,7 +130,7 @@ const Index = () => {
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20">
                 <MapPin className="w-6 h-6 mx-auto mb-2 text-white/80" />
                 <p className="text-sm text-white/70">Location</p>
-                <p className="font-semibold text-white">{employee?.custom_location || "—"}</p>
+                <p className="font-semibold text-white">{employee?.custom_city || "—"}</p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20">
                 <Calendar className="w-6 h-6 mx-auto mb-2 text-white/80" />
