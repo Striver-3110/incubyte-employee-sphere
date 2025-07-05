@@ -1,5 +1,5 @@
 
-import { useEmployee } from "@/contexts/EmployeeContext";
+import { useTestEmployee } from "@/contexts/TestEmployeeContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { shouldShowTechAdvisor, isTechnicalRole } from "@/utils/roleUtils";
 import { Users, User, UserCheck, Crown, Code } from "lucide-react";
@@ -25,7 +25,7 @@ const PeopleItem = ({ label, value, icon }: PeopleItemProps) => (
 );
 
 const MyPeople = () => {
-  const { employee, loading: employeeLoading } = useEmployee();
+  const { employee, loading: employeeLoading } = useTestEmployee();
 
   const isTechnical = employee ? isTechnicalRole(employee.designation) : false;
   const showTechAdvisor = employee ? shouldShowTechAdvisor(employee.designation) : false;

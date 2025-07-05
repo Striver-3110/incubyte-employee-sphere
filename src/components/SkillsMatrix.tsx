@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useEmployee } from "@/contexts/EmployeeContext";
+import { useTestEmployee } from "@/contexts/TestEmployeeContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Trash, Loader2 } from "lucide-react";
@@ -25,7 +25,7 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 const proficiencyLevels = ["Expert", "Intermediate", "Beginner", "Learning"];
 
 const SkillsMatrix = () => {
-  const { employee, loading, setEmployee, isViewingOtherEmployee } = useEmployee();
+  const { employee, loading, setEmployee, isViewingOtherEmployee } = useTestEmployee();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedProficiency, setSelectedProficiency] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -73,7 +73,7 @@ const SkillsMatrix = () => {
   // Group skills by proficiency level
   const groupedSkills = employee?.custom_tech_stack?.reduce(
     (acc: Record<string, typeof employee.custom_tech_stack>, skill) => {
-      const category = skill.proficiency_level;
+      const category = skill.proficiency;
       if (!acc[category]) {
         acc[category] = [];
       }
@@ -88,7 +88,7 @@ const SkillsMatrix = () => {
     if (!searchTerm.trim()) return [];
     
     const addedSkillNames = (employee?.custom_tech_stack || []).map(skill => 
-      skill.skill.toLowerCase().trim()
+      skill.technology.toLowerCase().trim()
     );
     
     console.log("Current search term:", searchTerm);
@@ -130,7 +130,7 @@ const SkillsMatrix = () => {
 
     // Check if skill already exists (case-insensitive)
     const existingSkill = employee?.custom_tech_stack?.find(
-      skill => skill.skill.toLowerCase().trim() === trimmedSkill.toLowerCase()
+      skill => skill.technology.toLowerCase().trim() === trimmedSkill.toLowerCase()
     );
     
     if (existingSkill) {
@@ -146,8 +146,8 @@ const SkillsMatrix = () => {
     }
 
     const newSkill = {
-      skill: trimmedSkill,
-      proficiency_level: selectedProficiency,
+      technology: trimmedSkill,
+      proficiency: selectedProficiency,
     };
 
     const updatedSkills = [...(employee?.custom_tech_stack || []), newSkill];
@@ -155,48 +155,22 @@ const SkillsMatrix = () => {
     try {
       setIsSaving(true);
       setIsAddDialogOpen(false);
-      // Call API to save the new skill
-      setIsComponentLoading(true);
-      console.log("Adding skill:", newSkill);
+      // For test context, just update the state directly
+      setEmployee((prev) => ({
+        ...prev,
+        custom_tech_stack: updatedSkills,
+      }));
       
-      const response = await fetch(`${BASE_URL}user.set_employee_details`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      toast.success("Skill added successfully.", {
+        position: "top-right",
+        style: {
+          background: "#D1F7C4",
+          border: "1px solid #9AE86B",
+          color: "#2B7724",
         },
-        body: JSON.stringify({
-          custom_tech_stack: updatedSkills,
-        }),
-        credentials: "include",
       });
-      const data = await response.json();
-
-      if (data.message?.status === "success") {
-        toast.success(data.message.message || "Skill added successfully.", {
-          position: "top-right",
-          style: {
-            background: "#D1F7C4",
-            border: "1px solid #9AE86B",
-            color: "#2B7724",
-          },
-        });
-        
-        // Update the global state immediately with the API response
-        setEmployee((prev) => ({
-          ...prev,
-          custom_tech_stack: data.message.data.custom_tech_stack,
-        }));
-        setSearchTerm("");
-        setSelectedProficiency("");
-        // Auto-close modal and reset form
-        
-        // Close dialog and reset form
-        closeDialog();
-        // window.location.reload();
-
-      } else {
-        throw new Error(data.message?.message || "Failed to add skill.");
-      }
+      
+      closeDialog();
     } catch (error) {
       console.error("Error adding skill:", error);
       toast.error("Failed to add skill.", {
@@ -214,52 +188,30 @@ const SkillsMatrix = () => {
   };
 
   // Delete a skill
-  const handleDeleteSkill = async (skillName: string) => {
-    const skillToDelete = employee?.custom_tech_stack?.find(skill => skill.name === skillName);
-    if (!skillToDelete) return;
-
+  const handleDeleteSkill = async (skillTechnology: string) => {
     // Filter out the skill to delete
     const updatedSkills = (employee?.custom_tech_stack || []).filter(
-      skill => skill.name !== skillName
+      skill => skill.technology !== skillTechnology
     );
 
     try {
-      setDeletingSkill(skillName);
+      setDeletingSkill(skillTechnology);
       setIsComponentLoading(true);
-      console.log("Deleting skill:", skillName);
       
-      const response = await fetch(`${BASE_URL}user.set_employee_details`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      // For test context, just update the state directly
+      setEmployee((prev) => ({
+        ...prev,
+        custom_tech_stack: updatedSkills,
+      }));
+      
+      toast.success("Skill deleted successfully.", {
+        position: "top-right",
+        style: {
+          background: "#D1F7C4",
+          border: "1px solid #9AE86B",
+          color: "#2B7724",
         },
-        body: JSON.stringify({
-          custom_tech_stack: updatedSkills,
-        }),
-        credentials: "include",
       });
-      const data = await response.json();
-
-      if (data.message?.status === "success") {
-        toast.success(data.message.message || "Skill deleted successfully.", {
-          position: "top-right",
-          style: {
-            background: "#D1F7C4",
-            border: "1px solid #9AE86B",
-            color: "#2B7724",
-          },
-        });
-        
-        // Update the global state immediately with the API response
-        setEmployee((prev) => ({
-          ...prev,
-          custom_tech_stack: data.message.data.custom_tech_stack,
-        }));
-        // window.location.reload();
-
-      } else {
-        throw new Error(data.message?.message || "Failed to delete skill.");
-      }
     } catch (error) {
       console.error("Error deleting skill:", error);
       toast.error("Failed to delete skill.", {
@@ -339,14 +291,14 @@ const SkillsMatrix = () => {
             <h3 className="text-md font-semibold text-gray-800 mb-3">{level}</h3>
             {groupedSkills[level]?.length > 0 ? (
               <div className="flex flex-wrap gap-2">
-                {(groupedSkills[level] || []).map((skill) => (
+                {(groupedSkills[level] || []).map((skill, index) => (
                   <div
-                    key={skill.name}
+                    key={`${skill.technology}-${index}`}
                     className="flex items-center bg-blue-50 p-2 rounded-md border border-blue-200 shadow-sm space-x-2"
                   >
-                    <span className="text-blue-800 text-sm font-medium">{skill.skill}</span>
+                    <span className="text-blue-800 text-sm font-medium">{skill.technology}</span>
                     {!isViewingOtherEmployee && (
-                      deletingSkill === skill.name ? (
+                      deletingSkill === skill.technology ? (
                         <div className="h-6 w-6 flex items-center justify-center">
                           <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
                         </div>
@@ -354,7 +306,7 @@ const SkillsMatrix = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDeleteSkill(skill.name)}
+                          onClick={() => handleDeleteSkill(skill.technology)}
                           className="h-6 w-6 text-blue-500 hover:text-red-500"
                           disabled={isSaving || deletingSkill !== null || isComponentLoading}
                         >

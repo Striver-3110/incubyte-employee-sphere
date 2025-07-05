@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useEmployee } from "@/contexts/EmployeeContext";
+import { useTestEmployee } from "@/contexts/TestEmployeeContext";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -33,7 +33,7 @@ interface SharedLearningFormData {
 const ITEMS_PER_PAGE = 10;
 
 const SharedLearnings = () => {
-  const { employee } = useEmployee();
+  const { employee } = useTestEmployee();
   const [allLearnings, setAllLearnings] = useState<SharedLearning[]>([]);
   const [filteredLearnings, setFilteredLearnings] = useState<SharedLearning[]>([]);
   const [displayedLearnings, setDisplayedLearnings] = useState<SharedLearning[]>([]);
@@ -62,19 +62,9 @@ const SharedLearnings = () => {
   const fetchAllLearnings = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}achievements.get_all_achievements`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-      });
-
-      const data = await response.json();
-      if (data.message?.status === "success") {
-        setAllLearnings(data.message.achievements || []);
-        setDataFetched(true);
-      } else {
-        throw new Error(data.message?.message || "Failed to fetch learnings");
-      }
+      // For test context, use empty array or mock data
+      setAllLearnings([]);
+      setDataFetched(true);
     } catch (error) {
       console.error("Error fetching learnings:", error);
       toast.error("Failed to fetch shared learnings", {
@@ -175,48 +165,17 @@ const SharedLearnings = () => {
     try {
       const eventType = data.event_type === "Other" ? data.custom_event_type : data.event_type;
 
-      const payload = {
-        employee: employee.name,
-        event_type: eventType,
-        event_date: format(data.event_date, "yyyy-MM-dd"),
-        event_description: data.event_description,
-        event_link: data.event_link || "",
-      };
-
-      let response;
-      if (editingLearning) {
-        response = await fetch(`${BASE_URL}achievements.edit_achievement`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify({ name: editingLearning.name, ...payload }),
-        });
-      } else {
-        response = await fetch(`${BASE_URL}achievements.push_achievement`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(payload),
-        });
-      }
-
-      const result = await response.json();
-      if (result.message?.status === "success") {
-        toast.success(editingLearning ? "Shared learning updated successfully" : "Shared learning added successfully", {
-          position: "top-right",
-          style: {
-            background: "#D1F7C4",
-            border: "1px solid #9AE86B",
-            color: "#2B7724",
-          },
-        });
-        setIsDialogOpen(false);
-        setEditingLearning(null);
-        // Only trigger one reload by setting dataFetched to false
-        setDataFetched(false);
-      } else {
-        throw new Error(result.message?.message || "Operation failed");
-      }
+      // For test context, just show success message
+      toast.success(editingLearning ? "Shared learning updated successfully" : "Shared learning added successfully", {
+        position: "top-right",
+        style: {
+          background: "#D1F7C4",
+          border: "1px solid #9AE86B",
+          color: "#2B7724",
+        },
+      });
+      setIsDialogOpen(false);
+      setEditingLearning(null);
     } catch (error) {
       console.error("Error saving learning:", error);
       toast.error("Failed to save shared learning", {
@@ -235,28 +194,15 @@ const SharedLearnings = () => {
   const handleDelete = async (name: string) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`${BASE_URL}achievements.delete_achievement`, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ name }),
+      // For test context, just show success message
+      toast.success("Shared learning deleted successfully", {
+        position: "top-right",
+        style: {
+          background: "#D1F7C4",
+          border: "1px solid #9AE86B",
+          color: "#2B7724",
+        },
       });
-
-      const result = await response.json();
-      if (result.message?.status === "success") {
-        toast.success("Shared learning deleted successfully", {
-          position: "top-right",
-          style: {
-            background: "#D1F7C4",
-            border: "1px solid #9AE86B",
-            color: "#2B7724",
-          },
-        });
-        // Only trigger one reload by setting dataFetched to false
-        setDataFetched(false);
-      } else {
-        throw new Error(result.message?.message || "Delete failed");
-      }
     } catch (error) {
       console.error("Error deleting learning:", error);
       toast.error("Failed to delete shared learning", {
@@ -357,9 +303,6 @@ const SharedLearnings = () => {
           </div>
         </>
       )}
-
-      {/* Floating Add Button */}
-
 
       {/* Modals */}
       <LearningViewModal

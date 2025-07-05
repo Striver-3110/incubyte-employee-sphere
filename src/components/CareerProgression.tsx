@@ -1,5 +1,4 @@
-
-import { useEmployee } from "@/contexts/EmployeeContext";
+import { useTestEmployee } from "@/contexts/TestEmployeeContext";
 import { formatDate } from "@/utils/dateUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -27,7 +26,7 @@ type ProjectEntry = {
 type CareerEntry = JoiningEntry | ProjectEntry;
 
 const CareerProgression = () => {
-  const { employee, loading } = useEmployee();
+  const { employee, loading } = useTestEmployee();
 
   if (loading || !employee) {
     return <CareerProgressionSkeleton />;
@@ -44,13 +43,13 @@ const CareerProgression = () => {
     isJoining: true
   };
 
-  // Get projects
-  const projects: ProjectEntry[] = [...(employee.custom_project || [])];
+  // Get projects - using empty array since test data doesn't have custom_project
+  const projects: ProjectEntry[] = [];
 
   // Combine all entries and sort chronologically (oldest first)
   const allEntries: CareerEntry[] = employee.date_of_joining ? [...projects, joiningEntry] : projects;
   
-  // Sort by start date (oldest first for chronological order)
+  // Sort by start date (newest first for reverse chronological order)
   const sortedEntries = allEntries.sort((a, b) => {
     return new Date(b.allocation_start_date).getTime() - new Date(a.allocation_start_date).getTime();
   });

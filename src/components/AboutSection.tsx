@@ -1,6 +1,5 @@
-
 import React, { useState } from "react";
-import { useEmployee } from "@/contexts/EmployeeContext";
+import { useTestEmployee } from "@/contexts/TestEmployeeContext";
 import { fetchEmployeeDetails } from "@/api/employeeService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -12,7 +11,7 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 const CHARACTER_LIMIT = 150;
 
 const AboutSection = () => {
-  const { employee, loading, error, setEmployee, isViewingOtherEmployee } = useEmployee();
+  const { employee, loading, error, setEmployee, isViewingOtherEmployee } = useTestEmployee();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
