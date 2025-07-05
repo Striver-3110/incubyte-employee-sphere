@@ -115,7 +115,7 @@ const Index = () => {
                   {employee?.designation || "Position"}
                 </p>
                 <p className="text-lg text-white/80">
-                  {employee?.designation || "Department"}
+                  {employee?.custom_team || "Team"}
                 </p>
               </div>
             </div>
