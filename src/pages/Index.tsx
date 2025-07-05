@@ -19,13 +19,12 @@ import { User, MapPin, Calendar, Building } from "lucide-react";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("about");
-  const [testCounter, setTestCounter] = useState(0);
   const [hasTechLeadAdvisorAccess, setHasTechLeadAdvisorAccess] = useState(false);
   const [hasPSMAccess, setHasPSMAccess] = useState(false);
-  const { employee, loading, isViewingOtherEmployee, viewEmployeeById } = useEmployee();
+  const { employee, loading, isViewingOtherEmployee } = useEmployee();
 
   const userRole = employee?.designation || "";
-  const hasBusinessAccess = roleCategories.Business.includes(userRole);
+  const hasBusinessAccess = roleCategories.Business?.includes(userRole) || false;
   const showCalibrationTab = shouldShowCalibrationTab(userRole);
 
   useEffect(() => {
@@ -47,32 +46,12 @@ const Index = () => {
     checkRoles();
   }, []);
 
-  console.log('Index component render:', {
-    employeeName: employee?.employee_name,
-    employeeId: employee?.name,
-    isViewingOtherEmployee,
-    loading,
-    testCounter,
-    hasTechLeadAdvisorAccess,
-    hasPSMAccess
-  });
-
-  const testFetchEmployee = async () => {
-    try {
-      console.log('Testing fetchEmployeeById with hardcoded ID...');
-      setTestCounter(prev => prev + 1);
-      await viewEmployeeById('E0034');
-    } catch (error) {
-      console.error('Test failed:', error);
-    }
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brandBlue/5 to-brandGreen/5 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-brandBlue/20 border-t-brandBlue rounded-full animate-spin mx-auto"></div>
-          <p className="text-brandBlueDark font-medium">Loading your profile...</p>
+          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
+          <p className="text-blue-800 font-medium">Loading your profile...</p>
         </div>
       </div>
     );
@@ -80,30 +59,20 @@ const Index = () => {
 
   if (!employee) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-brandBlue/5 to-brandGreen/5 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
         <div className="text-center space-y-4">
-          <p className="text-brandBlueDark font-medium">No employee data available</p>
+          <p className="text-blue-800 font-medium">No employee data available</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brandBlue/5 via-white to-brandGreen/5">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-brandBlueDarkest via-brandBlue to-brandBlueLighter">
+      <div className="relative bg-gradient-to-r from-blue-900 via-blue-700 to-blue-500">
         <div className="absolute inset-0 bg-black/10"></div>
-        <div className="relative max-w-7xl mx-auto px-6 py-12">
-          {/* Temporary test button */}
-          <div className="absolute top-4 right-4">
-            <button 
-              onClick={testFetchEmployee}
-              className="bg-white/20 backdrop-blur-sm text-white px-4 py-2 rounded-lg hover:bg-white/30 transition-all duration-200 text-sm"
-            >
-              Test Fetch Employee E0034
-            </button>
-          </div>
-          
+        <div className="relative max-w-7xl mx-auto px-6 py-12">          
           {/* Profile Header Content */}
           <div className="flex flex-col lg:flex-row items-start lg:items-center gap-8 text-white">
             {/* Avatar and Basic Info */}
@@ -112,20 +81,20 @@ const Index = () => {
                 <div className="w-32 h-32 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-4 border-white/30">
                   <User className="w-16 h-16 text-white/80" />
                 </div>
-                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-brandGreen rounded-full border-4 border-white flex items-center justify-center">
+                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white flex items-center justify-center">
                   <div className="w-2 h-2 bg-white rounded-full"></div>
                 </div>
               </div>
               
               <div className="text-center lg:text-left space-y-2">
                 <h1 className="text-3xl lg:text-4xl font-bold">
-                  {employee.employee_name}
+                  {employee?.employee_name || 'Employee Name'}
                 </h1>
                 <p className="text-xl text-white/90 font-medium">
-                  {employee.designation}
+                  {employee?.designation || 'Designation'}
                 </p>
                 <p className="text-lg text-white/80">
-                  {employee.custom_team || "Team"}
+                  {employee?.custom_team || "Team"}
                 </p>
               </div>
             </div>
@@ -135,24 +104,24 @@ const Index = () => {
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20">
                 <Building className="w-6 h-6 mx-auto mb-2 text-white/80" />
                 <p className="text-sm text-white/70">Team</p>
-                <p className="font-semibold text-white">{employee.custom_team || "—"}</p>
+                <p className="font-semibold text-white">{employee?.custom_team || "—"}</p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20">
                 <MapPin className="w-6 h-6 mx-auto mb-2 text-white/80" />
                 <p className="text-sm text-white/70">Location</p>
-                <p className="font-semibold text-white">{employee.custom_city || "—"}</p>
+                <p className="font-semibold text-white">{employee?.custom_city || "—"}</p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20">
                 <Calendar className="w-6 h-6 mx-auto mb-2 text-white/80" />
                 <p className="text-sm text-white/70">Joined</p>
                 <p className="font-semibold text-white">
-                  {employee.date_of_joining ? new Date(employee.date_of_joining).getFullYear() : "—"}
+                  {employee?.date_of_joining ? new Date(employee.date_of_joining).getFullYear() : "—"}
                 </p>
               </div>
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center border border-white/20">
                 <User className="w-6 h-6 mx-auto mb-2 text-white/80" />
                 <p className="text-sm text-white/70">ID</p>
-                <p className="font-semibold text-white">{employee.name}</p>
+                <p className="font-semibold text-white">{employee?.name || "—"}</p>
               </div>
             </div>
           </div>
@@ -161,21 +130,21 @@ const Index = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 -mt-8 relative z-10">
-        <div className="bg-white rounded-2xl shadow-xl border border-borderSoft overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
           {isViewingOtherEmployee ? (
             (hasTechLeadAdvisorAccess || hasPSMAccess) ? (
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <div className="border-b border-borderSoft bg-gradient-to-r from-highlightBg to-white">
+                <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
                   <TabsList className="w-full justify-start bg-transparent h-auto p-0">
                     <TabsTrigger 
                       value="about" 
-                      className="data-[state=active]:bg-brandBlue data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-brandBlue rounded-none px-8 py-4"
+                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-8 py-4"
                     >
                       About
                     </TabsTrigger>
                     <TabsTrigger 
                       value="calibration"
-                      className="data-[state=active]:bg-brandBlue data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-brandBlue rounded-none px-8 py-4"
+                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-8 py-4"
                     >
                       Calibration
                     </TabsTrigger>
@@ -183,19 +152,19 @@ const Index = () => {
                 </div>
                 
                 <TabsContent value="about" className="space-y-8 p-8">
-                  {employee.custom_about && <AboutSection />}
+                  {employee?.custom_about && <AboutSection />}
                   <MyPeople />
-                  {employee.custom_tech_stack && employee.custom_tech_stack.length > 0 && (
+                  {employee?.custom_tech_stack && employee.custom_tech_stack.length > 0 && (
                     <SkillsMatrix />
                   )}
-                  <div className="bg-cardBg p-8 rounded-xl border border-borderSoft">
-                    <h2 className="text-2xl font-bold text-brandBlueDarkest mb-6 flex items-center gap-3">
-                      <div className="w-1 h-8 bg-gradient-to-b from-brandBlue to-brandGreen rounded-full"></div>
+                  <div className="bg-gray-50 p-8 rounded-xl border border-gray-200">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                      <div className="w-1 h-8 bg-gradient-to-b from-blue-600 to-green-500 rounded-full"></div>
                       Career at Incubyte
                     </h2>
                     <CareerProgression />
                   </div>
-                  {employee.custom_employee_icebreaker_question && 
+                  {employee?.custom_employee_icebreaker_question && 
                    employee.custom_employee_icebreaker_question.length > 0 && 
                    employee.custom_employee_icebreaker_question.some(q => q.answer && q.answer.trim()) && (
                     <IceBreakers />
@@ -204,7 +173,7 @@ const Index = () => {
                 
                 <TabsContent value="calibration" className="p-8">
                   <CalibrationSection 
-                    employeeId={employee.name}
+                    employeeId={employee?.name || ''}
                     showPerformanceMatrix={true}
                     showSelfEvaluationUpload={false}
                     isAdminView={true}
@@ -213,19 +182,19 @@ const Index = () => {
               </Tabs>
             ) : (
               <div className="space-y-8 p-8">
-                {employee.custom_about && <AboutSection />}
+                {employee?.custom_about && <AboutSection />}
                 <MyPeople />
-                {employee.custom_tech_stack && employee.custom_tech_stack.length > 0 && (
+                {employee?.custom_tech_stack && employee.custom_tech_stack.length > 0 && (
                   <SkillsMatrix />
                 )}
-                <div className="bg-cardBg p-8 rounded-xl border border-borderSoft">
-                  <h2 className="text-2xl font-bold text-brandBlueDarkest mb-6 flex items-center gap-3">
-                    <div className="w-1 h-8 bg-gradient-to-b from-brandBlue to-brandGreen rounded-full"></div>
+                <div className="bg-gray-50 p-8 rounded-xl border border-gray-200">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                    <div className="w-1 h-8 bg-gradient-to-b from-blue-600 to-green-500 rounded-full"></div>
                     Career at Incubyte
                   </h2>
                   <CareerProgression />
                 </div>
-                {employee.custom_employee_icebreaker_question && 
+                {employee?.custom_employee_icebreaker_question && 
                  employee.custom_employee_icebreaker_question.length > 0 && 
                  employee.custom_employee_icebreaker_question.some(q => q.answer && q.answer.trim()) && (
                   <IceBreakers />
@@ -234,30 +203,30 @@ const Index = () => {
             )
           ) : (
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="border-b border-borderSoft bg-gradient-to-r from-highlightBg to-white">
+              <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
                 <TabsList className="w-full justify-start bg-transparent h-auto p-0 overflow-x-auto">
                   <TabsTrigger 
                     value="about"
-                    className="data-[state=active]:bg-brandBlue data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-brandBlue rounded-none px-6 py-4 whitespace-nowrap"
+                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-6 py-4 whitespace-nowrap"
                   >
                     About
                   </TabsTrigger>
                   <TabsTrigger 
                     value="tasks"
-                    className="data-[state=active]:bg-brandBlue data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-brandBlue rounded-none px-6 py-4 whitespace-nowrap"
+                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-6 py-4 whitespace-nowrap"
                   >
                     Tasks
                   </TabsTrigger>
                   <TabsTrigger 
                     value="feedback"
-                    className="data-[state=active]:bg-brandBlue data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-brandBlue rounded-none px-6 py-4 whitespace-nowrap"
+                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-6 py-4 whitespace-nowrap"
                   >
                     Feedback
                   </TabsTrigger>
                   {showCalibrationTab && (
                     <TabsTrigger 
                       value="calibration"
-                      className="data-[state=active]:bg-brandBlue data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-brandBlue rounded-none px-6 py-4 whitespace-nowrap"
+                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-6 py-4 whitespace-nowrap"
                     >
                       Calibration
                     </TabsTrigger>
@@ -265,7 +234,7 @@ const Index = () => {
                   {hasBusinessAccess && (
                     <TabsTrigger 
                       value="calibration-dashboard"
-                      className="data-[state=active]:bg-brandBlue data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-brandBlue rounded-none px-6 py-4 whitespace-nowrap"
+                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-6 py-4 whitespace-nowrap"
                     >
                       Dashboard
                     </TabsTrigger>
@@ -277,9 +246,9 @@ const Index = () => {
                 <AboutSection />
                 <MyPeople />
                 <SkillsMatrix />
-                <div className="bg-cardBg p-8 rounded-xl border border-borderSoft">
-                  <h2 className="text-2xl font-bold text-brandBlueDarkest mb-6 flex items-center gap-3">
-                    <div className="w-1 h-8 bg-gradient-to-b from-brandBlue to-brandGreen rounded-full"></div>
+                <div className="bg-gray-50 p-8 rounded-xl border border-gray-200">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                    <div className="w-1 h-8 bg-gradient-to-b from-blue-600 to-green-500 rounded-full"></div>
                     My Career at Incubyte
                   </h2>
                   <CareerProgression />
@@ -289,7 +258,7 @@ const Index = () => {
               </TabsContent>
               
               <TabsContent value="tasks" className="p-8">
-                <div className="bg-cardBg rounded-xl border border-borderSoft">
+                <div className="bg-gray-50 rounded-xl border border-gray-200">
                   <Tasks />
                 </div>
               </TabsContent>

@@ -31,7 +31,7 @@ const App = () => {
             <TooltipProvider>
               <Toaster />
               <Sonner />
-              <Router basename="/one-view">
+              <Router>
                 <Routes>
                   <Route path="/" element={
                     <ProtectedRoute>
@@ -48,8 +48,6 @@ const App = () => {
                       <ProfileData />
                     </AuthGuard>
                   } />
-                  {/* <Route path="/contributions" element={<Contributions />} /> */}
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Router>

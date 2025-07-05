@@ -5,7 +5,6 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import proxyOptions from './proxyOptions';
 
-
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
@@ -13,13 +12,7 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     force: true, // Force optimize deps
     proxy: proxyOptions,
-    historyApiFallback: {
-      rewrites: [
-        { from: /^\/one-view\/.*$/, to: '/one-view/index.html' }
-      ]
-    }
   },
-	base: '/one-view/', 
   optimizeDeps: {
     force: true, // Force re-optimization
     include: [
@@ -41,16 +34,16 @@ export default defineConfig(({ mode }) => ({
     },
   },
   build: {
-		outDir: '../incubyte_ui/public/one_view',
-		rollupOptions: {
-			output: {
-				entryFileNames: '[name].js',
-				chunkFileNames: '[name]-[hash].js',
-				assetFileNames: "[name].[ext]"
-			}
-		},
-		emptyOutDir: true,
-		target: 'es2015',
+    outDir: 'dist',
+    rollupOptions: {
+      output: {
+        entryFileNames: '[name].js',
+        chunkFileNames: '[name]-[hash].js',
+        assetFileNames: "[name].[ext]"
+      }
+    },
+    emptyOutDir: true,
+    target: 'es2015',
     sourcemap: true
-	},
+  },
 }));
