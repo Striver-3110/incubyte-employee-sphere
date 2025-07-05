@@ -1,31 +1,34 @@
+
 import { useEmployee } from "@/contexts/EmployeeContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { shouldShowTechAdvisor, isTechnicalRole } from "@/utils/roleUtils";
+import { Users, User, UserCheck, Crown, Code } from "lucide-react";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 interface PeopleItemProps {
   label: string;
   value: string;
+  icon: React.ReactNode;
 }
 
-const PeopleItem = ({ label, value }: PeopleItemProps) => (
-  <div className="flex  items-center gap-2">
-    <span className="text-md font-semibold text-gray-800">{label}:</span>
-    <span className="text-md text-gray-800">{value || "—"}</span>
+const PeopleItem = ({ label, value, icon }: PeopleItemProps) => (
+  <div className="bg-white p-4 rounded-lg border border-borderSoft shadow-sm hover:shadow-md transition-all duration-200">
+    <div className="flex items-center gap-3 mb-2">
+      <div className="w-8 h-8 bg-gradient-to-br from-brandBlue to-brandBlueLighter rounded-lg flex items-center justify-center">
+        {icon}
+      </div>
+      <span className="text-sm font-semibold text-brandBlueDark">{label}</span>
+    </div>
+    <p className="text-brandBlueDarkest font-medium">{value || "—"}</p>
   </div>
 );
 
 const MyPeople = () => {
   const { employee, loading: employeeLoading } = useEmployee();
 
-  // Check if the employee is in a technical role based on role utils
   const isTechnical = employee ? isTechnicalRole(employee.designation) : false;
-
-  // Check if tech advisor should be shown
   const showTechAdvisor = employee ? shouldShowTechAdvisor(employee.designation) : false;
-
-  // Check if the employee is a co-founder
   const isCoFounder = employee && employee.designation === "Co-Founder";
 
   if (employeeLoading || !employee) {
@@ -33,22 +36,45 @@ const MyPeople = () => {
   }
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">My People</h2>
+    <div className="bg-cardBg p-8 rounded-xl border border-borderSoft">
+      <h2 className="text-2xl font-bold text-brandBlueDarkest mb-6 flex items-center gap-3">
+        <div className="w-10 h-10 bg-gradient-to-br from-brandGreen to-brandBlue rounded-lg flex items-center justify-center">
+          <Users className="w-5 h-5 text-white" />
+        </div>
+        My People
+      </h2>
 
-      <div className="flex flex-wrap gap-x-8 gap-y-2">
-        <PeopleItem label="Team" value={employee.custom_team || ""} />
-        <PeopleItem label="POD" value={employee.custom_pod || ""} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <PeopleItem 
+          label="Team" 
+          value={employee.custom_team || ""} 
+          icon={<Users className="w-4 h-4 text-white" />}
+        />
+        <PeopleItem 
+          label="POD" 
+          value={employee.custom_pod || ""} 
+          icon={<User className="w-4 h-4 text-white" />}
+        />
 
-        {/* Show additional fields only if not a co-founder */}
         {!isCoFounder && (
           <>
-            <PeopleItem label="Lead" value={employee.custom_tech_lead_name || ""} />
-            <PeopleItem label="Buddy" value={employee.custom_buddy_name || ""} />
+            <PeopleItem 
+              label="Lead" 
+              value={employee.custom_tech_lead_name || ""} 
+              icon={<Crown className="w-4 h-4 text-white" />}
+            />
+            <PeopleItem 
+              label="Buddy" 
+              value={employee.custom_buddy_name || ""} 
+              icon={<UserCheck className="w-4 h-4 text-white" />}
+            />
 
-            {/* Only show Tech Advisor for technical roles and not PSM/Business */}
             {showTechAdvisor && (
-              <PeopleItem label="Tech Advisor" value={employee.custom_tech_advisor_name || ""} />
+              <PeopleItem 
+                label="Tech Advisor" 
+                value={employee.custom_tech_advisor_name || ""} 
+                icon={<Code className="w-4 h-4 text-white" />}
+              />
             )}
           </>
         )}
@@ -58,14 +84,21 @@ const MyPeople = () => {
 };
 
 const MyPeopleSkeleton = () => (
-  <div className="bg-white p-6 rounded-lg shadow-sm">
-    <Skeleton className="h-7 w-32 mb-4" />
-    <div className="flex flex-wrap gap-x-8 gap-y-2">
-      <Skeleton className="h-5 w-24" />
-      <Skeleton className="h-5 w-20" />
-      <Skeleton className="h-5 w-28" />
-      <Skeleton className="h-5 w-24" />
-      <Skeleton className="h-5 w-32" />
+  <div className="bg-cardBg p-8 rounded-xl border border-borderSoft">
+    <div className="flex items-center gap-3 mb-6">
+      <Skeleton className="h-10 w-10 rounded-lg" />
+      <Skeleton className="h-8 w-32" />
+    </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="bg-white p-4 rounded-lg border border-borderSoft">
+          <div className="flex items-center gap-3 mb-2">
+            <Skeleton className="h-8 w-8 rounded-lg" />
+            <Skeleton className="h-4 w-16" />
+          </div>
+          <Skeleton className="h-5 w-20" />
+        </div>
+      ))}
     </div>
   </div>
 );
