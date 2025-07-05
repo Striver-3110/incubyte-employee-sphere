@@ -9,10 +9,8 @@ import {
   Route
 } from 'react-router-dom'
 import { FrappeProvider } from 'frappe-react-sdk'
-import { EmployeeProvider } from '@/contexts/EmployeeContext'
+import { TestEmployeeProvider } from '@/contexts/TestEmployeeContext'
 import { TaskProvider } from '@/contexts/TaskContext'
-import { ProtectedRoute } from '@/components/ProtectedRoute'
-import { AuthGuard } from '@/components/AuthGuard'
 import Index from "./pages/Index";
 import Contributions from "./pages/Contributions";
 import Tasks from "./pages/Tasks";
@@ -22,38 +20,25 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => {
-
   return (
     <FrappeProvider>
       <QueryClientProvider client={queryClient}>
-        <EmployeeProvider>
+        <TestEmployeeProvider>
           <TaskProvider>
             <TooltipProvider>
               <Toaster />
               <Sonner />
               <Router>
                 <Routes>
-                  <Route path="/" element={
-                    <ProtectedRoute>
-                      <Index />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/tasks" element={
-                    <ProtectedRoute>
-                      <Tasks />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/profile-data" element={
-                    <AuthGuard>
-                      <ProfileData />
-                    </AuthGuard>
-                  } />
+                  <Route path="/" element={<Index />} />
+                  <Route path="/tasks" element={<Tasks />} />
+                  <Route path="/profile-data" element={<ProfileData />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Router>
             </TooltipProvider>
           </TaskProvider>
-        </EmployeeProvider>
+        </TestEmployeeProvider>
       </QueryClientProvider>
     </FrappeProvider>
   );

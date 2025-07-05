@@ -13,38 +13,44 @@ import CalibrationSection from "@/components/CalibrationSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CalibrationDashboard from "@/components/CalibrationDashboard";
 import Tasks from "./Tasks";
-import { useEmployee } from "@/contexts/EmployeeContext";
-import { roleCategories, shouldShowCalibrationTab, hasTechLeadAdvisorRole, hasPSMRole } from "@/utils/roleUtils";
 import { User, MapPin, Calendar, Building } from "lucide-react";
+
+// Test employee data
+const testEmployee = {
+  name: "EMP001",
+  employee_name: "John Doe",
+  designation: "Senior Software Engineer",
+  custom_team: "Engineering",
+  custom_city: "San Francisco",
+  date_of_joining: "2022-01-15",
+  custom_about: "Passionate software engineer with 5+ years of experience in full-stack development.",
+  custom_tech_stack: [
+    { technology: "React", proficiency: "Expert" },
+    { technology: "TypeScript", proficiency: "Advanced" },
+    { technology: "Node.js", proficiency: "Intermediate" }
+  ],
+  custom_employee_icebreaker_question: [
+    { question: "What's your favorite hobby?", answer: "Playing guitar and hiking" },
+    { question: "What's your dream vacation?", answer: "Backpacking through Europe" }
+  ],
+  custom_pod: "Alpha Pod",
+  custom_tech_lead_name: "Jane Smith",
+  custom_buddy_name: "Mike Johnson",
+  custom_tech_advisor_name: "Sarah Wilson"
+};
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("about");
-  const [hasTechLeadAdvisorAccess, setHasTechLeadAdvisorAccess] = useState(false);
-  const [hasPSMAccess, setHasPSMAccess] = useState(false);
-  const { employee, loading, isViewingOtherEmployee } = useEmployee();
+  const [employee] = useState(testEmployee);
+  const [loading] = useState(false);
 
+  // Mock role permissions for testing
   const userRole = employee?.designation || "";
-  const hasBusinessAccess = roleCategories.Business?.includes(userRole) || false;
-  const showCalibrationTab = shouldShowCalibrationTab(userRole);
-
-  useEffect(() => {
-    const checkRoles = async () => {
-      try {
-        const [techLeadAccess, psmAccess] = await Promise.all([
-          hasTechLeadAdvisorRole(),
-          hasPSMRole()
-        ]);
-        setHasTechLeadAdvisorAccess(techLeadAccess);
-        setHasPSMAccess(psmAccess);
-      } catch (error) {
-        console.error('Error checking roles:', error);
-        setHasTechLeadAdvisorAccess(false);
-        setHasPSMAccess(false);
-      }
-    };
-
-    checkRoles();
-  }, []);
+  const hasBusinessAccess = false;
+  const showCalibrationTab = true;
+  const hasTechLeadAdvisorAccess = false;
+  const hasPSMAccess = false;
+  const isViewingOtherEmployee = false;
 
   if (loading) {
     return (
@@ -131,158 +137,86 @@ const Index = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 -mt-8 relative z-10">
         <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-          {isViewingOtherEmployee ? (
-            (hasTechLeadAdvisorAccess || hasPSMAccess) ? (
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
-                  <TabsList className="w-full justify-start bg-transparent h-auto p-0">
-                    <TabsTrigger 
-                      value="about" 
-                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-8 py-4"
-                    >
-                      About
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="calibration"
-                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-8 py-4"
-                    >
-                      Calibration
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
-                
-                <TabsContent value="about" className="space-y-8 p-8">
-                  {employee?.custom_about && <AboutSection />}
-                  <MyPeople />
-                  {employee?.custom_tech_stack && employee.custom_tech_stack.length > 0 && (
-                    <SkillsMatrix />
-                  )}
-                  <div className="bg-gray-50 p-8 rounded-xl border border-gray-200">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-                      <div className="w-1 h-8 bg-gradient-to-b from-blue-600 to-green-500 rounded-full"></div>
-                      Career at Incubyte
-                    </h2>
-                    <CareerProgression />
-                  </div>
-                  {employee?.custom_employee_icebreaker_question && 
-                   employee.custom_employee_icebreaker_question.length > 0 && 
-                   employee.custom_employee_icebreaker_question.some(q => q.answer && q.answer.trim()) && (
-                    <IceBreakers />
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="calibration" className="p-8">
-                  <CalibrationSection 
-                    employeeId={employee?.name || ''}
-                    showPerformanceMatrix={true}
-                    showSelfEvaluationUpload={false}
-                    isAdminView={true}
-                  />
-                </TabsContent>
-              </Tabs>
-            ) : (
-              <div className="space-y-8 p-8">
-                {employee?.custom_about && <AboutSection />}
-                <MyPeople />
-                {employee?.custom_tech_stack && employee.custom_tech_stack.length > 0 && (
-                  <SkillsMatrix />
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+              <TabsList className="w-full justify-start bg-transparent h-auto p-0 overflow-x-auto">
+                <TabsTrigger 
+                  value="about"
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-6 py-4 whitespace-nowrap"
+                >
+                  About
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="tasks"
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-6 py-4 whitespace-nowrap"
+                >
+                  Tasks
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="feedback"
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-6 py-4 whitespace-nowrap"
+                >
+                  Feedback
+                </TabsTrigger>
+                {showCalibrationTab && (
+                  <TabsTrigger 
+                    value="calibration"
+                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-6 py-4 whitespace-nowrap"
+                  >
+                    Calibration
+                  </TabsTrigger>
                 )}
-                <div className="bg-gray-50 p-8 rounded-xl border border-gray-200">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-                    <div className="w-1 h-8 bg-gradient-to-b from-blue-600 to-green-500 rounded-full"></div>
-                    Career at Incubyte
-                  </h2>
-                  <CareerProgression />
-                </div>
-                {employee?.custom_employee_icebreaker_question && 
-                 employee.custom_employee_icebreaker_question.length > 0 && 
-                 employee.custom_employee_icebreaker_question.some(q => q.answer && q.answer.trim()) && (
-                  <IceBreakers />
+                {hasBusinessAccess && (
+                  <TabsTrigger 
+                    value="calibration-dashboard"
+                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-6 py-4 whitespace-nowrap"
+                  >
+                    Dashboard
+                  </TabsTrigger>
                 )}
+              </TabsList>
+            </div>
+            
+            <TabsContent value="about" className="space-y-8 p-8">
+              <AboutSection />
+              <MyPeople />
+              <SkillsMatrix />
+              <div className="bg-gray-50 p-8 rounded-xl border border-gray-200">
+                <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                  <div className="w-1 h-8 bg-gradient-to-b from-blue-600 to-green-500 rounded-full"></div>
+                  My Career at Incubyte
+                </h2>
+                <CareerProgression />
               </div>
-            )
-          ) : (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
-                <TabsList className="w-full justify-start bg-transparent h-auto p-0 overflow-x-auto">
-                  <TabsTrigger 
-                    value="about"
-                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-6 py-4 whitespace-nowrap"
-                  >
-                    About
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="tasks"
-                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-6 py-4 whitespace-nowrap"
-                  >
-                    Tasks
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="feedback"
-                    className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-6 py-4 whitespace-nowrap"
-                  >
-                    Feedback
-                  </TabsTrigger>
-                  {showCalibrationTab && (
-                    <TabsTrigger 
-                      value="calibration"
-                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-6 py-4 whitespace-nowrap"
-                    >
-                      Calibration
-                    </TabsTrigger>
-                  )}
-                  {hasBusinessAccess && (
-                    <TabsTrigger 
-                      value="calibration-dashboard"
-                      className="data-[state=active]:bg-blue-600 data-[state=active]:text-white border-b-2 border-transparent data-[state=active]:border-blue-600 rounded-none px-6 py-4 whitespace-nowrap"
-                    >
-                      Dashboard
-                    </TabsTrigger>
-                  )}
-                </TabsList>
+              <IceBreakers />
+              <SharedLearnings />
+            </TabsContent>
+            
+            <TabsContent value="tasks" className="p-8">
+              <div className="bg-gray-50 rounded-xl border border-gray-200">
+                <Tasks />
               </div>
-              
-              <TabsContent value="about" className="space-y-8 p-8">
-                <AboutSection />
-                <MyPeople />
-                <SkillsMatrix />
-                <div className="bg-gray-50 p-8 rounded-xl border border-gray-200">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-                    <div className="w-1 h-8 bg-gradient-to-b from-blue-600 to-green-500 rounded-full"></div>
-                    My Career at Incubyte
-                  </h2>
-                  <CareerProgression />
-                </div>
-                <IceBreakers />
-                <SharedLearnings />
+            </TabsContent>
+            
+            <TabsContent value="feedback" className="p-8">
+              <FeedbackSection />
+            </TabsContent>
+            
+            {showCalibrationTab && (
+              <TabsContent value="calibration" className="p-8">
+                <CalibrationSection 
+                  showPerformanceMatrix={false}
+                  showSelfEvaluationUpload={true}
+                />
               </TabsContent>
-              
-              <TabsContent value="tasks" className="p-8">
-                <div className="bg-gray-50 rounded-xl border border-gray-200">
-                  <Tasks />
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="feedback" className="p-8">
-                <FeedbackSection />
-              </TabsContent>
-              
-              {showCalibrationTab && (
-                <TabsContent value="calibration" className="p-8">
-                  <CalibrationSection 
-                    showPerformanceMatrix={false}
-                    showSelfEvaluationUpload={true}
-                  />
-                </TabsContent>
-              )}
+            )}
 
-              {hasBusinessAccess && (
-                <TabsContent value="calibration-dashboard" className="p-8">
-                  <CalibrationDashboard />
-                </TabsContent>
-              )}
-            </Tabs>
-          )}
+            {hasBusinessAccess && (
+              <TabsContent value="calibration-dashboard" className="p-8">
+                <CalibrationDashboard />
+              </TabsContent>
+            )}
+          </Tabs>
         </div>
       </div>
     </div>
