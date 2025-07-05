@@ -1,13 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useProfileForm } from '@/contexts/ProfileFormContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, Plus, Trash2, AlertCircle } from 'lucide-react';
+import { Upload, Plus, Trash2, AlertCircle, Search } from 'lucide-react';
 import { PlatformEntry } from '@/contexts/ProfileFormContext';
 import { socialPlatforms, getPlatformIcon } from '@/constants/socialPlatforms';
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandSeparator,
+} from '@/components/ui/command';
+import { fetchAllStates, fetchCitiesByState } from '@/utils/indianCitiesApi';
+import { Combobox } from '@/components/ui/combobox';
 
 interface ValidationErrors {
   image?: string;
@@ -26,6 +37,16 @@ export const BasicProfileStep = () => {
   const [showValidation, setShowValidation] = useState(false);
   const [touchedPlatforms, setTouchedPlatforms] = useState<Set<number>>(new Set());
   const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [states, setStates] = useState<string[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+  const [loadingStates, setLoadingStates] = useState(false);
+  const [loadingCities, setLoadingCities] = useState(false);
+  const [statesError, setStatesError] = useState<string | null>(null);
+  const [citiesError, setCitiesError] = useState<string | null>(null);
+  const [manualState, setManualState] = useState('');
+  const [manualCity, setManualCity] = useState('');
+  const [showManualState, setShowManualState] = useState(false);
+  const [showManualCity, setShowManualCity] = useState(false);
 
   // Expose validation function to parent
   React.useEffect(() => {
@@ -50,6 +71,49 @@ export const BasicProfileStep = () => {
     };
   }, [state.formData]);
 
+  // Fetch states on mount
+  React.useEffect(() => {
+    const loadStates = async () => {
+      setLoadingStates(true);
+      try {
+        const statesData = await fetchAllStates();
+        setStates(statesData);
+        setStatesError(null);
+      } catch (error) {
+        console.error('Error loading states:', error);
+        setStatesError('Failed to load states');
+      } finally {
+        setLoadingStates(false);
+      }
+    };
+
+    loadStates();
+  }, []);
+
+  // Fetch cities when state changes
+  useEffect(() => {
+    if (!state.formData.custom_state) {
+      setCities([]);
+      return;
+    }
+
+    const loadCities = async () => {
+      setLoadingCities(true);
+      setCitiesError(null);
+      try {
+        const citiesData = await fetchCitiesByState(state.formData.custom_state);
+        setCities(citiesData);
+      } catch (error) {
+        console.error('Error loading cities:', error);
+        setCitiesError('Failed to load cities');
+      } finally {
+        setLoadingCities(false);
+      }
+    };
+
+    loadCities();
+  }, [state.formData.custom_state]);
+
   const validateForm = (): ValidationErrors => {
     const errors: ValidationErrors = {};
     
@@ -59,9 +123,6 @@ export const BasicProfileStep = () => {
     }
     
     // Address validation
-    if (!state.formData.current_address || state.formData.current_address.trim() === '') {
-      errors.current_address = 'Current address is required';
-    }
     
     if (!state.formData.custom_city || state.formData.custom_city.trim() === '') {
       errors.custom_city = 'City is required';
@@ -69,10 +130,6 @@ export const BasicProfileStep = () => {
     
     if (!state.formData.custom_state || state.formData.custom_state.trim() === '') {
       errors.custom_state = 'State is required';
-    }
-    
-    if (!state.formData.custom_pin || state.formData.custom_pin.trim() === '') {
-      errors.custom_pin = 'Pin code is required';
     }
     
     // About validation
@@ -358,6 +415,10 @@ export const BasicProfileStep = () => {
     );
   };
 
+  // Filtered lists for dropdowns
+  const filteredStates = states.filter(s => s.toLowerCase().includes(state.formData.custom_state.toLowerCase()) || s === state.formData.custom_state);
+  const filteredCities = cities.filter(c => c.toLowerCase().includes(state.formData.custom_city.toLowerCase()) || c === state.formData.custom_city);
+
   return (
     <div className="space-y-6 font-sans">
       <h2 className="text-2xl font-bold text-brandBlueDark">Basic Details</h2>
@@ -434,7 +495,7 @@ export const BasicProfileStep = () => {
 
         <div className="space-y-2">
           <Label className={`text-textMuted font-semibold text-sm ${showValidation && validationErrors.current_address ? 'text-red-600' : ''}`}>
-            Current Address *
+            Current Address 
           </Label>
           <Textarea
             value={state.formData.current_address}
@@ -453,33 +514,24 @@ export const BasicProfileStep = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label className={`text-textMuted font-semibold text-sm ${showValidation && validationErrors.custom_city ? 'text-red-600' : ''}`}>
-              City *
-            </Label>
-            <Input
-              value={state.formData.custom_city}
-              onChange={(e) => handleAddressChange('custom_city', e.target.value)}
-              onBlur={(e) => handleAddressBlur('custom_city', e.target.value)}
-              placeholder="City"
-              className={`border-borderSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brandBlue focus-visible:ring-offset-1 text-brandBlueDarker ${showValidation && validationErrors.custom_city ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
-            />
-            {showValidation && validationErrors.custom_city && (
-              <div className="flex items-center space-x-1 text-red-600 text-sm mt-1">
-                <AlertCircle className="w-4 h-4" />
-                <span>{validationErrors.custom_city}</span>
-              </div>
-            )}
-          </div>
-          <div className="space-y-2">
             <Label className={`text-textMuted font-semibold text-sm ${showValidation && validationErrors.custom_state ? 'text-red-600' : ''}`}>
               State *
             </Label>
-            <Input
+            <Combobox
+              options={states.map(stateName => ({ value: stateName, label: stateName }))}
               value={state.formData.custom_state}
-              onChange={(e) => handleAddressChange('custom_state', e.target.value)}
-              onBlur={(e) => handleAddressBlur('custom_state', e.target.value)}
-              placeholder="State"
-              className={`border-borderSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brandBlue focus-visible:ring-offset-1 text-brandBlueDarker ${showValidation && validationErrors.custom_state ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+              onValueChange={(value) => {
+                handleAddressChange('custom_state', value);
+                // Clear city when state changes
+                handleAddressChange('custom_city', '');
+              }}
+              placeholder={loadingStates ? 'Loading states...' : statesError ? 'Failed to load states' : 'Select or type state'}
+              searchPlaceholder="Search or type state..."
+              emptyMessage="No states available"
+              loading={loadingStates}
+              error={statesError}
+              allowCustom={true}
+              className={showValidation && validationErrors.custom_state ? 'border-red-500 focus-visible:ring-red-500' : ''}
             />
             {showValidation && validationErrors.custom_state && (
               <div className="flex items-center space-x-1 text-red-600 text-sm mt-1">
@@ -489,8 +541,31 @@ export const BasicProfileStep = () => {
             )}
           </div>
           <div className="space-y-2">
+            <Label className={`text-textMuted font-semibold text-sm ${showValidation && validationErrors.custom_city ? 'text-red-600' : ''}`}>
+              City *
+            </Label>
+            <Combobox
+              options={cities.map(city => ({ value: city, label: city }))}
+              value={state.formData.custom_city}
+              onValueChange={(value) => handleAddressChange('custom_city', value)}
+              placeholder={loadingCities ? 'Loading cities...' : citiesError ? 'Failed to load cities' : 'Select or type city'}
+              searchPlaceholder="Search or type city..."
+              emptyMessage="No cities available"
+              loading={loadingCities}
+              error={citiesError}
+              allowCustom={true}
+              className={showValidation && validationErrors.custom_city ? 'border-red-500 focus-visible:ring-red-500' : ''}
+            />
+            {showValidation && validationErrors.custom_city && (
+              <div className="flex items-center space-x-1 text-red-600 text-sm mt-1">
+                <AlertCircle className="w-4 h-4" />
+                <span>{validationErrors.custom_city}</span>
+              </div>
+            )}
+          </div>
+          <div className="space-y-2">
             <Label className={`text-textMuted font-semibold text-sm ${showValidation && validationErrors.custom_pin ? 'text-red-600' : ''}`}>
-              Pin Code *
+              Pin Code
             </Label>
             <Input
               value={state.formData.custom_pin}

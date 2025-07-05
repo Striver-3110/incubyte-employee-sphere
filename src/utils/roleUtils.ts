@@ -85,3 +85,25 @@ export const shouldShowCalibrationTab = (designation: string | undefined): boole
   // Hide calibration tab if user has "Calibration Dashboard Access"
   return !roleCategories["Calibration Dashboard Access"].includes(designation);
 };
+
+import { checkTechLeadAccess, checkPSMAccess } from '../api/userRoleService';
+
+// Check if the user has Tech Lead or Tech Advisor role (backend check)
+export const hasTechLeadAdvisorRole = async (): Promise<boolean> => {
+  try {
+    return await checkTechLeadAccess();
+  } catch (error) {
+    console.error('Error checking Tech Lead/Advisor role:', error);
+    return false;
+  }
+};
+
+// Check if the user has PSM role (backend check)
+export const hasPSMRole = async (): Promise<boolean> => {
+  try {
+    return await checkPSMAccess();
+  } catch (error) {
+    console.error('Error checking PSM role:', error);
+    return false;
+  }
+};

@@ -26,6 +26,9 @@ export const ThankYouPage = () => {
           <p className="text-lg text-textMuted">
             Your profile has been successfully submitted.
           </p>
+          <p className="text-lg text-textMuted">
+            You can close this window now.
+          </p>
         </div>
       </div>
     </div>

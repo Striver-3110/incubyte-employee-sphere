@@ -5,11 +5,11 @@ export const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   const options: Intl.DateTimeFormatOptions = { 
     year: 'numeric', 
-    month: 'long', 
+    month: 'short', 
     day: 'numeric' 
   };
   
-  return date.toLocaleDateString('en-US', options);
+  return date.toLocaleDateString('en-GB', options);
 };
 
 export const calculateTenure = (joiningDate: string): string => {

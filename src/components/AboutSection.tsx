@@ -13,7 +13,7 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 const CHARACTER_LIMIT = 150;
 
 const AboutSection = () => {
-  const { employee, loading, error, setEmployee } = useEmployee();
+  const { employee, loading, error, setEmployee, isViewingOtherEmployee } = useEmployee();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -112,7 +112,7 @@ const AboutSection = () => {
       
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-gray-800">About</h2>
-        {!isEditing && (
+        {!isEditing && !isViewingOtherEmployee && (
           <Button
             variant="ghost"
             size="sm"
@@ -126,7 +126,7 @@ const AboutSection = () => {
         )}
       </div>
 
-      {isEditing ? (
+      {isEditing && !isViewingOtherEmployee ? (
         <div>
           <Textarea
             value={employee.custom_about || ""}

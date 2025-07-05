@@ -223,6 +223,22 @@ export const SharedLearningsStep = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {achievement.event_type === 'Other' && (
+                  <div className="mt-2">
+                    <Input
+                      placeholder="Enter custom event type"
+                      value={achievement.custom_event_type || ''}
+                      onChange={(e) => handleCustomEventTypeChange(index, e.target.value)}
+                      className={`border-borderSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brandBlue focus-visible:ring-offset-1 text-brandBlueDarker ${showValidation && validationErrors[index]?.custom_event_type ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                    />
+                    {showValidation && validationErrors[index]?.custom_event_type && (
+                      <div className="flex items-center space-x-1 text-red-600 text-sm mt-1">
+                        <AlertCircle className="w-4 h-4" />
+                        <span>{validationErrors[index].custom_event_type}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
                 {showValidation && validationErrors[index]?.event_type && (
                   <div className="flex items-center space-x-1 text-red-600 text-sm mt-1">
                     <AlertCircle className="w-4 h-4" />

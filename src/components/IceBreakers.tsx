@@ -97,7 +97,7 @@ const shuffleArray = <T,>(array: T[]): T[] => {
 };
 
 const IceBreakers = () => {
-  const { employee, loading } = useEmployee();
+  const { employee, loading, isViewingOtherEmployee } = useEmployee();
   const [isComponentLoading, setIsComponentLoading] = useState(false);
 
   if (loading || !employee) {
@@ -116,19 +116,37 @@ const IceBreakers = () => {
 
       {employee.custom_employee_icebreaker_question ? (
         employee.custom_employee_icebreaker_question.length === 0 ? (
-          <IceBreakersForm 
-            questions={[]} 
-            predefinedQuestions={predefinedQuestions} 
-            setIsComponentLoading={setIsComponentLoading}
-            isComponentLoading={isComponentLoading}
-          />
+          isViewingOtherEmployee ? (
+            <p className="text-gray-500 italic">No ice breakers available.</p>
+          ) : (
+            <IceBreakersForm 
+              questions={[]} 
+              predefinedQuestions={predefinedQuestions} 
+              setIsComponentLoading={setIsComponentLoading}
+              isComponentLoading={isComponentLoading}
+            />
+          )
         ) : (
-          <IceBreakersForm
-            questions={employee.custom_employee_icebreaker_question}
-            predefinedQuestions={predefinedQuestions}
-            setIsComponentLoading={setIsComponentLoading}
-            isComponentLoading={isComponentLoading}
-          />
+          isViewingOtherEmployee ? (
+            // Read-only view for other employees
+            <div className="space-y-4">
+              {employee.custom_employee_icebreaker_question
+                .filter(q => q.answer && q.answer.trim())
+                .map((icebreaker, index) => (
+                  <div key={index} className="p-4 border border-gray-200 rounded-lg">
+                    <h3 className="font-medium text-gray-800 mb-2">{icebreaker.question}</h3>
+                    <p className="text-gray-600">{icebreaker.answer}</p>
+                  </div>
+                ))}
+            </div>
+          ) : (
+            <IceBreakersForm
+              questions={employee.custom_employee_icebreaker_question}
+              predefinedQuestions={predefinedQuestions}
+              setIsComponentLoading={setIsComponentLoading}
+              isComponentLoading={isComponentLoading}
+            />
+          )
         )
       ) : (
         <p className="text-gray-500 italic">No ice breakers available.</p>

@@ -2,7 +2,9 @@
 import { useState, useEffect } from 'react';
 
 // Extracted base URL as a separate constant
-const BASE_URL = import.meta.env.VITE_BASE_URL
+const BASE_URL = import.meta.env.VITE_BASE_URL || '/api/method/';
+
+console.log('BASE_URL:', BASE_URL);
 
 export interface PlatformLink {
   name: string;
@@ -28,11 +30,11 @@ export interface IcebreakerQuestion {
 }
 
 export interface Project {
-  title: string;
+  project: string;
   pod: string;
   role: string;
-  expected_start_date: string;
-  expected_end_date: string;
+  allocation_start_date: string;
+  allocation_end_date: string;
   status: string;
   project_link: string;
   description: string;
@@ -45,10 +47,23 @@ export interface CalibrationSkill {
 }
 
 export interface Calibration {
+  name?: string;
+  creation?: string;
+  modified: string;
+  modified_by?: string;
+  owner?: string;
+  docstatus?: number;
+  idx?: number;
+  employee_name?: string;
+  role?: string;
+  tech_lead?: string;
   performance: string;
   potential: string;
+  "9_grid"?: string;
+  calibration_template?: string;
+  notes?: string;
+  self_evaluation_sheet?: string;
   calibration_skill_categories: CalibrationSkill[];
-  modified: string;
 }
 
 export interface Feedback {
@@ -592,7 +607,7 @@ export const useContributions = (type: ContributionType) => {
 };
 
 // Get calibration data
-export const useCalibrationData = () => {
+export const useCalibrationData = (employeeId?: string) => {
   const [calibration, setCalibration] = useState<Calibration | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -600,10 +615,17 @@ export const useCalibrationData = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`${BASE_URL}user.get_calibration_for_employee`, {
-          method: 'GET',
+        const url = employeeId 
+          ? `${BASE_URL}user.get_calibration_for_employee`
+          : `${BASE_URL}user.get_calibration_for_employee`;
+        
+        const requestBody = employeeId ? { employee_id: employeeId } : {};
+        
+        const response = await fetch(url, {
+          method: employeeId ? 'POST' : 'GET',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include'
+          credentials: 'include',
+          ...(employeeId && { body: JSON.stringify(requestBody) })
         });
 
         if (!response.ok) {
@@ -611,13 +633,24 @@ export const useCalibrationData = () => {
         }
 
         const data = await response.json();
-        // Check if the data is valid before setting it
-        if (data.message.status === "error" || !data?.message?.data) {
+        console.log("Calibration API response:", data);
+        
+        // Handle nested response structure: data.message.data
+        let calibrationData: any = null;
+        
+        if (data.message && data.message.status === "success" && data.message.data) {
+          calibrationData = data.message.data;
+        } else if (data.status === "success" && data.data) {
+          calibrationData = data.data;
+        } else if (data.status === "error" || (data.message && data.message.status === "error")) {
+          const errorMessage = data.message?.message || data.message || "Failed to fetch calibration data. Please try again later.";
+          throw new Error(errorMessage);
+        } else {
           console.error("Invalid calibration data received:", data);
-          throw new Error(data?.message || "Failed to fetch calibration data. Please try again later.");
+          throw new Error("Failed to fetch calibration data. Please try again later.");
         }
 
-        setCalibration(data.message.data);
+        setCalibration(calibrationData);
       } catch (err: any) {
         console.error("Error fetching calibration data:", err);
         setError(err.message || "Failed to fetch calibration data");
@@ -628,7 +661,7 @@ export const useCalibrationData = () => {
     };
 
     fetchData();
-  }, []);
+  }, [employeeId]);
 
   return { calibration, loading, error };
 };
@@ -721,6 +754,80 @@ export const fetchAllEmployees = async (): Promise<Employee[]> => {
       { name: 'E0009', employee_name: 'Akshay Vadher' },
       { name: 'E0002', employee_name: 'Arohi Shah' },
     ];
+  }
+};
+
+// Fetch employee details by ID for public profile viewing
+export const fetchEmployeeById = async (employeeId: string): Promise<EmployeeDetails> => {
+  try {
+    console.log('Fetching employee by ID:', employeeId);
+    const url = `${BASE_URL}user.get_employee_by_id`;
+    console.log('Full URL:', url);
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ employee_id: employeeId }),
+    });
+
+    console.log('Response status:', response.status);
+    console.log('Response ok:', response.ok);
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch employee details');
+    }
+
+    const data = await response.json();
+    console.log('API Response for fetchEmployeeById:', data);
+    
+    // Check different possible response structures
+    if (data.status === 'error') {
+      throw new Error(data.message || 'Failed to fetch employee details');
+    }
+
+    // Check if data is directly in data field (main structure)
+    if (data.data) {
+      console.log('Found data in data field:', data.data);
+      const employeeData = data.data;
+      
+      // Add missing fields that the frontend expects
+      const enhancedData: EmployeeDetails = {
+        ...employeeData,
+        custom_project: employeeData.employee_achievements || [], // Map employee_achievements to custom_project
+        custom_team: employeeData.custom_team || "",
+        custom_pod: employeeData.custom_pod || "",
+        custom_tech_lead: employeeData.custom_tech_lead || "",
+        custom_buddy: employeeData.custom_buddy || "",
+        custom_tech_advisor: employeeData.custom_tech_advisor || "",
+        custom_tech_lead_name: employeeData.custom_tech_lead_name || "",
+        custom_buddy_name: employeeData.custom_buddy_name || "",
+        custom_tech_advisor_name: employeeData.custom_tech_advisor_name || "",
+        personal_email: employeeData.personal_email || "",
+        custom_passionate_about: employeeData.custom_passionate_about || []
+      };
+      
+      console.log('Enhanced data:', enhancedData);
+      return enhancedData;
+    }
+
+    // Check if data is in message.data structure (fallback)
+    if (data.message && data.message.data) {
+      console.log('Found data in message.data:', data.message.data);
+      return data.message.data;
+    }
+
+    // Check if data is directly in message field (fallback)
+    if (data.message) {
+      console.log('Found data in message field:', data.message);
+      return data.message;
+    }
+
+    console.error('No valid data structure found in response:', data);
+    throw new Error('No employee data received');
+  } catch (error) {
+    console.error('Error fetching employee by ID:', error);
+    throw error;
   }
 };
 

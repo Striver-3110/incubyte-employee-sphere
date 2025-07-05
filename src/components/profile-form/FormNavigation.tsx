@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, forwardRef } from 'react';
 import { useProfileForm } from '@/contexts/ProfileFormContext';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, Upload, Loader2 } from 'lucide-react';
@@ -6,10 +6,20 @@ import { useToast } from '@/hooks/use-toast';
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-export const FormNavigation = () => {
+interface FormNavigationProps {
+  onSubmittingChange?: (isSubmitting: boolean) => void;
+}
+
+export const FormNavigation = forwardRef<HTMLDivElement, FormNavigationProps>(
+  ({ onSubmittingChange }, ref) => {
   const { state, goToNextStep, goToPrevStep, setSubmissionSuccess } = useProfileForm();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Notify parent when submitting state changes
+  React.useEffect(() => {
+    if (onSubmittingChange) onSubmittingChange(isSubmitting);
+  }, [isSubmitting, onSubmittingChange]);
 
   const validateStep = (step: number): boolean => {
     const { formData } = state;
@@ -188,9 +198,9 @@ export const FormNavigation = () => {
       if (response.ok) {
         toast({
           title: "Success!",
-          description: "Your profile has been updated successfully.",
+          description: "Your profile has been updated successfully.\n You can now close this window.",
         });
-        // Set submission success to show thank you page
+        setIsSubmitting(false);
         setSubmissionSuccess(true);
       } else {
         throw new Error('Failed to update profile');
@@ -210,7 +220,7 @@ export const FormNavigation = () => {
   const isLastStep = state.currentStep === 4;
 
   return (
-    <div className="flex justify-between items-center">
+    <div ref={ref} className="flex justify-between items-center">
       <div>
         {state.currentStep > 1 && (
           <Button 
@@ -232,7 +242,7 @@ export const FormNavigation = () => {
             type="button" 
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="min-w-[120px] bg-brandGreen hover:bg-brandGreen/90 text-white transition-colors disabled:opacity-50"
+            className="min-w-[120px] bg-[#00994d] hover:bg-[#00994d]/90 text-white transition-colors disabled:opacity-50"
           >
             {isSubmitting ? (
               <>
@@ -259,4 +269,5 @@ export const FormNavigation = () => {
       </div>
     </div>
   );
-};
+}
+);

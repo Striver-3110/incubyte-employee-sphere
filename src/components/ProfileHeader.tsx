@@ -4,10 +4,11 @@ import { calculateTenure, formatDate } from "@/utils/dateUtils";
 import { 
   Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, 
   Plus, Save, Trash2, Users, Loader2, Globe, Twitch, Youtube, 
-  MessageSquare, FileCode, BookOpen, Coffee, Server, Code, Database 
+  MessageSquare, FileCode, BookOpen, Coffee, Server, Code, Database,
+  Search, Home
 } from "lucide-react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,6 +28,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Combobox } from "@/components/ui/combobox";
+import { fetchAllEmployees } from "@/api/employeeService";
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -47,12 +50,14 @@ const socialPlatforms = [
 ];
 
 const ProfileHeader = () => {
-  const { employee, setEmployee, loading } = useEmployee();
+  const { employee, setEmployee, loading, viewEmployeeById, isViewingOtherEmployee, resetToOwnProfile } = useEmployee();
   const { employees: teamMembers } = useTeamEmployees();
   const [editingSocial, setEditingSocial] = useState<string | null>(null);
   const [newUrl, setNewUrl] = useState("");
   const [processingPlatform, setProcessingPlatform] = useState<string | null>(null);
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
+  const [allEmployees, setAllEmployees] = useState<{ value: string; label: string }[]>([]);
+  const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
 
   const [isAddingPlatform, setIsAddingPlatform] = useState(false);
   const [isAddingPlatformLoading, setIsAddingPlatformLoading] = useState(false);
@@ -77,6 +82,41 @@ const ProfileHeader = () => {
   // Image upload states
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  // Fetch all employees for search
+  useEffect(() => {
+    const loadEmployees = async () => {
+      try {
+        setIsLoadingEmployees(true);
+        const employees = await fetchAllEmployees();
+        const employeeOptions = employees
+          .filter(emp => emp.name !== employee?.name) // Filter out current user
+          .map(emp => ({
+            value: emp.name,
+            label: `${emp.employee_name} (${emp.name})`
+          }));
+        setAllEmployees(employeeOptions);
+      } catch (error) {
+        console.error('Error loading employees:', error);
+        toast.error('Failed to load employee list');
+      } finally {
+        setIsLoadingEmployees(false);
+      }
+    };
+
+    loadEmployees();
+  }, [employee?.name]); // Re-run when current employee changes
+
+  // Handle employee selection
+  const handleEmployeeSelect = async (employeeId: string) => {
+    try {
+      await viewEmployeeById(employeeId);
+      toast.success('Employee profile loaded successfully');
+    } catch (error) {
+      console.error('Error loading employee profile:', error);
+      toast.error('Failed to load employee profile');
+    }
+  };
 
   // Check if any operation is in progress
   const isAnyOperationInProgress = !!processingPlatform || isAddingPlatformLoading || isUpdatingProfile;
@@ -494,6 +534,7 @@ const ProfileHeader = () => {
   // Check if user is co-founder to show team members
   const isCoFounder = employee && employee.designation === "Co-Founder";
   const hasTeamMembers = teamMembers && teamMembers.length > 0;
+  const shouldShowTeamMembers = !isCoFounder && hasTeamMembers && !isViewingOtherEmployee;
 
   return (
     <div className="w-full bg-white rounded-lg shadow-md overflow-hidden relative">
@@ -504,20 +545,51 @@ const ProfileHeader = () => {
         </div>
       )}
       
-      <div className="relative p-4 sm:p-6 lg:p-8">
-        {/* Edit Profile Button */}
-        <div className="absolute top-4 right-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleEditProfile}
-            className="flex items-center gap-2"
-            disabled={isAnyOperationInProgress}
-          >
-            <Edit className="h-4 w-4" />
-            Edit Profile
-          </Button>
+      {/* Employee Search Bar */}
+      <div className="bg-gray-50 p-4 border-b border-gray-200">
+        <div className="flex items-center gap-4 max-w-2xl mx-auto">
+          <div className="flex-1">
+            <Combobox
+              options={allEmployees}
+              value=""
+              onValueChange={handleEmployeeSelect}
+              placeholder="Search employees..."
+              searchPlaceholder="Type employee name or ID..."
+              emptyMessage={isLoadingEmployees ? "Loading employees..." : "No employees found"}
+              loading={isLoadingEmployees}
+              allowCustom={false}
+            />
+          </div>
+          {isViewingOtherEmployee && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetToOwnProfile}
+              className="flex items-center gap-2"
+            >
+              <Home className="h-4 w-4" />
+              My Profile
+            </Button>
+          )}
         </div>
+      </div>
+      
+      <div className="relative p-4 sm:p-6 lg:p-8">
+        {/* Edit Profile Button - Only show when viewing own profile */}
+        {!isViewingOtherEmployee && (
+          <div className="absolute top-4 right-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleEditProfile}
+              className="flex items-center gap-2"
+              disabled={isAnyOperationInProgress}
+            >
+              <Edit className="h-4 w-4" />
+              Edit Profile
+            </Button>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Section - Profile Info */}
@@ -541,7 +613,8 @@ const ProfileHeader = () => {
                   <p className="text-sm sm:text-base font-medium text-blue-600 mt-1">{employee.designation}</p>
 
                   <div className="flex flex-col sm:flex-row sm:items-center mt-2 text-gray-600 text-sm gap-1 sm:gap-0">
-                    <span>Joined {formatDate(employee.date_of_joining)}</span>
+                    <span>Joined {formatDate(employee.date_of_joining)}
+                    </span>
                     <span className="hidden sm:inline mx-2">•</span>
                     <span>Tenure: {calculateTenure(employee.date_of_joining)}</span>
                   </div>
@@ -589,31 +662,35 @@ const ProfileHeader = () => {
                             {getPlatformIcon(platform.platform_name.toLowerCase())}
                             <span className="hidden sm:inline">{platform.platform_name}</span>
                           </a>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleEditSocial(platform.name, platform.url)}
-                            className="h-6 w-6 ml-1"
-                            disabled={isAnyOperationInProgress}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeletePlatform(platform.name)}
-                            className="h-6 w-6 ml-1 text-red-500"
-                            disabled={isAnyOperationInProgress}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                          {!isViewingOtherEmployee && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditSocial(platform.name, platform.url)}
+                              className="h-6 w-6 ml-1"
+                              disabled={isAnyOperationInProgress}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                          )}
+                          {!isViewingOtherEmployee && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeletePlatform(platform.name)}
+                              className="h-6 w-6 ml-1 text-red-500"
+                              disabled={isAnyOperationInProgress}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          )}
                         </>
                       )}
                     </div>
                   ))}
 
                   {/* Add Platform Button & Form */}
-                  {availablePlatforms.length > 0 && !isAddingPlatform && (
+                  {availablePlatforms.length > 0 && !isAddingPlatform && !isViewingOtherEmployee && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -627,7 +704,7 @@ const ProfileHeader = () => {
                     </Button>
                   )}
 
-                  {isAddingPlatform && (
+                  {isAddingPlatform && !isViewingOtherEmployee && (
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2 border rounded-md bg-gray-50 w-full sm:w-auto">
                       <Select 
                         value={selectedPlatform} 
@@ -690,28 +767,57 @@ const ProfileHeader = () => {
                     </a>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 flex-shrink-0" />
-                    <a href={`tel:${employee.cell_number}`} className="hover:underline">
-                      {employee.cell_number}
-                    </a>
-                  </div>
-
                   <div className="flex items-center gap-2 min-w-0 sm:col-span-2 lg:col-span-1">
                     <MapPin className="h-4 w-4 flex-shrink-0" />
                     <span className="truncate">
-                      {employee.custom_city}, {employee.custom_state}
+                      {employee.custom_city && employee.custom_state ? `${employee.custom_city}, ${employee.custom_state}` : 'Location not specified'}
                     </span>
                   </div>
                 </div>
+
+                {/* Additional Profile Information */}
+                {(employee.custom_team || employee.custom_pod) && (
+                  <div className="mt-4 space-y-3">
+                    {/* REMOVE: About section when viewing other employees */}
+                    {/*
+                    {employee.custom_about && (
+                      <div className="text-sm text-gray-700">
+                        <h4 className="font-medium text-gray-800 mb-1">About</h4>
+                        <p className="text-gray-600 leading-relaxed">{employee.custom_about}</p>
+                      </div>
+                    )}
+                    */}
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                      {employee.custom_team && (
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-gray-500" />
+                          <span className="text-gray-600">
+                            <span className="font-medium">Team:</span> {employee.custom_team}
+                          </span>
+                        </div>
+                      )}
+                      
+                      {employee.custom_pod && (
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-gray-500" />
+                          <span className="text-gray-600">
+                            <span className="font-medium">POD:</span> {employee.custom_pod}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Right Section - Team Members */}
-          {!isCoFounder && hasTeamMembers && (
-            <div className="lg:col-span-1">
-              <div className="bg-gray-50 p-4 sm:p-6 rounded-lg h-full">
+          {/* Right Section - Team Members & Additional Info */}
+          <div className="lg:col-span-1 space-y-4">
+            {/* Team Members - Only show for own profile */}
+            {shouldShowTeamMembers && (
+              <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-sm sm:text-base font-medium text-gray-700 flex items-center gap-2">
                     <Users className="h-4 w-4" />
@@ -721,9 +827,8 @@ const ProfileHeader = () => {
                 
                 <div className="grid grid-cols-1 gap-3">
                   {(teamMembers || []).slice(0, 3).map((member, index) => (
-
                     <div key={member.name || index} className="text-sm border-b border-gray-200 pb-2 last:border-b-0 last:pb-0">
-                      <div className="font-medium text-gray-800 truncate">{member.employee_name}</div>
+                      <div className="font-medium text-gray-800">{member.employee_name}</div>
                       <div className="text-gray-500 text-xs truncate">{member.designation}</div>
                     </div>
                   ))}
@@ -740,8 +845,83 @@ const ProfileHeader = () => {
                   )}
                 </div>
               </div>
-            </div>
-          )}
+            )}
+            {/* REMOVE: Tech Stack, Achievements, and Icebreaker Questions for other employees */}
+            {/*
+            {isViewingOtherEmployee && employee.custom_tech_stack && employee.custom_tech_stack.length > 0 && (
+              <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
+                <div className="flex items-center gap-2 mb-4">
+                  <Code className="h-4 w-4" />
+                  <h3 className="text-sm sm:text-base font-medium text-gray-700">Tech Stack</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-2">
+                  {employee.custom_tech_stack.slice(0, 5).map((tech, index) => (
+                    <div key={index} className="text-sm flex justify-between items-center">
+                      <span className="font-medium text-gray-800">{tech.skill}</span>
+                      <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                        {tech.proficiency_level}
+                      </span>
+                    </div>
+                  ))}
+                  
+                  {employee.custom_tech_stack.length > 5 && (
+                    <div className="text-xs text-gray-500 mt-2">
+                      +{employee.custom_tech_stack.length - 5} more skills
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            {isViewingOtherEmployee && employee.employee_achievements && employee.employee_achievements.length > 0 && (
+              <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
+                <div className="flex items-center gap-2 mb-4">
+                  <BookOpen className="h-4 w-4" />
+                  <h3 className="text-sm sm:text-base font-medium text-gray-700">Recent Achievements</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-3">
+                  {employee.employee_achievements.slice(0, 3).map((achievement, index) => (
+                    <div key={index} className="text-sm border-b border-gray-200 pb-2 last:border-b-0 last:pb-0">
+                      <div className="font-medium text-gray-800">{achievement.event_type}</div>
+                      <div className="text-gray-500 text-xs">{achievement.event_description}</div>
+                      <div className="text-gray-400 text-xs">{formatDate(achievement.event_date)}</div>
+                    </div>
+                  ))}
+                  
+                  {employee.employee_achievements.length > 3 && (
+                    <div className="text-xs text-gray-500 mt-2">
+                      +{employee.employee_achievements.length - 3} more achievements
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            {isViewingOtherEmployee && employee.custom_employee_icebreaker_question && employee.custom_employee_icebreaker_question.length > 0 && (
+              <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
+                <div className="flex items-center gap-2 mb-4">
+                  <MessageSquare className="h-4 w-4" />
+                  <h3 className="text-sm sm:text-base font-medium text-gray-700">Icebreaker Questions</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-3">
+                  {employee.custom_employee_icebreaker_question.slice(0, 3).map((icebreaker, index) => (
+                    <div key={index} className="text-sm border-b border-gray-200 pb-2 last:border-b-0 last:pb-0">
+                      <div className="font-medium text-gray-800">{icebreaker.question}</div>
+                      <div className="text-gray-600 text-xs mt-1">{icebreaker.answer}</div>
+                    </div>
+                  ))}
+                  
+                  {employee.custom_employee_icebreaker_question.length > 3 && (
+                    <div className="text-xs text-gray-500 mt-2">
+                      +{employee.custom_employee_icebreaker_question.length - 3} more questions
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            */}
+          </div>
         </div>
       </div>
 

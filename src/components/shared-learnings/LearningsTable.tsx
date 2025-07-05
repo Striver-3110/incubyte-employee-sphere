@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatDate } from "@/utils/dateUtils";
 
 interface SharedLearning {
   name: string;
@@ -76,7 +77,7 @@ const LearningsTable = ({
                   </Badge>
                 </TableCell>
                 <TableCell className="text-sm text-gray-600">
-                  {format(new Date(learning.event_date), "dd MMM yyyy")}
+                  {formatDate(learning.event_date)}
                 </TableCell>
                 <TableCell className="text-sm font-medium text-blue-600">
                   {learning.employee_name || learning.employee}

@@ -4,22 +4,22 @@ import { formatDate } from "@/utils/dateUtils";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type JoiningEntry = {
-  title: string;
+  project: string;
   role: string;
   pod: string;
-  expected_start_date: string;
-  expected_end_date: null;
+  allocation_start_date: string;
+  allocation_end_date: null;
   status: string;
   isJoining: true;
 };
 
 type ProjectEntry = {
   name: string;
-  title?: string;
+  project?: string;
   role: string;
   pod: string;
-  expected_start_date: string;
-  expected_end_date: string | null;
+  allocation_start_date: string;
+  allocation_end_date: string | null;
   status: string;
   isJoining?: false;
 };
@@ -35,11 +35,11 @@ const CareerProgression = () => {
 
   // Create joining entry
   const joiningEntry: JoiningEntry = {
-    title: "Joined Incubyte",
+    project: "Joined Incubyte",
     role: employee.designation || "Employee",
     pod: "—",
-    expected_start_date: employee.date_of_joining,
-    expected_end_date: null,
+    allocation_start_date: employee.date_of_joining,
+    allocation_end_date: null,
     status: "Completed",
     isJoining: true
   };
@@ -52,7 +52,7 @@ const CareerProgression = () => {
   
   // Sort by start date (oldest first for chronological order)
   const sortedEntries = allEntries.sort((a, b) => {
-    return new Date(b.expected_start_date).getTime() - new Date(a.expected_start_date).getTime();
+    return new Date(b.allocation_start_date).getTime() - new Date(a.allocation_start_date).getTime();
   });
 
   // Type guard to check if entry is joining entry
@@ -93,15 +93,33 @@ const CareerProgression = () => {
                 }`}
               >
                 <h3 className="font-medium text-gray-800 mb-1">
-                  {isJoiningEntry(entry) ? entry.title : (entry.title || entry.name)}
+                  {isJoiningEntry(entry) ? entry.project : (entry.project || entry.name)}
                 </h3>
                 <div className="text-sm text-gray-600 mb-2">
                   <span className="font-semibold">Role:</span> {entry.role} <br />
-                  <span className="font-semibold">Pod:</span> {entry.pod}
+                  {
+                    !isJoiningEntry(entry) ?
+                    <>
+                      <span className="font-semibold">Pod: </span> 
+                      <span>{entry.pod}</span> 
+                    </>
+                    :
+                    ""
+                  }
                 </div>
-                <div className="text-sm text-gray-600">
-                  {formatDate(entry.expected_start_date)} —{" "}
-                  {entry.expected_end_date ? formatDate(entry.expected_end_date) : "Present"}
+                <div className="text-sm text-gray-600 font-semibold">
+                  {formatDate(entry.allocation_start_date)}
+                  {
+                    !isJoiningEntry(entry) && (
+                      <>
+                        <span> to </span>
+                        {entry.allocation_end_date 
+                          ? formatDate(entry.allocation_end_date)
+                          : (entry.status === "Active" ? "Present" : "—")
+                        }
+                      </>
+                    )
+                  }
                 </div>
               </div>
             </div>

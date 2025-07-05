@@ -4,6 +4,8 @@ export interface UserRole {
   user_email: string;
   roles: string[];
   has_profile_test_role: boolean;
+  has_tech_lead_role: boolean;
+  has_psm_role: boolean;
 }
 
 export interface UserRoleResponse {
@@ -66,6 +68,54 @@ export const checkProfileTestAccess = async (): Promise<boolean> => {
     return userData?.has_profile_test_role || false;
   } catch (error) {
     console.error('Error checking profile test access:', error);
+    // Default to false for security - don't allow access if we can't verify
+    return false;
+  }
+};
+
+/**
+ * Check if user has Tech Lead/Advisor role access
+ */
+export const checkTechLeadAccess = async (): Promise<boolean> => {
+  try {
+    const response = await fetchUserRoles();
+    
+    // Handle nested response structure: response.message.data
+    let userData: UserRole | undefined;
+    
+    if (typeof response.message === 'object' && response.message.data) {
+      userData = response.message.data;
+    } else if (response.data) {
+      userData = response.data;
+    }
+    
+    return userData?.has_tech_lead_role || false;
+  } catch (error) {
+    console.error('Error checking tech lead access:', error);
+    // Default to false for security - don't allow access if we can't verify
+    return false;
+  }
+};
+
+/**
+ * Check if user has PSM role access
+ */
+export const checkPSMAccess = async (): Promise<boolean> => {
+  try {
+    const response = await fetchUserRoles();
+    
+    // Handle nested response structure: response.message.data
+    let userData: UserRole | undefined;
+    
+    if (typeof response.message === 'object' && response.message.data) {
+      userData = response.message.data;
+    } else if (response.data) {
+      userData = response.data;
+    }
+    
+    return userData?.has_psm_role || false;
+  } catch (error) {
+    console.error('Error checking PSM access:', error);
     // Default to false for security - don't allow access if we can't verify
     return false;
   }

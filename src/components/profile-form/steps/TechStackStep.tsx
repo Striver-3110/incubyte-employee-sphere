@@ -4,10 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Search, BookOpen } from 'lucide-react';
+import { Plus, Trash2, BookOpen } from 'lucide-react';
 import { TechStackEntry } from '@/contexts/ProfileFormContext';
 import { useToast } from '@/hooks/use-toast';
 import { isTechnicalRole } from '@/utils/roleUtils';
+import { Combobox } from '@/components/ui/combobox';
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -25,7 +26,6 @@ export const TechStackStep = () => {
   const [isLoadingSkills, setIsLoadingSkills] = useState(true);
   const [newSkillName, setNewSkillName] = useState('');
   const [newSkillProficiency, setNewSkillProficiency] = useState<'Expert' | 'Intermediate' | 'Beginner' | 'Learning'>('Intermediate');
-  const [showDropdown, setShowDropdown] = useState(false);
   
   // Determine component name based on role
   const isUserTechnicalRole = isTechnicalRole(state.formData.designation);
@@ -63,50 +63,9 @@ export const TechStackStep = () => {
     fetchAvailableSkills();
   }, []);
 
-  // Filter available skills to exclude already added skills
-  const getFilteredSkills = () => {
-    if (!newSkillName.trim()) return [];
-    
-    const addedSkillNames = state.formData.custom_tech_stack.map(skill => 
-      skill.skill.toLowerCase().trim()
-    );
-    
-    const filtered = availableSkills
-      .filter(skill => {
-        const skillLower = skill.toLowerCase().trim();
-        const searchLower = newSkillName.toLowerCase().trim();
-        const matchesSearch = skillLower.includes(searchLower);
-        const notAlreadyAdded = !addedSkillNames.includes(skillLower);
-        
-        return matchesSearch && notAlreadyAdded;
-      })
-      .slice(0, 10);
-    
-    return filtered;
-  };
 
-  const handleSkillSelect = (skill: string) => {
-    setNewSkillName(skill);
-    setShowDropdown(false);
-  };
 
-  const handleSkillInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewSkillName(e.target.value);
-    setShowDropdown(e.target.value.trim().length > 0);
-  };
 
-  const handleSkillInputBlur = () => {
-    // Trim the input when focus is lost
-    setNewSkillName(prev => prev.trim());
-    // Delay hiding dropdown to allow click events to register
-    setTimeout(() => setShowDropdown(false), 150);
-  };
-
-  const handleSkillInputFocus = () => {
-    if (newSkillName.trim().length > 0) {
-      setShowDropdown(true);
-    }
-  };
 
 
   const handleTechStackChange = (index: number, field: keyof TechStackEntry, value: string) => {
@@ -178,7 +137,6 @@ export const TechStackStep = () => {
     // Reset form
     setNewSkillName('');
     setNewSkillProficiency('Intermediate');
-    setShowDropdown(false);
   };
 
   const removeTechStack = (index: number) => {
@@ -186,14 +144,7 @@ export const TechStackStep = () => {
     updateFormData({ custom_tech_stack: updatedTechStack });
   };
 
-  const filteredSkills = getFilteredSkills();
-
-  // Get already selected skills to filter them out from dropdown
-  const selectedSkills = state.formData.custom_tech_stack.map(tech => tech.skill).filter(Boolean);
-
   const SkillInput = ({ techStack, index }: { techStack: TechStackEntry; index: number }) => {
-    const [searchTerm, setSearchTerm] = useState('');
-    
     // Create a combined list of available skills + any custom skills already selected
     const getAllAvailableSkills = () => {
       const baseSkills = [...availableSkills];
@@ -208,53 +159,35 @@ export const TechStackStep = () => {
       return baseSkills.sort(); // Sort alphabetically for better UX
     };
     
-    // Filter available skills based on search term and exclude already selected skills
+    // Get already selected skills to filter them out from dropdown
     // but allow the current skill to be shown (in case user wants to keep it)
-    const filteredSkills = getAllAvailableSkills().filter(skill => {
-      const matchesSearch = skill.toLowerCase().includes(searchTerm.toLowerCase());
-      const isCurrentSkill = skill === techStack.skill;
-      const isAlreadySelected = selectedSkills.includes(skill);
+    const getFilteredOptions = () => {
+      const allSkills = getAllAvailableSkills();
+      const selectedSkills = state.formData.custom_tech_stack.map(tech => tech.skill).filter(Boolean);
       
-      return matchesSearch && (isCurrentSkill || !isAlreadySelected);
-    });
+      return allSkills
+        .filter(skill => {
+          const isCurrentSkill = skill === techStack.skill;
+          const isAlreadySelected = selectedSkills.includes(skill);
+          
+          return isCurrentSkill || !isAlreadySelected;
+        })
+        .map(skill => ({ value: skill, label: skill }));
+    };
 
     return (
       <div className="space-y-2">
         <Label className="text-textMuted font-semibold text-sm">{skillLabel} *</Label>
-        <Select
+        <Combobox
+          options={getFilteredOptions()}
           value={techStack.skill}
           onValueChange={(value) => handleTechStackChange(index, 'skill', value)}
-        >
-          <SelectTrigger className="border-borderSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brandBlue focus-visible:ring-offset-1">
-            <SelectValue placeholder={`Select ${skillLabel.toLowerCase()}`} />
-          </SelectTrigger>
-          <SelectContent>
-            <div className="p-2">
-              <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder={`Search ${skillLabel.toLowerCase()}...`}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 border-borderSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brandBlue focus-visible:ring-offset-1"
-                />
-              </div>
-            </div>
-            {isLoadingSkills ? (
-              <div className="p-2 text-sm text-textMuted">Loading skills...</div>
-            ) : filteredSkills.length > 0 ? (
-              filteredSkills.map((skill) => (
-                <SelectItem key={skill} value={skill}>
-                  {skill}
-                </SelectItem>
-              ))
-            ) : (
-              <div className="p-2 text-sm text-textMuted">
-                {searchTerm ? 'No matching skills found' : 'No skills available'}
-              </div>
-            )}
-          </SelectContent>
-        </Select>
+          placeholder={`Select ${skillLabel.toLowerCase()}`}
+          searchPlaceholder={`Search ${skillLabel.toLowerCase()}...`}
+          emptyMessage={isLoadingSkills ? "Loading skills..." : "No skills available"}
+          loading={isLoadingSkills}
+          allowCustom={true}
+        />
       </div>
     );
   };
@@ -328,29 +261,16 @@ export const TechStackStep = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
             <div className="space-y-2">
               <Label className="text-textMuted font-semibold text-sm">{skillLabel} Name</Label>
-              <div className="relative">
-                <Input
-                  value={newSkillName}
-                  onChange={handleSkillInputChange}
-                  onFocus={handleSkillInputFocus}
-                  onBlur={handleSkillInputBlur}
-                  placeholder={`Enter ${skillLabel.toLowerCase()} name or search`}
-                  className="border-borderSoft focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brandBlue focus-visible:ring-offset-1 text-brandBlueDarker"
-                />
-                {showDropdown && filteredSkills.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 max-h-32 overflow-y-auto border rounded-md mt-1 bg-white shadow-lg z-50">
-                    {filteredSkills.map((skill, index) => (
-                      <div
-                        key={index}
-                        className="p-2 cursor-pointer hover:bg-cardInner border-b last:border-b-0"
-                        onMouseDown={() => handleSkillSelect(skill)}
-                      >
-                        {skill}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <Combobox
+                options={availableSkills.map(skill => ({ value: skill, label: skill }))}
+                value={newSkillName}
+                onValueChange={setNewSkillName}
+                placeholder={`Enter ${skillLabel.toLowerCase()} name or search`}
+                searchPlaceholder={`Search ${skillLabel.toLowerCase()}...`}
+                emptyMessage={isLoadingSkills ? "Loading skills..." : "No skills available"}
+                loading={isLoadingSkills}
+                allowCustom={true}
+              />
             </div>
             <div className="space-y-2">
               <Label className="text-textMuted font-semibold text-sm">Proficiency Level</Label>

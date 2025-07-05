@@ -398,14 +398,6 @@ const FeedbackSection = () => {
                       )}
                     </div>
                     <div className="flex gap-2 self-start sm:self-auto">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 rounded-full flex-shrink-0"
-                        onClick={() => setViewFeedbackDialog(feedback)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
                       <span className={`px-2 py-1 text-xs rounded-full flex-shrink-0 ${
                         (feedback.feedback_status || "Pending") === 'Pending' 
                           ? 'bg-yellow-100 text-yellow-800'

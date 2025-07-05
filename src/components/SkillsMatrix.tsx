@@ -25,7 +25,7 @@ const BASE_URL = import.meta.env.VITE_BASE_URL;
 const proficiencyLevels = ["Expert", "Intermediate", "Beginner", "Learning"];
 
 const SkillsMatrix = () => {
-  const { employee, loading, setEmployee } = useEmployee();
+  const { employee, loading, setEmployee, isViewingOtherEmployee } = useEmployee();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedProficiency, setSelectedProficiency] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,33 +40,35 @@ const SkillsMatrix = () => {
   
   const sectionTitle = isUserTechnicalRole ? "Tech Stack" : "Skills Matrix";
 
-  // Fetch available skills from the API
+  // Fetch available skills from the API (only if not viewing other employee)
   useEffect(() => {
-    const fetchAvailableSkills = async () => {
-      try {
-        const response = await fetch(`${BASE_URL}tech_stack.get_tech_stack_list`, {
-          method: "GET",
-          credentials: "include",
-        });
-        const data = await response.json();
-        // Add safety check to ensure data.message is an array
-        const skills = Array.isArray(data.message) ? data.message : [];
-        setAvailableSkills(skills.map((item: { skill_name: string }) => item.skill_name));
-      } catch (error) {
-        console.error("Error fetching available skills:", error);
-        toast.error("Failed to fetch available skills.", {
-          position: "top-right",
-          style: {
-            background: "#F8D7DA",
-            border: "1px solid #F5C6CB",
-            color: "#721C24",
-          },
-        });
-      }
-    };
+    if (!isViewingOtherEmployee) {
+      const fetchAvailableSkills = async () => {
+        try {
+          const response = await fetch(`${BASE_URL}tech_stack.get_tech_stack_list`, {
+            method: "GET",
+            credentials: "include",
+          });
+          const data = await response.json();
+          // Add safety check to ensure data.message is an array
+          const skills = Array.isArray(data.message) ? data.message : [];
+          setAvailableSkills(skills.map((item: { skill_name: string }) => item.skill_name));
+        } catch (error) {
+          console.error("Error fetching available skills:", error);
+          toast.error("Failed to fetch available skills.", {
+            position: "top-right",
+            style: {
+              background: "#F8D7DA",
+              border: "1px solid #F5C6CB",
+              color: "#721C24",
+            },
+          });
+        }
+      };
 
-    fetchAvailableSkills();
-  }, []);
+      fetchAvailableSkills();
+    }
+  }, [isViewingOtherEmployee]);
 
   // Group skills by proficiency level
   const groupedSkills = employee?.custom_tech_stack?.reduce(
@@ -318,15 +320,17 @@ const SkillsMatrix = () => {
       
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-gray-800">{sectionTitle}</h2>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setIsAddDialogOpen(true)}
-          className="h-8"
-          disabled={isSaving || isComponentLoading}
-        >
-          <Plus className="h-4 w-4 mr-1" /> Add Skill
-        </Button>
+        {!isViewingOtherEmployee && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsAddDialogOpen(true)}
+            className="h-8"
+            disabled={isSaving || isComponentLoading}
+          >
+            <Plus className="h-4 w-4 mr-1" /> Add Skill
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-6">
@@ -341,20 +345,22 @@ const SkillsMatrix = () => {
                     className="flex items-center bg-blue-50 p-2 rounded-md border border-blue-200 shadow-sm space-x-2"
                   >
                     <span className="text-blue-800 text-sm font-medium">{skill.skill}</span>
-                    {deletingSkill === skill.name ? (
-                      <div className="h-6 w-6 flex items-center justify-center">
-                        <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-                      </div>
-                    ) : (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDeleteSkill(skill.name)}
-                        className="h-6 w-6 text-blue-500 hover:text-red-500"
-                        disabled={isSaving || deletingSkill !== null || isComponentLoading}
-                      >
-                        <Trash className="h-4 w-4" />
-                      </Button>
+                    {!isViewingOtherEmployee && (
+                      deletingSkill === skill.name ? (
+                        <div className="h-6 w-6 flex items-center justify-center">
+                          <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                        </div>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteSkill(skill.name)}
+                          className="h-6 w-6 text-blue-500 hover:text-red-500"
+                          disabled={isSaving || deletingSkill !== null || isComponentLoading}
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      )
                     )}
                   </div>
                 ))}
@@ -366,77 +372,79 @@ const SkillsMatrix = () => {
         ))}
       </div>
 
-      {/* Add Skill Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="max-w-md fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" showOverlay={false}>
-          <DialogHeader>
-            <DialogTitle>Add Skill</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="relative">
-              <label className="text-sm font-medium mb-1 block">Skill Name</label>
-              <Input
-                value={searchTerm}
-                onChange={handleInputChange}
-                onFocus={handleInputFocus}
-                onBlur={handleInputBlur}
-                placeholder="Enter a new skill or search"
-                disabled={isSaving}
-              />
-              {showDropdown && filteredSkills.length > 0 && (
-                <div className="absolute top-full left-0 right-0 max-h-32 overflow-y-auto border rounded-md mt-1 bg-white shadow-lg z-50">
-                  {filteredSkills.map((skill, index) => (
-                    <div
-                      key={index}
-                      className="p-2 cursor-pointer hover:bg-gray-100 border-b last:border-b-0"
-                      onMouseDown={() => handleSkillSelect(skill)} // Use onMouseDown to prevent blur from hiding dropdown first
-                    >
-                      {skill}
-                    </div>
-                  ))}
-                </div>
-              )}
+      {/* Add Skill Dialog - Only show if not viewing other employee */}
+      {!isViewingOtherEmployee && (
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogContent className="max-w-md fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" showOverlay={false}>
+            <DialogHeader>
+              <DialogTitle>Add Skill</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="relative">
+                <label className="text-sm font-medium mb-1 block">Skill Name</label>
+                <Input
+                  value={searchTerm}
+                  onChange={handleInputChange}
+                  onFocus={handleInputFocus}
+                  onBlur={handleInputBlur}
+                  placeholder="Enter a new skill or search"
+                  disabled={isSaving}
+                />
+                {showDropdown && filteredSkills.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 max-h-32 overflow-y-auto border rounded-md mt-1 bg-white shadow-lg z-50">
+                    {filteredSkills.map((skill, index) => (
+                      <div
+                        key={index}
+                        className="p-2 cursor-pointer hover:bg-gray-100 border-b last:border-b-0"
+                        onMouseDown={() => handleSkillSelect(skill)} // Use onMouseDown to prevent blur from hiding dropdown first
+                      >
+                        {skill}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Proficiency Level</label>
+                <Select
+                  value={selectedProficiency}
+                  onValueChange={setSelectedProficiency}
+                  disabled={isSaving}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select proficiency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {proficiencyLevels.map((level) => (
+                      <SelectItem key={level} value={level}>
+                        {level}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Proficiency Level</label>
-              <Select
-                value={selectedProficiency}
-                onValueChange={setSelectedProficiency}
-                disabled={isSaving}
+            <DialogFooter>
+              <Button variant="outline" onClick={closeDialog} disabled={isSaving}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleAddSkill} 
+                disabled={isSaving || !searchTerm.trim() || !selectedProficiency}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select proficiency" />
-                </SelectTrigger>
-                <SelectContent>
-                  {proficiencyLevels.map((level) => (
-                    <SelectItem key={level} value={level}>
-                      {level}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={closeDialog} disabled={isSaving}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleAddSkill} 
-              disabled={isSaving || !searchTerm.trim() || !selectedProficiency}
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Adding...
-                </>
-              ) : (
-                "Add Skill"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  "Add Skill"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

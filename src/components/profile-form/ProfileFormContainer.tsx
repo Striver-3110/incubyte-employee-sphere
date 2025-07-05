@@ -8,12 +8,14 @@ import { SharedLearningsStep } from './steps/SharedLearningsStep';
 import { FormNavigation } from './FormNavigation';
 import { ThankYouPage } from './ThankYouPage';
 import { useToast } from '@/hooks/use-toast';
+import { Loader2 } from 'lucide-react';
 
 const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 export const ProfileFormContainer = () => {
   const { state, dispatch } = useProfileForm();
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -116,8 +118,16 @@ export const ProfileFormContainer = () => {
   };
 
   return (
-    <div className="min-h-screen bg-sidebarBg p-6 font-sans">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-sidebarBg p-6 font-sans relative">
+      {isSubmitting && !state.isSubmissionSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="flex flex-col items-center">
+            <Loader2 className="w-12 h-12 text-brandBlue animate-spin mb-4" />
+            <span className="text-white text-lg font-semibold">Submitting your profile...</span>
+          </div>
+        </div>
+      )}
+      <div className={`max-w-6xl mx-auto ${isSubmitting ? 'pointer-events-none' : ''}`}>
         {state.isSubmissionSuccess ? (
           <ThankYouPage />
         ) : (
@@ -133,7 +143,7 @@ export const ProfileFormContainer = () => {
               {renderCurrentStep()}
             </div>
 
-            <FormNavigation />
+            <FormNavigation onSubmittingChange={setIsSubmitting} />
           </>
         )}
       </div>

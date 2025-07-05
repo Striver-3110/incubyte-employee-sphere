@@ -17,6 +17,7 @@ const BASE_URL = import.meta.env.VITE_BASE_URL
 
 interface CalibrationSectionProps {
   employeeCalibration?: any;
+  employeeId?: string;
   showPerformanceMatrix?: boolean;
   showSelfEvaluationUpload?: boolean;
   isAdminView?: boolean;
@@ -24,11 +25,12 @@ interface CalibrationSectionProps {
 
 const CalibrationSection = ({
   employeeCalibration,
+  employeeId,
   showPerformanceMatrix = true,
   showSelfEvaluationUpload = false,
   isAdminView = false
 }: CalibrationSectionProps) => {
-  const { calibration, loading, error } = useCalibrationData();
+  const { calibration, loading, error } = useCalibrationData(employeeId);
   const { calibrationDataForAllEmployees } = useCalibrationDataForAllEmployees();
   const { employee } = useEmployee();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -40,20 +42,22 @@ const CalibrationSection = ({
   const userRoleCategory = getRoleCategory(employee?.designation);
   const isBusinessRole = userRoleCategory === "Business";
 
-  // Use the passed employeeCalibration if available, otherwise use the current user's calibration
-  const calibrationData = employeeCalibration || calibration;
-  const isLoading = !employeeCalibration && loading;
+  // Use the calibration data from the hook (which will be for the specified employee or current user)
+  const calibrationData = calibration;
+  const isLoading = loading;
 
   // Load self-evaluation sheet data on component mount
   useEffect(() => {
-    if (showSelfEvaluationUpload && employee?.employee) {
+    if (showSelfEvaluationUpload && (employeeId || employee?.employee)) {
       loadSelfEvaluationData();
     }
-  }, [showSelfEvaluationUpload, employee?.employee]);
+  }, [showSelfEvaluationUpload, employeeId, employee?.employee]);
 
   const loadSelfEvaluationData = async () => {
     try {
       setLoadingSelfEvaluation(true);
+      const targetEmployeeId = employeeId || employee?.employee;
+      
       const response = await fetch(`${BASE_URL}calibration.self_evaluation_sheet.get_self_evaluation_sheet`, {
         method: 'POST',
         headers: {
@@ -61,7 +65,7 @@ const CalibrationSection = ({
         },
         credentials: 'include',
         body: JSON.stringify({
-          employee_id: employee?.employee
+          employee_id: targetEmployeeId
         }),
       });
 
@@ -82,9 +86,25 @@ const CalibrationSection = ({
   if (isLoading) {
     return <CalibrationSectionSkeleton />;
   }
-  console.log("checking calibration data:", calibrationData);
-  // If not a business role and no specific employee calibration is passed, don't show
-  if (calibrationData === null) {
+  
+  console.log("CalibrationSection - calibration data:", calibrationData);
+  console.log("CalibrationSection - error:", error);
+  console.log("CalibrationSection - employeeId:", employeeId);
+  
+  // Handle error state
+  if (error) {
+    return (
+      <div className="bg-white p-6 rounded-lg shadow-sm">
+        <div className="text-center py-8">
+          <h2 className="text-xl font-semibold text-gray-800 mb-2">Error Loading Calibration</h2>
+          <p className="text-gray-500">{error}</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // If no calibration data is available
+  if (!calibrationData) {
     return (
       <div className="bg-white p-6 rounded-lg shadow-sm">
         <div className="text-center py-8">
