@@ -2,7 +2,7 @@ import { useTestEmployee } from "@/contexts/TestEmployeeContext";
 import { useTeamEmployees } from "@/api/employeeService";
 import { calculateTenure, formatDate } from "@/utils/dateUtils";
 import { 
-  Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, 
+  Linkedin, Github, Twitter, Mail, MapPin, Edit, X, Check, 
   Plus, Save, Trash2, Users, Loader2, Globe, Twitch, Youtube, 
   MessageSquare, FileCode, BookOpen, Coffee, Server, Code, Database,
   Search, Home, User
@@ -99,37 +99,37 @@ const ProfileHeader = () => {
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
       case "linkedin":
-        return <Linkedin className="h-5 w-5" />;
+        return <Linkedin className="h-4 w-4" />;
       case "github":
-        return <Github className="h-5 w-5" />;
+        return <Github className="h-4 w-4" />;
       case "twitter":
-        return <Twitter className="h-5 w-5" />;
+        return <Twitter className="h-4 w-4" />;
       case "personal website":
       case "website":
-        return <Globe className="h-5 w-5" />;
+        return <Globe className="h-4 w-4" />;
       case "stack overflow":
       case "stackoverflow":
-        return <FileCode className="h-5 w-5" />;
+        return <FileCode className="h-4 w-4" />;
       case "medium":
-        return <BookOpen className="h-5 w-5" />;
+        return <BookOpen className="h-4 w-4" />;
       case "dev community":
       case "dev":
-        return <Code className="h-5 w-5" />;
+        return <Code className="h-4 w-4" />;
       case "hashnode":
-        return <Database className="h-5 w-5" />;
+        return <Database className="h-4 w-4" />;
       case "youtube":
-        return <Youtube className="h-5 w-5" />;
+        return <Youtube className="h-4 w-4" />;
       case "twitch":
-        return <Twitch className="h-5 w-5" />;
+        return <Twitch className="h-4 w-4" />;
       case "discord":
-        return <MessageSquare className="h-5 w-5" />;
+        return <MessageSquare className="h-4 w-4" />;
       case "kaggle":
-        return <Server className="h-5 w-5" />;
+        return <Server className="h-4 w-4" />;
       case "buy me a coffee":
       case "buymeacoffee":
-        return <Coffee className="h-5 w-5" />;
+        return <Coffee className="h-4 w-4" />;
       default:
-        return <Globe className="h-5 w-5" />;
+        return <Globe className="h-4 w-4" />;
     }
   };
 
@@ -138,7 +138,7 @@ const ProfileHeader = () => {
       employee_name: employee.employee_name || "",
       designation: employee.designation || "",
       date_of_joining: employee.date_of_joining || "",
-      company_email: employee.company_email || "john.doe@company.com",
+      company_email: employee.company_email || "",
       current_address: employee.current_address || "",
       custom_pin: employee.custom_pin || "",
       cell_number: employee.cell_number || "",
@@ -167,7 +167,7 @@ const ProfileHeader = () => {
       setIsUpdatingProfile(true);
       // Mock save for test data
       setEmployee((prevEmployee) => ({
-        ...prevEmployee,
+        ...prevEmployee!,
         ...editFormData,
       }));
 
@@ -299,7 +299,7 @@ const ProfileHeader = () => {
               <div className="flex-shrink-0">
                 <div className="w-32 h-32 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
                   <img
-                    src={employee.image || 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=400&fit=crop&crop=face'}
+                    src={employee.image}
                     alt={employee.employee_name}
                     className="w-full h-full object-cover"
                   />
@@ -388,7 +388,7 @@ const ProfileHeader = () => {
                     </div>
                   ))}
 
-                  {/* Add Platform Button & Form */}
+                  {/* Add Platform Button */}
                   {availablePlatforms.length > 0 && !isAddingPlatform && !isViewingOtherEmployee && (
                     <Button
                       variant="outline"
@@ -449,43 +449,25 @@ const ProfileHeader = () => {
                   )}
                 </div>
 
-                {/* Contact Information */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-600 mb-4">
+                {/* Contact Information - Only Email and Location */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-600">
                   <div className="flex items-center gap-2">
                     <Mail className="h-4 w-4" />
-                    <a href={`mailto:john.doe@company.com`} className="hover:underline">
-                      john.doe@company.com
+                    <a href={`mailto:${employee.company_email}`} className="hover:underline">
+                      {employee.company_email}
                     </a>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <MapPin className="h-4 w-4" />
-                    <span>{employee.custom_city}, CA</span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4" />
-                    <span>+1 (555) 123-4567</span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    <span>{employee.custom_team}</span>
+                    <span>{employee.custom_city}</span>
                   </div>
                 </div>
-
-                {/* About Section */}
-                {employee.custom_about && (
-                  <div className="text-sm text-gray-700">
-                    <h4 className="font-medium text-gray-800 mb-2">About</h4>
-                    <p className="text-gray-600 leading-relaxed">{employee.custom_about}</p>
-                  </div>
-                )}
               </div>
             </div>
           </div>
 
-          {/* Right Section - Team Members */}
+          {/* Right Section - Team Members Table */}
           <div className="lg:col-span-1">
             {shouldShowTeamMembers && (
               <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
@@ -497,21 +479,23 @@ const ProfileHeader = () => {
                 </div>
                 
                 <div className="space-y-3">
-                  {(teamMembers || []).slice(0, 3).map((member, index) => (
-                    <div key={member.name || index} className="text-sm border-b border-gray-200 pb-3 last:border-b-0 last:pb-0">
-                      <div className="font-medium text-gray-800">{member.employee_name}</div>
-                      <div className="text-gray-500 text-xs">{member.designation}</div>
+                  {(teamMembers || []).slice(0, 5).map((member, index) => (
+                    <div key={member.name || index} className="flex items-center justify-between py-2 border-b border-gray-200 last:border-0">
+                      <div className="text-sm">
+                        <div className="font-medium text-gray-800">{member.employee_name}</div>
+                        <div className="text-gray-500 text-xs">{member.designation}</div>
+                      </div>
                     </div>
                   ))}
                   
-                  {teamMembers.length > 3 && (
+                  {teamMembers.length > 5 && (
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setIsTeamModalOpen(true)}
                       className="text-blue-600 hover:text-blue-700 p-0 h-auto font-normal text-sm w-full justify-start"
                     >
-                      +{teamMembers.length - 3} more team members
+                      +{teamMembers.length - 5} more members
                     </Button>
                   )}
                 </div>
@@ -655,8 +639,6 @@ const ProfileHeaderSkeleton = () => (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Skeleton className="h-5 w-40" />
                 <Skeleton className="h-5 w-32" />
-                <Skeleton className="h-5 w-36" />
-                <Skeleton className="h-5 w-28" />
               </div>
             </div>
           </div>

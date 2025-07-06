@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState } from 'react';
 
 interface EmployeeDetails {
@@ -14,6 +15,12 @@ interface EmployeeDetails {
   custom_tech_lead_name: string;
   custom_buddy_name: string;
   custom_tech_advisor_name: string;
+  company_email: string;
+  current_address: string;
+  custom_pin: string;
+  cell_number: string;
+  custom_state: string;
+  image: string;
 }
 
 interface EmployeeContextType {
@@ -51,7 +58,13 @@ const testEmployee: EmployeeDetails = {
   custom_pod: "Alpha Pod",
   custom_tech_lead_name: "Jane Smith",
   custom_buddy_name: "Mike Johnson",
-  custom_tech_advisor_name: "Sarah Wilson"
+  custom_tech_advisor_name: "Sarah Wilson",
+  company_email: "john.doe@company.com",
+  current_address: "123 Tech Street, San Francisco, CA",
+  custom_pin: "94105",
+  cell_number: "+1 (555) 123-4567",
+  custom_state: "California",
+  image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=400&fit=crop&crop=face"
 };
 
 const TestEmployeeContext = createContext<EmployeeContextType | undefined>(undefined);

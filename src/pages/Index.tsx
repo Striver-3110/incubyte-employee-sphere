@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import ProfileHeader from "@/components/ProfileHeader";
 import AboutSection from "@/components/AboutSection";
+import EmployeeAbout from "@/components/EmployeeAbout";
 import CreativePursuits from "@/components/CreativePursuits";
 import IceBreakers from "@/components/IceBreakers";
 import SharedLearnings from "@/components/SharedLearnings";
@@ -14,63 +15,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CalibrationDashboard from "@/components/CalibrationDashboard";
 import Tasks from "./Tasks";
 
-// Test employee data
-const testEmployee = {
-  name: "EMP001",
-  employee_name: "John Doe",
-  designation: "Senior Software Engineer",
-  custom_team: "Engineering",
-  custom_city: "San Francisco",
-  date_of_joining: "2022-01-15",
-  custom_about: "Passionate software engineer with 5+ years of experience in full-stack development.",
-  custom_tech_stack: [
-    { technology: "React", proficiency: "Expert" },
-    { technology: "TypeScript", proficiency: "Advanced" },
-    { technology: "Node.js", proficiency: "Intermediate" }
-  ],
-  custom_employee_icebreaker_question: [
-    { question: "What's your favorite hobby?", answer: "Playing guitar and hiking" },
-    { question: "What's your dream vacation?", answer: "Backpacking through Europe" }
-  ],
-  custom_pod: "Alpha Pod",
-  custom_tech_lead_name: "Jane Smith",
-  custom_buddy_name: "Mike Johnson",
-  custom_tech_advisor_name: "Sarah Wilson"
-};
-
 const Index = () => {
   const [activeTab, setActiveTab] = useState("about");
-  const [employee] = useState(testEmployee);
-  const [loading] = useState(false);
 
   // Mock role permissions for testing
-  const userRole = employee?.designation || "";
-  const hasBusinessAccess = false;
   const showCalibrationTab = true;
-  const hasTechLeadAdvisorAccess = false;
-  const hasPSMAccess = false;
-  const isViewingOtherEmployee = false;
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
-          <p className="text-gray-600 font-medium">Loading your profile...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!employee) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <p className="text-gray-600 font-medium">No employee data available</p>
-        </div>
-      </div>
-    );
-  }
+  const hasBusinessAccess = false;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -121,11 +71,11 @@ const Index = () => {
             </div>
             
             <TabsContent value="about" className="space-y-6 p-6">
-              <AboutSection />
+              <EmployeeAbout />
               <MyPeople />
               <SkillsMatrix />
-              <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">
+              <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">
                   My Career at Incubyte
                 </h2>
                 <CareerProgression />
