@@ -4,8 +4,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { shouldShowTechAdvisor, isTechnicalRole } from "@/utils/roleUtils";
 import { Users, User, UserCheck, Crown, Code } from "lucide-react";
 
-const BASE_URL = import.meta.env.VITE_BASE_URL;
-
 interface PeopleItemProps {
   label: string;
   value: string;
@@ -13,14 +11,14 @@ interface PeopleItemProps {
 }
 
 const PeopleItem = ({ label, value, icon }: PeopleItemProps) => (
-  <div className="bg-white p-4 rounded-lg border border-borderSoft shadow-sm hover:shadow-md transition-all duration-200">
+  <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
     <div className="flex items-center gap-3 mb-2">
-      <div className="w-8 h-8 bg-gradient-to-br from-brandBlue to-brandBlueLighter rounded-lg flex items-center justify-center">
+      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
         {icon}
       </div>
-      <span className="text-sm font-semibold text-brandBlueDark">{label}</span>
+      <span className="text-sm font-medium text-gray-700">{label}</span>
     </div>
-    <p className="text-brandBlueDarkest font-medium">{value || "—"}</p>
+    <p className="text-gray-900 font-medium">{value || "—"}</p>
   </div>
 );
 
@@ -36,10 +34,10 @@ const MyPeople = () => {
   }
 
   return (
-    <div className="bg-cardBg p-8 rounded-xl border border-borderSoft">
-      <h2 className="text-2xl font-bold text-brandBlueDarkest mb-6 flex items-center gap-3">
-        <div className="w-10 h-10 bg-gradient-to-br from-brandGreen to-brandBlue rounded-lg flex items-center justify-center">
-          <Users className="w-5 h-5 text-white" />
+    <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+      <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+        <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+          <Users className="w-4 h-4 text-blue-600" />
         </div>
         My People
       </h2>
@@ -48,12 +46,12 @@ const MyPeople = () => {
         <PeopleItem 
           label="Team" 
           value={employee.custom_team || ""} 
-          icon={<Users className="w-4 h-4 text-white" />}
+          icon={<Users className="w-4 h-4 text-blue-600" />}
         />
         <PeopleItem 
           label="POD" 
           value={employee.custom_pod || ""} 
-          icon={<User className="w-4 h-4 text-white" />}
+          icon={<User className="w-4 h-4 text-blue-600" />}
         />
 
         {!isCoFounder && (
@@ -61,19 +59,19 @@ const MyPeople = () => {
             <PeopleItem 
               label="Lead" 
               value={employee.custom_tech_lead_name || ""} 
-              icon={<Crown className="w-4 h-4 text-white" />}
+              icon={<Crown className="w-4 h-4 text-blue-600" />}
             />
             <PeopleItem 
               label="Buddy" 
               value={employee.custom_buddy_name || ""} 
-              icon={<UserCheck className="w-4 h-4 text-white" />}
+              icon={<UserCheck className="w-4 h-4 text-blue-600" />}
             />
 
             {showTechAdvisor && (
               <PeopleItem 
                 label="Tech Advisor" 
                 value={employee.custom_tech_advisor_name || ""} 
-                icon={<Code className="w-4 h-4 text-white" />}
+                icon={<Code className="w-4 h-4 text-blue-600" />}
               />
             )}
           </>
@@ -84,14 +82,14 @@ const MyPeople = () => {
 };
 
 const MyPeopleSkeleton = () => (
-  <div className="bg-cardBg p-8 rounded-xl border border-borderSoft">
-    <div className="flex items-center gap-3 mb-6">
-      <Skeleton className="h-10 w-10 rounded-lg" />
-      <Skeleton className="h-8 w-32" />
+  <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+    <div className="flex items-center gap-3 mb-4">
+      <Skeleton className="h-8 w-8 rounded-lg" />
+      <Skeleton className="h-6 w-32" />
     </div>
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       {[...Array(4)].map((_, i) => (
-        <div key={i} className="bg-white p-4 rounded-lg border border-borderSoft">
+        <div key={i} className="bg-white p-4 rounded-lg border border-gray-200">
           <div className="flex items-center gap-3 mb-2">
             <Skeleton className="h-8 w-8 rounded-lg" />
             <Skeleton className="h-4 w-16" />

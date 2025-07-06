@@ -1,11 +1,11 @@
-import { useEmployee } from "@/contexts/EmployeeContext";
+import { useTestEmployee } from "@/contexts/TestEmployeeContext";
 import { useTeamEmployees } from "@/api/employeeService";
 import { calculateTenure, formatDate } from "@/utils/dateUtils";
 import { 
   Linkedin, Github, Twitter, Mail, Phone, MapPin, Edit, X, Check, 
   Plus, Save, Trash2, Users, Loader2, Globe, Twitch, Youtube, 
   MessageSquare, FileCode, BookOpen, Coffee, Server, Code, Database,
-  Search, Home
+  Search, Home, User
 } from "lucide-react";
 
 import { useState, useEffect } from "react";
@@ -50,7 +50,7 @@ const socialPlatforms = [
 ];
 
 const ProfileHeader = () => {
-  const { employee, setEmployee, loading, viewEmployeeById, isViewingOtherEmployee, resetToOwnProfile } = useEmployee();
+  const { employee, setEmployee, loading, viewEmployeeById, isViewingOtherEmployee, resetToOwnProfile } = useTestEmployee();
   const { employees: teamMembers } = useTeamEmployees();
   const [editingSocial, setEditingSocial] = useState<string | null>(null);
   const [newUrl, setNewUrl] = useState("");
@@ -83,40 +83,11 @@ const ProfileHeader = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  // Fetch all employees for search
-  useEffect(() => {
-    const loadEmployees = async () => {
-      try {
-        setIsLoadingEmployees(true);
-        const employees = await fetchAllEmployees();
-        const employeeOptions = employees
-          .filter(emp => emp.name !== employee?.name) // Filter out current user
-          .map(emp => ({
-            value: emp.name,
-            label: `${emp.employee_name} (${emp.name})`
-          }));
-        setAllEmployees(employeeOptions);
-      } catch (error) {
-        console.error('Error loading employees:', error);
-        toast.error('Failed to load employee list');
-      } finally {
-        setIsLoadingEmployees(false);
-      }
-    };
-
-    loadEmployees();
-  }, [employee?.name]); // Re-run when current employee changes
-
-  // Handle employee selection
-  const handleEmployeeSelect = async (employeeId: string) => {
-    try {
-      await viewEmployeeById(employeeId);
-      toast.success('Employee profile loaded successfully');
-    } catch (error) {
-      console.error('Error loading employee profile:', error);
-      toast.error('Failed to load employee profile');
-    }
-  };
+  // Mock platforms for test data
+  const mockPlatforms = [
+    { name: "linkedin", platform_name: "LinkedIn", url: "https://linkedin.com/in/johndoe" },
+    { name: "github", platform_name: "GitHub", url: "https://github.com/johndoe" }
+  ];
 
   // Check if any operation is in progress
   const isAnyOperationInProgress = !!processingPlatform || isAddingPlatformLoading || isUpdatingProfile;
@@ -158,7 +129,7 @@ const ProfileHeader = () => {
       case "buymeacoffee":
         return <Coffee className="h-5 w-5" />;
       default:
-        return <Globe className="h-5 w-5" />; // Default icon for unknown platforms
+        return <Globe className="h-5 w-5" />;
     }
   };
 
@@ -167,7 +138,7 @@ const ProfileHeader = () => {
       employee_name: employee.employee_name || "",
       designation: employee.designation || "",
       date_of_joining: employee.date_of_joining || "",
-      company_email: employee.company_email || "",
+      company_email: employee.company_email || "john.doe@company.com",
       current_address: employee.current_address || "",
       custom_pin: employee.custom_pin || "",
       cell_number: employee.cell_number || "",
@@ -191,94 +162,22 @@ const ProfileHeader = () => {
     }
   };
 
-  const uploadImage = async (file: File): Promise<string> => {
-    const formData = new FormData();
-    formData.append('file', file);
-
-    const response = await fetch(`${BASE_URL}profile.upload_image`, {
-      method: 'POST',
-      body: formData,
-      credentials: 'include',
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to upload image');
-    }
-
-    const result = await response.json();
-    return result.file_url || result.message?.file_url;
-  };
-
   const handleSaveProfile = async () => {
     try {
       setIsUpdatingProfile(true);
-      setIsEditModalOpen(false);
-
-      let imageUrl = employee.image;
-
-      // Upload image if a new one is selected
-      if (selectedImage) {
-        try {
-          imageUrl = await uploadImage(selectedImage);
-        } catch (error) {
-          console.error("Error uploading image:", error);
-          toast.error("Failed to upload image", {
-            position: "top-right",
-            style: {
-              background: "#F8D7DA",
-              border: "1px solid #F5C6CB",
-              color: "#721C24",
-            },
-          });
-          return;
-        }
-      }
-
-      const profileData = {
-        ...editFormData,
-        ...(imageUrl && { image: imageUrl })
-      };
-
-      const response = await fetch(`${BASE_URL}profile.update_basic_profile`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(profileData),
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update profile');
-      }
-
-      // Update the employee data in state
+      // Mock save for test data
       setEmployee((prevEmployee) => ({
         ...prevEmployee,
-        ...profileData,
+        ...editFormData,
       }));
 
-      toast.success("Profile updated successfully", {
-        position: "top-right",
-        style: {
-          background: "#D1F7C4",
-          border: "1px solid #9AE86B",
-          color: "#2B7724",
-        },
-      });
-
-
+      toast.success("Profile updated successfully");
       setIsEditModalOpen(false);
       setSelectedImage(null);
       setImagePreview(null);
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast.error("Failed to update profile", {
-        position: "top-right",
-        style: {
-          background: "#F8D7DA",
-          border: "1px solid #F5C6CB",
-          color: "#721C24",
-        },
-      });
+      toast.error("Failed to update profile");
     } finally {
       setIsUpdatingProfile(false);
     }
@@ -292,170 +191,42 @@ const ProfileHeader = () => {
   const handleSaveSocial = async (platformId: string) => {
     const trimmedUrl = newUrl.trim();
     if (!trimmedUrl) {
-      toast.error("URL cannot be empty", {
-        position: "top-right",
-        style: {
-          background: "#F8D7DA",
-          border: "1px solid #F5C6CB",
-          color: "#721C24",
-        },
-      });
-      return;
-    }
-
-    // URL validation
-    const urlRegex = /^(https?:\/\/)?([\w\-]+\.)+[\w\-]+(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$/;
-    if (!urlRegex.test(trimmedUrl)) {
-      toast.error("Please enter a valid URL", {
-        position: "top-right",
-        style: {
-          background: "#F8D7DA",
-          border: "1px solid #F5C6CB",
-          color: "#721C24",
-        },
-      });
+      toast.error("URL cannot be empty");
       return;
     }
 
     try {
       setProcessingPlatform(platformId);
-
-      const updatedPlatforms = (employee.custom_platforms || []).map((platform) =>
-        platform.name === platformId ? { ...platform, url: trimmedUrl } : platform
-      );
-
-      const response = await fetch(`${BASE_URL}user.set_employee_details`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          custom_platforms: updatedPlatforms,
-        }),
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update platform');
-      }
-
-      const platformIndex = employee.custom_platforms.findIndex(
-        (platform) => platform.name === platformId
-      );
-      if (platformIndex !== -1) {
-        employee.custom_platforms[platformIndex].url = trimmedUrl;
-      }
-
-      toast.success("Platform link updated successfully", {
-        position: "top-right",
-        style: {
-          background: "#D1F7C4",
-          border: "1px solid #9AE86B",
-          color: "#2B7724",
-        },
-      });
-
+      // Mock save for test data
+      toast.success("Platform link updated successfully");
       setEditingSocial(null);
       setNewUrl("");
     } catch (error) {
       console.error("Error updating platform:", error);
-      toast.error("Failed to update platform link", {
-        position: "top-right",
-        style: {
-          background: "#F8D7DA",
-          border: "1px solid #F5C6CB",
-          color: "#721C24",
-        },
-      });
+      toast.error("Failed to update platform link");
     } finally {
       setProcessingPlatform(null);
     }
-  };
-
-  const getAvailablePlatforms = () => {
-    const addedPlatforms = (employee.custom_platforms || []).map((p) =>
-      p.platform_name.toLowerCase()
-    );
-    return socialPlatforms.filter((platform) => !addedPlatforms.includes(platform.name.toLowerCase()));
   };
 
   const handleAddPlatform = async () => {
     const trimmedUrl = platformUrl.trim();
 
     if (!selectedPlatform || !trimmedUrl) {
-      toast.error("Please select a platform and enter a URL", {
-        position: "top-right",
-        style: {
-          background: "#F8D7DA",
-          border: "1px solid #F5C6CB",
-          color: "#721C24",
-        },
-      });
-      return;
-    }
-
-    const urlRegex = /^(https?:\/\/)?([\w\-]+\.)+[\w\-]+(\/[\w\-._~:/?#[\]@!$&'()*+,;=]*)?$/;
-    if (!urlRegex.test(trimmedUrl)) {
-      toast.error("Please enter a valid URL", {
-        position: "top-right",
-        style: {
-          background: "#F8D7DA",
-          border: "1px solid #F5C6CB",
-          color: "#721C24",
-        },
-      });
+      toast.error("Please select a platform and enter a URL");
       return;
     }
 
     try {
       setIsAddingPlatformLoading(true);
-      const platformInfo = socialPlatforms.find((p) => p.id === selectedPlatform);
-
-      if (!platformInfo) return;
-
-      const newPlatform = {
-        name: selectedPlatform,
-        platform_name: platformInfo.name,
-        url: trimmedUrl,
-      };
-
-      const updatedPlatforms = [...employee.custom_platforms, newPlatform];
-
-      const response = await fetch(`${BASE_URL}user.set_employee_details`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          custom_platforms: updatedPlatforms,
-        }),
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to add platform');
-      }
-
-      employee.custom_platforms.push(newPlatform);
-
-      toast.success("Platform added successfully", {
-        position: "top-right",
-        style: {
-          background: "#D1F7C4",
-          border: "1px solid #9AE86B",
-          color: "#2B7724",
-        },
-      });
-
+      // Mock add for test data
+      toast.success("Platform added successfully");
       setIsAddingPlatform(false);
       setSelectedPlatform("");
       setPlatformUrl("");
     } catch (error) {
       console.error("Error adding platform:", error);
-      toast.error("Failed to add platform", {
-        position: "top-right",
-        style: {
-          background: "#F8D7DA",
-          border: "1px solid #F5C6CB",
-          color: "#721C24",
-        },
-      });
+      toast.error("Failed to add platform");
     } finally {
       setIsAddingPlatformLoading(false);
     }
@@ -463,56 +234,12 @@ const ProfileHeader = () => {
 
   const handleDeletePlatform = async (platformName: string) => {
     try {
-
-      const platformToDelete = employee.custom_platforms.find(
-        (platform) => platform.name === platformName
-      );
-      
-      if (!platformToDelete) return;
-      
-      setProcessingPlatform(platformToDelete.name);
-
-      const updatedPlatforms = employee.custom_platforms.filter(
-        (platform) => platform.name !== platformName
-      );
-      console.log("updated platforms are: ",updatedPlatforms)
-
-      const response = await fetch(`${BASE_URL}user.set_employee_details`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          custom_platforms: updatedPlatforms,
-        }),
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete platform');
-      }
-
-      setEmployee((prevEmployee) => ({
-        ...prevEmployee,
-        custom_platforms: updatedPlatforms,
-      }));
-
-      toast.success("Platform deleted successfully", {
-        position: "top-right",
-        style: {
-          background: "#D1F7C4",
-          border: "1px solid #9AE86B",
-          color: "#2B7724",
-        },
-      });
+      setProcessingPlatform(platformName);
+      // Mock delete for test data
+      toast.success("Platform deleted successfully");
     } catch (error) {
       console.error("Error deleting platform:", error);
-      toast.error("Failed to delete platform", {
-        position: "top-right",
-        style: {
-          background: "#F8D7DA",
-          border: "1px solid #F5C6CB",
-          color: "#721C24",
-        },
-      });
+      toast.error("Failed to delete platform");
     } finally {
       setProcessingPlatform(null);
     }
@@ -529,7 +256,9 @@ const ProfileHeader = () => {
     setPlatformUrl("");
   };
 
-  const availablePlatforms = getAvailablePlatforms();
+  const availablePlatforms = socialPlatforms.filter(platform => 
+    !mockPlatforms.some(mp => mp.name === platform.id)
+  );
 
   // Check if user is co-founder to show team members
   const isCoFounder = employee && employee.designation === "Co-Founder";
@@ -537,47 +266,18 @@ const ProfileHeader = () => {
   const shouldShowTeamMembers = !isCoFounder && hasTeamMembers && !isViewingOtherEmployee;
 
   return (
-    <div className="w-full bg-white rounded-lg shadow-md overflow-hidden relative">
+    <div className="w-full bg-white border-b border-gray-200 relative">
       {/* Spinner overlay for platform operations */}
       {isAnyOperationInProgress && (
-        <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10 rounded-lg">
+        <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-10">
           <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
         </div>
       )}
       
-      {/* Employee Search Bar */}
-      <div className="bg-gray-50 p-4 border-b border-gray-200">
-        <div className="flex items-center gap-4 max-w-2xl mx-auto">
-          <div className="flex-1">
-            <Combobox
-              options={allEmployees}
-              value=""
-              onValueChange={handleEmployeeSelect}
-              placeholder="Search employees..."
-              searchPlaceholder="Type employee name or ID..."
-              emptyMessage={isLoadingEmployees ? "Loading employees..." : "No employees found"}
-              loading={isLoadingEmployees}
-              allowCustom={false}
-            />
-          </div>
-          {isViewingOtherEmployee && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={resetToOwnProfile}
-              className="flex items-center gap-2"
-            >
-              <Home className="h-4 w-4" />
-              My Profile
-            </Button>
-          )}
-        </div>
-      </div>
-      
-      <div className="relative p-4 sm:p-6 lg:p-8">
-        {/* Edit Profile Button - Only show when viewing own profile */}
+      <div className="relative p-6">
+        {/* Edit Profile Button */}
         {!isViewingOtherEmployee && (
-          <div className="absolute top-4 right-4">
+          <div className="absolute top-6 right-6">
             <Button
               variant="outline"
               size="sm"
@@ -594,12 +294,12 @@ const ProfileHeader = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Section - Profile Info */}
           <div className="lg:col-span-2">
-            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
+            <div className="flex flex-col sm:flex-row gap-6 items-start">
               {/* Profile Image */}
               <div className="flex-shrink-0">
-                <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-md overflow-hidden border-4 border-gray-100 shadow-inner">
+                <div className="w-32 h-32 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
                   <img
-                    src={employee.image || ''}
+                    src={employee.image || 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=400&fit=crop&crop=face'}
                     alt={employee.employee_name}
                     className="w-full h-full object-cover"
                   />
@@ -609,27 +309,26 @@ const ProfileHeader = () => {
               {/* Profile Details */}
               <div className="flex flex-col flex-grow min-w-0">
                 <div className="mb-4">
-                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800 break-words">{employee.employee_name}</h1>
-                  <p className="text-sm sm:text-base font-medium text-blue-600 mt-1">{employee.designation}</p>
+                  <h1 className="text-3xl font-bold text-gray-900 break-words">{employee.employee_name}</h1>
+                  <p className="text-lg font-medium text-blue-600 mt-1">{employee.designation}</p>
 
                   <div className="flex flex-col sm:flex-row sm:items-center mt-2 text-gray-600 text-sm gap-1 sm:gap-0">
-                    <span>Joined {formatDate(employee.date_of_joining)}
-                    </span>
+                    <span>Joined {formatDate(employee.date_of_joining)}</span>
                     <span className="hidden sm:inline mx-2">•</span>
                     <span>Tenure: {calculateTenure(employee.date_of_joining)}</span>
                   </div>
                 </div>
 
                 {/* Social Links */}
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-2 mb-4">
-                  {(employee.custom_platforms || []).map((platform) => (
+                <div className="flex flex-wrap items-center gap-3 mt-2 mb-4">
+                  {mockPlatforms.map((platform) => (
                     <div key={platform.name} className="flex items-center">
                       {editingSocial === platform.name ? (
                         <div className="flex items-center space-x-2">
                           <Input
                             value={newUrl}
                             onChange={(e) => setNewUrl(e.target.value)}
-                            className="h-8 w-36 sm:w-48"
+                            className="h-8 w-48"
                             disabled={isAnyOperationInProgress}
                           />
                           <Button
@@ -657,32 +356,32 @@ const ProfileHeader = () => {
                             href={platform.url.startsWith("http") ? platform.url : `https://${platform.url}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-2 sm:px-3 py-1.5 text-xs sm:text-sm rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
+                            className="flex items-center gap-2 px-3 py-2 text-sm rounded-md bg-gray-100 hover:bg-gray-200 transition-colors"
                           >
-                            {getPlatformIcon(platform.platform_name.toLowerCase())}
-                            <span className="hidden sm:inline">{platform.platform_name}</span>
+                            {getPlatformIcon(platform.platform_name)}
+                            <span>{platform.platform_name}</span>
                           </a>
                           {!isViewingOtherEmployee && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleEditSocial(platform.name, platform.url)}
-                              className="h-6 w-6 ml-1"
-                              disabled={isAnyOperationInProgress}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                          )}
-                          {!isViewingOtherEmployee && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeletePlatform(platform.name)}
-                              className="h-6 w-6 ml-1 text-red-500"
-                              disabled={isAnyOperationInProgress}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleEditSocial(platform.name, platform.url)}
+                                className="h-6 w-6 ml-1"
+                                disabled={isAnyOperationInProgress}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDeletePlatform(platform.name)}
+                                className="h-6 w-6 ml-1 text-red-500"
+                                disabled={isAnyOperationInProgress}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </>
                           )}
                         </>
                       )}
@@ -695,23 +394,18 @@ const ProfileHeader = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => setIsAddingPlatform(true)}
-                      className="flex items-center gap-1 text-xs sm:text-sm"
+                      className="flex items-center gap-2"
                       disabled={isAnyOperationInProgress}
                     >
-                      <Plus className="h-3 w-3" /> 
-                      <span className="hidden sm:inline">Add Platform</span>
-                      <span className="sm:hidden">Add</span>
+                      <Plus className="h-4 w-4" />
+                      Add Platform
                     </Button>
                   )}
 
                   {isAddingPlatform && !isViewingOtherEmployee && (
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 p-2 border rounded-md bg-gray-50 w-full sm:w-auto">
-                      <Select 
-                        value={selectedPlatform} 
-                        onValueChange={setSelectedPlatform}
-                        disabled={isAnyOperationInProgress}
-                      >
-                        <SelectTrigger className="w-full sm:w-[120px] h-8">
+                    <div className="flex items-center gap-2 p-2 border rounded-md bg-gray-50">
+                      <Select value={selectedPlatform} onValueChange={setSelectedPlatform}>
+                        <SelectTrigger className="w-[150px] h-8">
                           <SelectValue placeholder="Platform" />
                         </SelectTrigger>
                         <SelectContent>
@@ -730,106 +424,83 @@ const ProfileHeader = () => {
                         placeholder="Enter URL"
                         value={platformUrl}
                         onChange={(e) => setPlatformUrl(e.target.value)}
-                        className="h-8 w-full sm:w-48"
+                        className="h-8 w-48"
                         disabled={isAnyOperationInProgress}
                       />
 
-                      <div className="flex gap-1 w-full sm:w-auto">
-                        <Button
-                          size="sm"
-                          variant="default"
-                          onClick={handleAddPlatform}
-                          className="h-8 flex-1 sm:flex-none"
-                          disabled={isAnyOperationInProgress}
-                        >
-                          <Save className="h-3 w-3 mr-1" /> Save
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={handleCancelAddPlatform}
-                          className="h-8"
-                          disabled={isAnyOperationInProgress}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
-                      </div>
+                      <Button
+                        size="sm"
+                        onClick={handleAddPlatform}
+                        className="h-8"
+                        disabled={isAnyOperationInProgress}
+                      >
+                        <Save className="h-4 w-4 mr-1" /> Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleCancelAddPlatform}
+                        className="h-8"
+                        disabled={isAnyOperationInProgress}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
                   )}
                 </div>
 
                 {/* Contact Information */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 text-sm text-gray-600">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Mail className="h-4 w-4 flex-shrink-0" />
-                    <a href={`mailto:${employee.company_email}`} className="hover:underline truncate">
-                      {employee.company_email}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-600 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Mail className="h-4 w-4" />
+                    <a href={`mailto:john.doe@company.com`} className="hover:underline">
+                      john.doe@company.com
                     </a>
                   </div>
 
-                  <div className="flex items-center gap-2 min-w-0 sm:col-span-2 lg:col-span-1">
-                    <MapPin className="h-4 w-4 flex-shrink-0" />
-                    <span className="truncate">
-                      {employee.custom_city && employee.custom_state ? `${employee.custom_city}, ${employee.custom_state}` : 'Location not specified'}
-                    </span>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    <span>{employee.custom_city}, CA</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4" />
+                    <span>+1 (555) 123-4567</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    <span>{employee.custom_team}</span>
                   </div>
                 </div>
 
-                {/* Additional Profile Information */}
-                {(employee.custom_team || employee.custom_pod) && (
-                  <div className="mt-4 space-y-3">
-                    {/* REMOVE: About section when viewing other employees */}
-                    {/*
-                    {employee.custom_about && (
-                      <div className="text-sm text-gray-700">
-                        <h4 className="font-medium text-gray-800 mb-1">About</h4>
-                        <p className="text-gray-600 leading-relaxed">{employee.custom_about}</p>
-                      </div>
-                    )}
-                    */}
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                      {employee.custom_team && (
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-gray-500" />
-                          <span className="text-gray-600">
-                            <span className="font-medium">Team:</span> {employee.custom_team}
-                          </span>
-                        </div>
-                      )}
-                      
-                      {employee.custom_pod && (
-                        <div className="flex items-center gap-2">
-                          <Users className="h-4 w-4 text-gray-500" />
-                          <span className="text-gray-600">
-                            <span className="font-medium">POD:</span> {employee.custom_pod}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                {/* About Section */}
+                {employee.custom_about && (
+                  <div className="text-sm text-gray-700">
+                    <h4 className="font-medium text-gray-800 mb-2">About</h4>
+                    <p className="text-gray-600 leading-relaxed">{employee.custom_about}</p>
                   </div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Right Section - Team Members & Additional Info */}
-          <div className="lg:col-span-1 space-y-4">
-            {/* Team Members - Only show for own profile */}
+          {/* Right Section - Team Members */}
+          <div className="lg:col-span-1">
             {shouldShowTeamMembers && (
-              <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
+              <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm sm:text-base font-medium text-gray-700 flex items-center gap-2">
+                  <h3 className="text-base font-medium text-gray-700 flex items-center gap-2">
                     <Users className="h-4 w-4" />
                     Team Members
                   </h3>
                 </div>
                 
-                <div className="grid grid-cols-1 gap-3">
+                <div className="space-y-3">
                   {(teamMembers || []).slice(0, 3).map((member, index) => (
-                    <div key={member.name || index} className="text-sm border-b border-gray-200 pb-2 last:border-b-0 last:pb-0">
+                    <div key={member.name || index} className="text-sm border-b border-gray-200 pb-3 last:border-b-0 last:pb-0">
                       <div className="font-medium text-gray-800">{member.employee_name}</div>
-                      <div className="text-gray-500 text-xs truncate">{member.designation}</div>
+                      <div className="text-gray-500 text-xs">{member.designation}</div>
                     </div>
                   ))}
                   
@@ -846,88 +517,13 @@ const ProfileHeader = () => {
                 </div>
               </div>
             )}
-            {/* REMOVE: Tech Stack, Achievements, and Icebreaker Questions for other employees */}
-            {/*
-            {isViewingOtherEmployee && employee.custom_tech_stack && employee.custom_tech_stack.length > 0 && (
-              <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
-                <div className="flex items-center gap-2 mb-4">
-                  <Code className="h-4 w-4" />
-                  <h3 className="text-sm sm:text-base font-medium text-gray-700">Tech Stack</h3>
-                </div>
-                
-                <div className="grid grid-cols-1 gap-2">
-                  {employee.custom_tech_stack.slice(0, 5).map((tech, index) => (
-                    <div key={index} className="text-sm flex justify-between items-center">
-                      <span className="font-medium text-gray-800">{tech.skill}</span>
-                      <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
-                        {tech.proficiency_level}
-                      </span>
-                    </div>
-                  ))}
-                  
-                  {employee.custom_tech_stack.length > 5 && (
-                    <div className="text-xs text-gray-500 mt-2">
-                      +{employee.custom_tech_stack.length - 5} more skills
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            {isViewingOtherEmployee && employee.employee_achievements && employee.employee_achievements.length > 0 && (
-              <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
-                <div className="flex items-center gap-2 mb-4">
-                  <BookOpen className="h-4 w-4" />
-                  <h3 className="text-sm sm:text-base font-medium text-gray-700">Recent Achievements</h3>
-                </div>
-                
-                <div className="grid grid-cols-1 gap-3">
-                  {employee.employee_achievements.slice(0, 3).map((achievement, index) => (
-                    <div key={index} className="text-sm border-b border-gray-200 pb-2 last:border-b-0 last:pb-0">
-                      <div className="font-medium text-gray-800">{achievement.event_type}</div>
-                      <div className="text-gray-500 text-xs">{achievement.event_description}</div>
-                      <div className="text-gray-400 text-xs">{formatDate(achievement.event_date)}</div>
-                    </div>
-                  ))}
-                  
-                  {employee.employee_achievements.length > 3 && (
-                    <div className="text-xs text-gray-500 mt-2">
-                      +{employee.employee_achievements.length - 3} more achievements
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            {isViewingOtherEmployee && employee.custom_employee_icebreaker_question && employee.custom_employee_icebreaker_question.length > 0 && (
-              <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
-                <div className="flex items-center gap-2 mb-4">
-                  <MessageSquare className="h-4 w-4" />
-                  <h3 className="text-sm sm:text-base font-medium text-gray-700">Icebreaker Questions</h3>
-                </div>
-                
-                <div className="grid grid-cols-1 gap-3">
-                  {employee.custom_employee_icebreaker_question.slice(0, 3).map((icebreaker, index) => (
-                    <div key={index} className="text-sm border-b border-gray-200 pb-2 last:border-b-0 last:pb-0">
-                      <div className="font-medium text-gray-800">{icebreaker.question}</div>
-                      <div className="text-gray-600 text-xs mt-1">{icebreaker.answer}</div>
-                    </div>
-                  ))}
-                  
-                  {employee.custom_employee_icebreaker_question.length > 3 && (
-                    <div className="text-xs text-gray-500 mt-2">
-                      +{employee.custom_employee_icebreaker_question.length - 3} more questions
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-            */}
           </div>
         </div>
       </div>
 
       {/* Edit Profile Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" showOverlay={false}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Profile</DialogTitle>
           </DialogHeader>
@@ -939,7 +535,7 @@ const ProfileHeader = () => {
               <div className="flex items-center gap-4">
                 <div className="w-20 h-20 rounded-md overflow-hidden border-2 border-gray-200">
                   <img
-                    src={imagePreview || employee.image || ''}
+                    src={imagePreview || employee.image || 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=400&h=400&fit=crop&crop=face'}
                     alt="Profile preview"
                     className="w-full h-full object-cover"
                   />
@@ -971,16 +567,6 @@ const ProfileHeader = () => {
                 />
               </div>
               
-              {/* <div className="space-y-2">
-                <Label htmlFor="designation">Designation</Label>
-                <Input
-                  id="designation"
-                  value={editFormData.designation}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, designation: e.target.value }))}
-                  disabled={isUpdatingProfile}
-                />
-              </div> */}
-              
               <div className="space-y-2">
                 <Label htmlFor="company_email">Company Email</Label>
                 <Input
@@ -1003,31 +589,11 @@ const ProfileHeader = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="custom_pin">PIN Code</Label>
-                <Input
-                  id="custom_pin"
-                  value={editFormData.custom_pin}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, custom_pin: e.target.value }))}
-                  disabled={isUpdatingProfile}
-                />
-              </div>
-              
-              <div className="space-y-2">
                 <Label htmlFor="custom_city">City</Label>
                 <Input
                   id="custom_city"
                   value={editFormData.custom_city}
                   onChange={(e) => setEditFormData(prev => ({ ...prev, custom_city: e.target.value }))}
-                  disabled={isUpdatingProfile}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="custom_state">State</Label>
-                <Input
-                  id="custom_state"
-                  value={editFormData.custom_state}
-                  onChange={(e) => setEditFormData(prev => ({ ...prev, custom_state: e.target.value }))}
                   disabled={isUpdatingProfile}
                 />
               </div>
@@ -1072,32 +638,33 @@ const ProfileHeader = () => {
 };
 
 const ProfileHeaderSkeleton = () => (
-  <div className="w-full bg-white rounded-lg shadow-md overflow-hidden">
-    <div className="p-4 sm:p-6 lg:p-8">
+  <div className="w-full bg-white border-b border-gray-200">
+    <div className="p-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 items-start">
-            <Skeleton className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-md" />
+          <div className="flex flex-col sm:flex-row gap-6 items-start">
+            <Skeleton className="w-32 h-32 rounded-lg" />
             <div className="flex-grow min-w-0">
-              <Skeleton className="h-6 sm:h-8 w-48 mb-2" />
-              <Skeleton className="h-4 sm:h-5 w-32 mb-4" />
+              <Skeleton className="h-8 w-48 mb-2" />
+              <Skeleton className="h-5 w-32 mb-4" />
               <Skeleton className="h-4 w-64 mb-6" />
               <div className="flex gap-2 mb-4">
-                <Skeleton className="h-8 w-20 sm:w-24" />
-                <Skeleton className="h-8 w-20 sm:w-24" />
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-8 w-24" />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                <Skeleton className="h-5 w-36 sm:w-40" />
-                <Skeleton className="h-5 w-28 sm:w-32" />
-                <Skeleton className="h-5 w-32 sm:w-36" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="h-5 w-36" />
+                <Skeleton className="h-5 w-28" />
               </div>
             </div>
           </div>
         </div>
         <div className="lg:col-span-1">
-          <div className="bg-gray-50 p-4 sm:p-6 rounded-lg">
+          <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
             <Skeleton className="h-6 w-32 mb-4" />
-            <div className="grid grid-cols-1 gap-3">
+            <div className="space-y-3">
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
               <Skeleton className="h-12 w-full" />
